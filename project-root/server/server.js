@@ -23,6 +23,14 @@ const db = new sqlite3.Database(dbPath, (err) => {
             email TEXT,
             phone TEXT
         );`);
+        db.run(`CREATE TABLE IF NOT EXISTS appointments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client INTEGER,
+            procedure TEXT,
+            date TEXT,
+            time TEXT,
+            FOREIGN KEY(client) REFERENCES clients(id)
+        );`);
     }
 });
 
@@ -58,6 +66,27 @@ app.delete('/api/clients/:id', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
         res.json({ deletedID: id });
+    });
+});
+
+// Rota para adicionar agendamento
+app.post('/api/appointments', (req, res) => {
+    const { client, procedure, date, time } = req.body;
+    db.run(`INSERT INTO appointments (client, procedure, date, time) VALUES (?, ?, ?, ?)`, [client, procedure, date, time], function (err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ id: this.lastID, client, procedure, date, time });
+    });
+});
+
+// Rota para listar agendamentos
+app.get('/api/appointments', (req, res) => {
+    db.all(`SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time FROM appointments INNER JOIN clients ON appointments.client = clients.id`, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ appointments: rows });
     });
 });
 

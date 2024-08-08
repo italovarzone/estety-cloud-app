@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Agendamento</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastrar Agendamento</h1>
+        <form id="appointment-form">
+            <label for="client">Cliente:</label>
+            <select id="client" required></select>
+
+            <label for="procedure">Procedimento:</label>
+            <select id="procedure" required>
+                <option value="Extensão de Cílios">Extensão de Cílios</option>
+                <option value="Design de Sobrancelhas">Design de Sobrancelhas</option>
+            </select>
+
+            <label for="date">Dia do agendamento:</label>
+            <input type="date" id="date" required>
+
+            <label for="time">Hora do agendamento:</label>
+            <input type="time" id="time" required>
+
+            <div>
+                <button type="submit">Cadastrar Agendamento</button>
+                <button type="button" onclick="window.location.href='index.html'">Voltar ao Menu</button>
+            </div>
+        </form>
+        <div id="snackbar"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

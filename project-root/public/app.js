@@ -5,9 +5,19 @@ function init() {
     if (clientForm) {
         clientForm.addEventListener('submit', addClient);
     }
-    
+
+    const appointmentForm = document.getElementById('appointment-form');
+    if (appointmentForm) {
+        loadClientsIntoSelect();
+        appointmentForm.addEventListener('submit', addAppointment);
+    }
+
     if (document.getElementById('client-table')) {
         loadClients();
+    }
+
+    if (document.getElementById('appointment-table')) {
+        loadAppointments();
     }
 
     const confirmButton = document.getElementById('confirm-delete');
@@ -92,6 +102,21 @@ function loadClients() {
     .catch(error => console.error('Erro ao carregar clientes:', error));
 }
 
+function loadClientsIntoSelect() {
+    fetch('/api/clients')
+    .then(response => response.json())
+    .then(data => {
+        const clientSelect = document.getElementById('client');
+        data.clients.forEach(client => {
+            const option = document.createElement('option');
+            option.value = client.id;
+            option.textContent = client.name;
+            clientSelect.appendChild(option);
+        });
+    })
+    .catch(error => console.error('Erro ao carregar clientes no select box:', error));
+}
+
 function promptDeleteClient(id) {
     clientIdToDelete = id;
     const dialog = document.getElementById('dialog');
@@ -118,4 +143,52 @@ function cancelDeleteClient() {
     clientIdToDelete = null;
     const dialog = document.getElementById('dialog');
     dialog.style.display = 'none';
+}
+
+function addAppointment(e) {
+    e.preventDefault();
+
+    const client = document.getElementById('client').value;
+    const procedure = document.getElementById('procedure').value;
+    const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
+
+    fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ client, procedure, date, time })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('appointment-form').reset();
+        showSnackbar('Agendamento cadastrado com sucesso!');
+    })
+    .catch(error => {
+        showSnackbar('Erro ao cadastrar agendamento.');
+        console.error('Erro ao adicionar agendamento:', error);
+    });
+}
+
+function loadAppointments() {
+    fetch('/api/appointments')
+    .then(response => response.json())
+    .then(data => {
+        const tbody = document.querySelector('#appointment-table tbody');
+        tbody.innerHTML = '';
+
+        data.appointments.forEach(appointment => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${appointment.id}</td>
+                <td>${appointment.client}</td>
+                <td>${appointment.procedure}</td>
+                <td>${appointment.date}</td>
+                <td>${appointment.time}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    })
+    .catch(error => console.error('Erro ao carregar agendamentos:', error));
 }
