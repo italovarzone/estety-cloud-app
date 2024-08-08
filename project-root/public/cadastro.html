@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Clientes</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastro de Clientes</h1>
+        <form id="client-form">
+            <input type="text" id="name" placeholder="Nome" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="text" id="phone" placeholder="Telefone" required>
+            <div>
+                <button type="submit" id="add-client-btn">
+                    <span id="btn-text">Adicionar Cliente</span>
+                    <span id="btn-spinner" class="spinner" style="display: none;"></span>
+                </button>
+                <button type="button" onclick="window.location.href='index.html'">Voltar ao Menu</button>
+            </div>
+        </form>
+        <div id="snackbar"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
