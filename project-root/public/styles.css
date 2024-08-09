@@ -1,4 +1,5 @@
-/* Estilos básicos */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 body {
     font-family: Arial, sans-serif;
     background-color: #F2DAB6; /* Cor de fundo aplicada ao body */
@@ -27,13 +28,7 @@ body {
     border: none;
     cursor: pointer;
     border-radius: 5px;
-    background-color: #1D1411; /* Cor do botão */
-    color: #F2DAB6; /* Cor do texto do botão */
     transition: background-color 0.3s ease;
-}
-
-.container button:hover {
-    background-color: #A68A7C; /* Cor do botão ao passar o mouse */
 }
 
 #client-form div, #appointment-form div {
@@ -206,6 +201,21 @@ td button:hover {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.header-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+#edit-button {
+    margin-left: auto;
+}
+
 .ficha-tecnica input[type="text"] {
     width: 50%;
 }
@@ -227,26 +237,6 @@ input[type="radio"] {
 
 .mb-3 {
     margin-bottom: 1rem;
-}
-
-.btn-primary {
-    background-color: #4F2A17;
-    border-color: #4F2A17;
-}
-
-.btn-primary:hover {
-    background-color: #6D3A23;
-    border-color: #6D3A23;
-}
-
-.btn-secondary {
-    background-color: #B38769;
-    border-color: #B38769;
-}
-
-.btn-secondary:hover {
-    background-color: #8E654F;
-    border-color: #8E654F;
 }
 
 

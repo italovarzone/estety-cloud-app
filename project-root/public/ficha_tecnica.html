@@ -9,8 +9,10 @@
 </head>
 <body>
     <div class="container ficha-tecnica">
-        <h1>Ficha Técnica</h1>
-        <button id="edit-button" class="btn btn-warning mb-3">Editar ficha</button>
+        <div class="header-container">
+            <h1>Ficha Técnica</h1>
+            <button id="edit-button" class="btn btn-sm btn-primary">Editar ficha</button>
+        </div>
         <form id="technical-sheet-form">
             <div class="mb-3">
                 <label for="client-name" class="form-label">Nome do Cliente:</label>
@@ -21,16 +23,6 @@
                 <input type="text" id="datetime" class="form-control" disabled>
             </div>
             <div class="mb-3">
-                <label>Está de rímel?</label>
-                <div>
-                    <input type="radio" id="rimel-sim" name="rimel" value="Sim">
-                    <label for="rimel-sim">Sim</label>
-                    <input type="radio" id="rimel-nao" name="rimel" value="Não">
-                    <label for="rimel-nao">Não</label>
-                </div>
-            </div>
-            
-            <div class="mb-3">
                 <label>Gestante?</label>
                 <div>
                     <input type="radio" id="gestante-sim" name="gestante" value="Sim">
@@ -39,9 +31,18 @@
                     <label for="gestante-nao">Não</label>
                 </div>
             </div>
+            <div class="mb-3">
+                <label>Está de rímel?</label>
+                <div>
+                    <input type="radio" id="rimel-sim" name="rimel" value="Sim">
+                    <label for="rimel-sim">Sim</label>
+                    <input type="radio" id="rimel-nao" name="rimel" value="Não">
+                    <label for="rimel-nao">Não</label>
+                </div>
+            </div>
 
             <div class="mb-3">
-                <label>Fez algum procedimento recentemente nos olhos?</label>
+                <label>Usa lente de contato?</label>
                 <div>
                     <input type="radio" id="procedimento-olhos-sim" name="procedimento-olhos" value="Sim">
                     <label for="procedimento-olhos-sim">Sim</label>
@@ -157,9 +158,9 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between">
-                <button type="submit" class="btn btn-primary">Salvar Ficha Técnica</button>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='clientes.html'">Voltar</button>
+            <div style="display: flex; flex-direction: row; gap: 16px;">
+                <button type="submit" class="btn btn-sm btn-primary">Salvar Ficha Técnica</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="window.location.href='clientes.html'">Voltar</button>
             </div>
         </form>
 
