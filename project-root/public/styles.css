@@ -8,10 +8,11 @@ body {
 }
 
 .container {
-    width: 50%;
+    max-width: 1000px; /* Aumenta a largura máxima do container */
+    margin: 0 auto; /* Centraliza o container */
+    padding: 20px;
     margin: auto;
     overflow: hidden;
-    padding: 30px;
     background: #ffffff; /* Cor de fundo do container */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin-top: 50px;
@@ -20,8 +21,7 @@ body {
 }
 
 .container button {
-    width: 100%;
-    margin: 5px 0;
+    margin-left: 5px 0;
     padding: 10px;
     font-size: 16px;
     border: none;
@@ -124,7 +124,7 @@ table, th, td {
 }
 
 th, td {
-    padding: 10px;
+    padding-left: 10px;
     text-align: left;
 }
 
@@ -258,4 +258,31 @@ td button:hover {
 .dialog-content button:last-child:hover {
     background-color: #A68A7C;
     color: #F2DAB6;
+}
+
+/* Estilos para botões de ação na tabela */
+.action-buttons {
+    display: flex;
+    gap: 10px; /* Espaçamento entre os botões */
+}
+
+.edit-btn, .delete-btn {
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.edit-btn {
+    background-color: #4CAF50; /* Verde para editar */
+    color: white;
+}
+
+.delete-btn {
+    background-color: #f44336; /* Vermelho para deletar */
+    color: white;
+}
+
+.edit-btn:hover, .delete-btn:hover {
+    opacity: 0.8;
 }

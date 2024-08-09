@@ -1,7 +1,7 @@
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bodyParser = require('body-parser');
-const path = require('path');
+import express from 'express';
+import sqlite3 from 'sqlite3';
+import bodyParser from 'body-parser';
+import path from 'path';
 
 const app = express();
 const PORT = 3000;
@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Conectar ao banco de dados SQLite
-const dbPath = path.resolve(__dirname, '../database/clientdb.db');
+const dbPath = path.resolve(__dirname, 'database/dblash.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Erro ao conectar ao banco de dados:', err.message);
@@ -25,22 +25,22 @@ const db = new sqlite3.Database(dbPath, (err) => {
         );`);
         db.run(`CREATE TABLE IF NOT EXISTS appointments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            client INTEGER,
+            clientId INTEGER,
             procedure TEXT,
             date TEXT,
             time TEXT,
-            FOREIGN KEY(client) REFERENCES clients(id)
+            FOREIGN KEY(clientId) REFERENCES clients(id)
         );`);
     }
 });
 
 // Servir arquivos estáticos
-app.use(express.static(path.resolve(__dirname, '../public')));
+app.use(express.static(path.resolve(__dirname, 'public')));
 
-// Rota para adicionar cliente
+// Rotas para gerenciar clientes
 app.post('/api/clients', (req, res) => {
     const { name, email, phone } = req.body;
-    db.run(`INSERT INTO clients (name, email, phone) VALUES (?, ?, ?)`, [name, email, phone], function (err) {
+    db.run(`INSERT INTO clients (name, email, phone) VALUES (?, ?, ?)`, [name, email, phone], function(err) {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -48,7 +48,6 @@ app.post('/api/clients', (req, res) => {
     });
 });
 
-// Rota para listar clientes
 app.get('/api/clients', (req, res) => {
     db.all(`SELECT * FROM clients`, [], (err, rows) => {
         if (err) {
@@ -58,10 +57,9 @@ app.get('/api/clients', (req, res) => {
     });
 });
 
-// Rota para remover cliente
 app.delete('/api/clients/:id', (req, res) => {
     const { id } = req.params;
-    db.run(`DELETE FROM clients WHERE id = ?`, id, function (err) {
+    db.run(`DELETE FROM clients WHERE id = ?`, id, function(err) {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -69,20 +67,22 @@ app.delete('/api/clients/:id', (req, res) => {
     });
 });
 
-// Rota para adicionar agendamento
+
+// Rotas para gerenciar agendamentos
 app.post('/api/appointments', (req, res) => {
-    const { client, procedure, date, time } = req.body;
-    db.run(`INSERT INTO appointments (client, procedure, date, time) VALUES (?, ?, ?, ?)`, [client, procedure, date, time], function (err) {
+    const { clientId, procedure, date, time } = req.body;
+    db.run(`INSERT INTO appointments (clientId, procedure, date, time) VALUES (?, ?, ?, ?)`, [clientId, procedure, date, time], function(err) {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
-        res.json({ id: this.lastID, client, procedure, date, time });
+        res.json({ id: this.lastID, clientId, procedure, date, time });
     });
 });
 
-// Rota para listar agendamentos
 app.get('/api/appointments', (req, res) => {
-    db.all(`SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time FROM appointments INNER JOIN clients ON appointments.client = clients.id`, [], (err, rows) => {
+    db.all(`SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
+            FROM appointments 
+            INNER JOIN clients ON appointments.clientId = clients.id`, [], (err, rows) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }

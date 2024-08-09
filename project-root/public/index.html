@@ -4,21 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema da Livia</title>
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background-color: azure;
+        }
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Opacidade para escurecer */
+            z-index: 0;
+        }
+        .wrapper {
+            display: flex;
+            height: 100%;
+            position: relative;
+            z-index: 1; /* Garante que o conteúdo fique acima do fundo */
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #755043; /* Tornando a sidebar um pouco transparente */
+            color: white;
+            padding-top: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .sidebar a {
+            color: white;
+            padding: 15px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #432A24; /* Mantém a transparência no hover */
+        }
+        .sidebar .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: transparent;
+            margin-right: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar a.active .indicator {
+            background-color: #F2DAB6; /* Cor da bolinha quando o módulo está ativo */
+        }
+        .sidebar.hidden a {
+            pointer-events: none; /* Desativa os cliques nos links */
+            opacity: 0; /* Esconde os links visualmente */
+        }
+        .content {
+            flex: 1;
+            padding: 0;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8); /* Fundo do iframe com opacidade */
+        }
+        .content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: transparent; /* Mantém a transparência do fundo */
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+        }
+        .toggle-btn {
+            font-size: 24px;
+            background-color: transparent;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+        .sidebar.hidden {
+            margin-left: -190px; /* Deixa 60px visíveis, ajustado para a nova margem */
+        }
+        .content.expanded {
+            margin-left: 0;
+        }
+        @media (max-width: 1000px) {
+            .sidebar {
+                margin-left: -190px;
+            }
+            .content.expanded {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Bem-vindo ao Sistema da Livia</h1>
-        <nav>
-            <ul>
-                <div class="buttons-menu">
-                    <li><a href="cadastro.html">Cadastrar Cliente</a></li>
-                    <li><a href="clientes.html">Meus Clientes</a></li>
-                    <li><a href="agendamento.html">Cadastrar Agendamento</a></li>
-                    <li><a href="agendamentos.html">Meus Agendamentos</a></li>
-                </div>
-            </ul>
-        </nav>
+    <div class="wrapper">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h5>Olá, Livia Moraes</h5>
+                <button class="toggle-btn" id="toggle-btn">☰</button>
+            </div>
+            <a href="cadastro.html" target="content-frame" class="sidebar-link">
+                <div class="indicator"></div> Cadastrar Cliente
+            </a>
+            <a href="clientes.html" target="content-frame" class="sidebar-link">
+                <div class="indicator"></div> Meus Clientes
+            </a>
+            <a href="agendamento.html" target="content-frame" class="sidebar-link">
+                <div class="indicator"></div> Cadastrar Agendamento
+            </a>
+            <a href="agendamentos.html" target="content-frame" class="sidebar-link">
+                <div class="indicator"></div> Meus Agendamentos
+            </a>
+        </div>
+        <div class="content expanded">
+            <iframe name="content-frame" src="clientes.html"></iframe>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const toggleBtn = document.getElementById('toggle-btn');
+        const sidebar = document.querySelector('.sidebar');
+        const content = document.querySelector('.content');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('hidden');
+            content.classList.toggle('expanded');
+        });
+
+        // Adiciona o evento de clique para ativar/desativar a bolinha colorida
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Remove a classe 'active' de todos os links
+                sidebarLinks.forEach(link => link.classList.remove('active'));
+                // Adiciona a classe 'active' ao link clicado
+                this.classList.add('active');
+            });
+        });
+
+        // Define o módulo padrão como ativo (clientes.html)
+        function setDefaultActiveModule() {
+            const defaultLink = document.querySelector('a[href="clientes.html"]');
+            if (defaultLink) {
+                defaultLink.classList.add('active');
+            }
+        }
+
+        setDefaultActiveModule(); // Chama a função para definir o módulo padrão
+
+        // Oculta a sidebar automaticamente se a largura da janela for menor que 1000px
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 1000) {
+                sidebar.classList.add('hidden');
+                content.classList.add('expanded');
+            } else {
+                sidebar.classList.remove('hidden');
+                content.classList.remove('expanded');
+            }
+        });
+
+        // Esconder automaticamente se a tela já estiver menor que 1000px ao carregar
+        if (window.innerWidth <= 1000) {
+            sidebar.classList.add('hidden');
+            content.classList.add('expanded');
+        }
+    </script>
 </body>
 </html>
