@@ -88,7 +88,6 @@ function addTechnicalSheet(e) {
 
     if (!clientId || clientId === "{{clientId}}") {
         console.error('Client ID inválido:', clientId);
-        showToast('Erro ao salvar ficha técnica. ID do cliente não encontrado.');
         return;
     }
     
@@ -127,15 +126,12 @@ function addTechnicalSheet(e) {
     .then(data => {
         if (data.error) {
             console.error('Erro ao salvar ficha técnica:', data.error);
-            showToast('Erro ao salvar ficha técnica.');
         } else {
-            showToast('Ficha técnica salva com sucesso!');
             window.location.href = 'clientes.html'; // Redireciona para a listagem de clientes
         }
     })
     .catch(error => {
         console.error('Erro ao salvar ficha técnica:', error);
-        showToast('Erro ao salvar ficha técnica.');
     });
 }
 
@@ -177,11 +173,9 @@ function addClient(e) {
 
             if (data.error) {
                 console.error(data.error);
-                showToast('Erro ao cadastrar cliente.');
             } else {
-                document.getElementById('client-form').reset();
-                showToast('Cliente cadastrado com sucesso!');
-                checkForNewClients();  // Verificar se novos clientes foram adicionados
+                window.location.href = 'clientes.html';
+                // document.getElementById('client-form').reset();
             }
         }, 3000);
     })
@@ -191,7 +185,6 @@ function addClient(e) {
             btnSpinner.style.display = 'none';
             addClientBtn.disabled = false;
             console.error('Erro ao adicionar cliente:', error);
-            showToast('Erro ao cadastrar cliente.');
         }, 3000);
     });
 }
@@ -244,7 +237,7 @@ function addAppointment(e) {
     const btnText = document.getElementById('btn-text');
     const btnSpinner = document.getElementById('btn-spinner');
 
-    btnText.style.display = 'none';
+    // btnText.style.display = 'none';
     btnSpinner.style.display = 'inline-block';
     addAppointmentBtn.disabled = true;
 
@@ -264,11 +257,8 @@ function addAppointment(e) {
 
             if (data.error) {
                 console.error(data.error);
-                showToast('Erro ao cadastrar agendamento.');
             } else {
                 document.getElementById('appointment-form').reset();
-                showToast('Agendamento cadastrado com sucesso!');
-                checkForNewAppointments();  // Verificar se novos agendamentos foram adicionados
             }
         }, 3000);
     })
@@ -278,7 +268,6 @@ function addAppointment(e) {
             btnSpinner.style.display = 'none';
             addAppointmentBtn.disabled = false;
             console.error('Erro ao adicionar agendamento:', error);
-            showToast('Erro ao cadastrar agendamento.');
         }, 3000);
     });
 }
@@ -286,24 +275,43 @@ function addAppointment(e) {
 // Função para carregar a lista de agendamentos
 function loadAppointments() {
     fetch('/api/appointments')
-    .then(response => response.json())
-    .then(data => {
-        const tbody = document.querySelector('#appointment-table tbody');
-        tbody.innerHTML = '';
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#appointment-table tbody');
+            
+            if (!tbody) {
+                console.error('Tabela de agendamentos não encontrada.');
+                return;
+            }
 
-        data.appointments.forEach(appointment => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${appointment.id}</td>
-                <td>${appointment.client}</td>
-                <td>${appointment.procedure}</td>
-                <td>${appointment.date}</td>
-                <td>${appointment.time}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    })
-    .catch(error => console.error('Erro ao carregar agendamentos:', error));
+            // Limpa o conteúdo atual da tabela
+            tbody.innerHTML = '';
+
+            if (data.appointments.length === 0) {
+                // Se não houver agendamentos, exibe uma mensagem amigável
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 5; // Supondo que sua tabela tenha 5 colunas
+                td.textContent = "Você não possui nenhum agendamento, bora agendar? :)";
+                td.style.textAlign = 'center';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            } else {
+                // Preenche a tabela com os agendamentos existentes
+                data.appointments.forEach(appointment => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${appointment.id}</td>
+                        <td>${appointment.client}</td>
+                        <td>${appointment.procedure}</td>
+                        <td>${appointment.date}</td>
+                        <td>${appointment.time}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        })
+        .catch(error => console.error('Erro ao carregar agendamentos:', error));
 }
 
 // Função para editar um cliente
@@ -326,41 +334,85 @@ function accessTechnicalSheet(clientId, clientName) {
 // Função para carregar os dados na ficha técnica
 document.addEventListener('DOMContentLoaded', () => {
     const clientData = JSON.parse(localStorage.getItem('clientForTechnicalSheet'));
-    if (clientData) {
+
+    // Verifique se o elemento 'client-name' existe antes de tentar acessá-lo
+    const clientNameElement = document.getElementById('client-name');
+    const datetimeElement = document.getElementById('datetime');
+    const editButton = document.getElementById('edit-button');
+
+    if (clientData && clientNameElement && datetimeElement) {
         fetch(`/api/technical-sheets/${clientData.clientId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
                     console.log('Nenhuma ficha técnica encontrada para este cliente.');
-                    document.getElementById('client-name').value = clientData.clientName;
-                    document.getElementById('client-name').dataset.clientId = clientData.clientId; // Associando o clientId
-                    document.getElementById('datetime').value = new Date().toLocaleString();
-                    document.getElementById('edit-button').style.display = 'none';
+                    clientNameElement.value = clientData.clientName;
+                    clientNameElement.dataset.clientId = clientData.clientId; // Associando o clientId
+                    datetimeElement.value = new Date().toLocaleString();
+                    if (editButton) {
+                        editButton.style.display = 'none';
+                    }
                 } else {
                     // Preenchimento dos campos quando a ficha existe
-                    document.getElementById('client-name').value = clientData.clientName;
-                    document.getElementById('client-name').dataset.clientId = clientData.clientId;
-                    document.getElementById('datetime').value = data.datetime;
+                    clientNameElement.value = clientData.clientName;
+                    clientNameElement.dataset.clientId = clientData.clientId;
+                    datetimeElement.value = data.datetime;
 
-                    // Preenchimento dos campos de input tipo radio e text
-                    document.querySelector(`input[name="rimel"][value="${data.rimel}"]`).checked = true;
-                    document.querySelector(`input[name="gestante"][value="${data.gestante}"]`).checked = true;
-                    document.querySelector(`input[name="procedimento-olhos"][value="${data.procedimento_olhos}"]`).checked = true;
-                    document.querySelector(`input[name="alergia"][value="${data.alergia}"]`).checked = true;
-                    document.getElementById('especificar-alergia').value = data.especificar_alergia;
-                    document.querySelector(`input[name="tireoide"][value="${data.tireoide}"]`).checked = true;
-                    document.querySelector(`input[name="problema-ocular"][value="${data.problema_ocular}"]`).checked = true;
-                    document.getElementById('especificar-ocular').value = data.especificar_ocular;
-                    document.querySelector(`input[name="oncologico"][value="${data.oncologico}"]`).checked = true;
-                    document.querySelector(`input[name="dorme-lado"][value="${data.dorme_lado}"]`).checked = true;
-                    document.getElementById('problema-informar').value = data.problema_informar;
-                    document.querySelector(`input[name="procedimento"][value="${data.procedimento}"]`).checked = true;
-                    document.getElementById('mapping').value = data.mapping;
-                    document.getElementById('estilo').value = data.estilo;
-                    document.getElementById('modelo-fios').value = data.modelo_fios;
-                    document.getElementById('espessura').value = data.espessura;
-                    document.getElementById('curvatura').value = data.curvatura;
-                    document.getElementById('adesivo').value = data.adesivo;
+                    // Preencher os outros campos somente se eles existirem
+                    if (document.querySelector(`input[name="rimel"][value="${data.rimel}"]`)) {
+                        document.querySelector(`input[name="rimel"][value="${data.rimel}"]`).checked = true;
+                    }
+                    if (document.querySelector(`input[name="gestante"][value="${data.gestante}"]`)) {
+                        document.querySelector(`input[name="gestante"][value="${data.gestante}"]`).checked = true;
+                    }
+                    if (document.querySelector(`input[name="procedimento-olhos"][value="${data.procedimento_olhos}"]`)) {
+                        document.querySelector(`input[name="procedimento-olhos"][value="${data.procedimento_olhos}"]`).checked = true;
+                    }
+                    if (document.querySelector(`input[name="alergia"][value="${data.alergia}"]`)) {
+                        document.querySelector(`input[name="alergia"][value="${data.alergia}"]`).checked = true;
+                    }
+                    if (document.getElementById('especificar-alergia')) {
+                        document.getElementById('especificar-alergia').value = data.especificar_alergia;
+                    }
+                    if (document.querySelector(`input[name="tireoide"][value="${data.tireoide}"]`)) {
+                        document.querySelector(`input[name="tireoide"][value="${data.tireoide}"]`).checked = true;
+                    }
+                    if (document.querySelector(`input[name="problema-ocular"][value="${data.problema_ocular}"]`)) {
+                        document.querySelector(`input[name="problema-ocular"][value="${data.problema_ocular}"]`).checked = true;
+                    }
+                    if (document.getElementById('especificar-ocular')) {
+                        document.getElementById('especificar-ocular').value = data.especificar_ocular;
+                    }
+                    if (document.querySelector(`input[name="oncologico"][value="${data.oncologico}"]`)) {
+                        document.querySelector(`input[name="oncologico"][value="${data.oncologico}"]`).checked = true;
+                    }
+                    if (document.querySelector(`input[name="dorme-lado"][value="${data.dorme_lado}"]`)) {
+                        document.querySelector(`input[name="dorme-lado"][value="${data.dorme_lado}"]`).checked = true;
+                    }
+                    if (document.getElementById('problema-informar')) {
+                        document.getElementById('problema-informar').value = data.problema_informar;
+                    }
+                    if (document.querySelector(`input[name="procedimento"][value="${data.procedimento}"]`)) {
+                        document.querySelector(`input[name="procedimento"][value="${data.procedimento}"]`).checked = true;
+                    }
+                    if (document.getElementById('mapping')) {
+                        document.getElementById('mapping').value = data.mapping;
+                    }
+                    if (document.getElementById('estilo')) {
+                        document.getElementById('estilo').value = data.estilo;
+                    }
+                    if (document.getElementById('modelo-fios')) {
+                        document.getElementById('modelo-fios').value = data.modelo_fios;
+                    }
+                    if (document.getElementById('espessura')) {
+                        document.getElementById('espessura').value = data.espessura;
+                    }
+                    if (document.getElementById('curvatura')) {
+                        document.getElementById('curvatura').value = data.curvatura;
+                    }
+                    if (document.getElementById('adesivo')) {
+                        document.getElementById('adesivo').value = data.adesivo;
+                    }
 
                     // Desabilitar todos os campos para visualização inicial
                     toggleFormFields(false);
@@ -368,17 +420,22 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Erro ao carregar ficha técnica:', error);
-                document.getElementById('edit-button').style.display = 'none';
+                if (editButton) {
+                    editButton.style.display = 'none';
+                }
             });
     }
 
-    // Verifique se o botão "Editar ficha" existe antes de adicionar o event listener
-    const editButton = document.getElementById('edit-button');
     if (editButton) {
         editButton.addEventListener('click', () => {
             toggleFormFields(true);
-            document.getElementById('datetime').value = new Date().toLocaleString(); // Gerar nova data/hora
-            document.getElementById('save-button').disabled = false; // Habilitar botão de salvar
+            if (datetimeElement) {
+                datetimeElement.value = new Date().toLocaleString(); // Gerar nova data/hora
+            }
+            const saveButton = document.getElementById('save-button');
+            if (saveButton) {
+                saveButton.disabled = false; // Habilitar botão de salvar
+            }
         });
     }
 });
@@ -421,27 +478,17 @@ function confirmDeleteClient() {
     }
 }
 
-// Função para exibir o Toast
-function showToast(message) {
-    const toastElement = document.getElementById('snackbar-toast');
-    const toastBody = toastElement.querySelector('.toast-body');
-    toastBody.textContent = message;
+document.addEventListener('DOMContentLoaded', () => {
+    const phoneInput = document.getElementById('phone');
 
-    const toast = new bootstrap.Toast(toastElement);
-    toast.show();
-}
+    if (phoneInput) { // Verifica se o campo de telefone existe
+        phoneInput.addEventListener('input', function (e) {
+            let input = e.target;
+            input.value = input.value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
 
-document.getElementById('phone').addEventListener('input', function (e) {
-    let input = e.target;
-    input.value = input.value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
-
-    if (input.value.length > 11) {
-        input.value = input.value.substring(0, 11); // Limita o número de dígitos a 11
-    }
-});
-
-document.getElementById('phone').addEventListener('keypress', function (e) {
-    if (!/\d/.test(e.key)) {
-        e.preventDefault(); // Impede a entrada de qualquer caractere que não seja um dígito
+            if (input.value.length > 11) {
+                input.value = input.value.substring(0, 11); // Limita o número de dígitos a 11
+            }
+        });
     }
 });
