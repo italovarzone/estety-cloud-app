@@ -213,7 +213,15 @@ td button:hover {
 }
 
 #edit-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
     margin-left: auto;
+}
+
+#add-client-btn {
+    width: 200px;
 }
 
 .ficha-tecnica input[type="text"] {

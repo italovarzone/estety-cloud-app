@@ -220,7 +220,7 @@ function loadClients() {
                             Deletar
                         </button>
                         <button class="btn btn-sm btn-info" onclick="accessTechnicalSheet(${client.id}, '${client.name}')">
-                            FT
+                            Ficha Técnica
                         </button>
                     </div>
                 </td>
@@ -430,3 +430,18 @@ function showToast(message) {
     const toast = new bootstrap.Toast(toastElement);
     toast.show();
 }
+
+document.getElementById('phone').addEventListener('input', function (e) {
+    let input = e.target;
+    input.value = input.value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+
+    if (input.value.length > 11) {
+        input.value = input.value.substring(0, 11); // Limita o número de dígitos a 11
+    }
+});
+
+document.getElementById('phone').addEventListener('keypress', function (e) {
+    if (!/\d/.test(e.key)) {
+        e.preventDefault(); // Impede a entrada de qualquer caractere que não seja um dígito
+    }
+});
