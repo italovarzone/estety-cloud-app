@@ -80,6 +80,67 @@ function loadClientsIntoSelect() {
     .catch(error => console.error('Erro ao carregar clientes no select box:', error));
 }
 
+function addTechnicalSheet(e) {
+    e.preventDefault();
+
+    // Captura o clientId do dataset do elemento client-name
+    const clientId = document.getElementById('client-name').dataset.clientId;
+
+    if (!clientId || clientId === "{{clientId}}") {
+        console.error('Client ID inválido:', clientId);
+        showToast('Erro ao salvar ficha técnica. ID do cliente não encontrado.');
+        return;
+    }
+    
+    const datetime = document.getElementById('datetime').value || '';
+    const rimel = document.querySelector('input[name="rimel"]:checked')?.value || '';
+    const gestante = document.querySelector('input[name="gestante"]:checked')?.value || '';
+    const procedimento_olhos = document.querySelector('input[name="procedimento-olhos"]:checked')?.value || '';
+    const alergia = document.querySelector('input[name="alergia"]:checked')?.value || '';
+    const especificar_alergia = document.getElementById('especificar-alergia').value || '';
+    const tireoide = document.querySelector('input[name="tireoide"]:checked')?.value || '';
+    const problema_ocular = document.querySelector('input[name="problema-ocular"]:checked')?.value || '';
+    const especificar_ocular = document.getElementById('especificar-ocular').value || '';
+    const oncologico = document.querySelector('input[name="oncologico"]:checked')?.value || '';
+    const dorme_lado = document.querySelector('input[name="dorme-lado"]:checked')?.value || '';
+    const problema_informar = document.getElementById('problema-informar').value || '';
+    const procedimento = document.querySelector('input[name="procedimento"]:checked')?.value || '';
+    const mapping = document.getElementById('mapping').value || '';
+    const estilo = document.getElementById('estilo').value || '';
+    const modelo_fios = document.getElementById('modelo-fios').value || '';
+    const espessura = document.getElementById('espessura').value || '';
+    const curvatura = document.getElementById('curvatura').value || '';
+    const adesivo = document.getElementById('adesivo').value || '';
+
+    fetch('/api/technical-sheets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+            tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, problema_informar,
+            procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error('Erro ao salvar ficha técnica:', data.error);
+            showToast('Erro ao salvar ficha técnica.');
+        } else {
+            showToast('Ficha técnica salva com sucesso!');
+            window.location.href = 'clientes.html'; // Redireciona para a listagem de clientes
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao salvar ficha técnica:', error);
+        showToast('Erro ao salvar ficha técnica.');
+    });
+}
+
+
+
 // Função para adicionar um cliente
 function addClient(e) {
     e.preventDefault();
@@ -266,20 +327,22 @@ function accessTechnicalSheet(clientId, clientName) {
 document.addEventListener('DOMContentLoaded', () => {
     const clientData = JSON.parse(localStorage.getItem('clientForTechnicalSheet'));
     if (clientData) {
-        const url = `/api/technical-sheets/${clientData.clientId}`;
-        console.log('URL para buscar ficha técnica:', url);
-
-        fetch(url)
+        fetch(`/api/technical-sheets/${clientData.clientId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    showToast('Erro ao carregar ficha técnica.');
+                    console.log('Nenhuma ficha técnica encontrada para este cliente.');
+                    document.getElementById('client-name').value = clientData.clientName;
+                    document.getElementById('client-name').dataset.clientId = clientData.clientId; // Associando o clientId
+                    document.getElementById('datetime').value = new Date().toLocaleString();
+                    document.getElementById('edit-button').style.display = 'none';
                 } else {
-                    // Preencher os campos com os dados da ficha técnica
+                    // Preenchimento dos campos quando a ficha existe
                     document.getElementById('client-name').value = clientData.clientName;
                     document.getElementById('client-name').dataset.clientId = clientData.clientId;
                     document.getElementById('datetime').value = data.datetime;
 
+                    // Preenchimento dos campos de input tipo radio e text
                     document.querySelector(`input[name="rimel"][value="${data.rimel}"]`).checked = true;
                     document.querySelector(`input[name="gestante"][value="${data.gestante}"]`).checked = true;
                     document.querySelector(`input[name="procedimento-olhos"][value="${data.procedimento_olhos}"]`).checked = true;
@@ -305,10 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Erro ao carregar ficha técnica:', error);
-                showToast('Erro ao carregar ficha técnica.');
+                document.getElementById('edit-button').style.display = 'none';
             });
-
-        localStorage.removeItem('clientForTechnicalSheet');
     }
 
     // Verifique se o botão "Editar ficha" existe antes de adicionar o event listener
@@ -328,6 +389,13 @@ function toggleFormFields(enable) {
     fields.forEach(field => field.disabled = !enable);
 }
 
+let clientIdToDelete = null;
+
+function promptDeleteClient(id) {
+    clientIdToDelete = id;
+    const dialog = new bootstrap.Modal(document.getElementById('dialog'));
+    dialog.show();
+}
 
 // Função para confirmar exclusão de cliente
 function confirmDeleteClient() {
