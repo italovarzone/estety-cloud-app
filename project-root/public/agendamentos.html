@@ -24,5 +24,14 @@
         </table>
     </div>
     <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+        const message = sessionStorage.getItem('toastMessage');
+        if (message) {
+            showToast(message);
+            sessionStorage.removeItem('toastMessage'); // Remover a mensagem após exibir o Toast
+        }
+    });
+    </script>
 </body>
 </html>

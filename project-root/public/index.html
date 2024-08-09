@@ -20,18 +20,18 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* Opacidade para escurecer */
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 0;
         }
         .wrapper {
             display: flex;
             height: 100%;
             position: relative;
-            z-index: 1; /* Garante que o conteúdo fique acima do fundo */
+            z-index: 1;
         }
         .sidebar {
             width: 250px;
-            background-color: #755043; /* Tornando a sidebar um pouco transparente */
+            background-color: #755043;
             color: white;
             padding-top: 20px;
             transition: all 0.3s ease;
@@ -47,7 +47,7 @@
             transition: opacity 0.3s ease;
         }
         .sidebar a:hover {
-            background-color: #432A24; /* Mantém a transparência no hover */
+            background-color: #432A24;
         }
         .sidebar .indicator {
             width: 10px;
@@ -58,23 +58,23 @@
             transition: background-color 0.3s ease;
         }
         .sidebar a.active .indicator {
-            background-color: #F2DAB6; /* Cor da bolinha quando o módulo está ativo */
+            background-color: #F2DAB6;
         }
         .sidebar.hidden a {
-            pointer-events: none; /* Desativa os cliques nos links */
-            opacity: 0; /* Esconde os links visualmente */
+            pointer-events: none;
+            opacity: 0;
         }
         .content {
             flex: 1;
             padding: 0;
             transition: all 0.3s ease;
-            background-color: rgba(255, 255, 255, 0.8); /* Fundo do iframe com opacidade */
+            background-color: rgba(255, 255, 255, 0.8);
         }
         .content iframe {
             width: 100%;
             height: 100%;
             border: none;
-            background-color: transparent; /* Mantém a transparência do fundo */
+            background-color: transparent;
         }
         .sidebar-header {
             display: flex;
@@ -92,7 +92,7 @@
             transition: all 0.3s ease;
         }
         .sidebar.hidden {
-            margin-left: -190px; /* Deixa 60px visíveis, ajustado para a nova margem */
+            margin-left: -190px;
         }
         .content.expanded {
             margin-left: 0;
@@ -128,7 +128,7 @@
             </a>
         </div>
         <div class="content expanded">
-            <iframe name="content-frame" src="clientes.html"></iframe>
+            <iframe name="content-frame" id="content-frame" src="agendamentos.html"></iframe>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -143,27 +143,25 @@
             content.classList.toggle('expanded');
         });
 
-        // Adiciona o evento de clique para ativar/desativar a bolinha colorida
         sidebarLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                // Remove a classe 'active' de todos os links
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
                 sidebarLinks.forEach(link => link.classList.remove('active'));
-                // Adiciona a classe 'active' ao link clicado
                 this.classList.add('active');
+                const targetUrl = this.getAttribute('href');
+                document.getElementById('content-frame').src = targetUrl;
             });
         });
 
-        // Define o módulo padrão como ativo (clientes.html)
         function setDefaultActiveModule() {
-            const defaultLink = document.querySelector('a[href="clientes.html"]');
+            const defaultLink = document.querySelector('a[href="agendamentos.html"]');
             if (defaultLink) {
                 defaultLink.classList.add('active');
             }
         }
 
-        setDefaultActiveModule(); // Chama a função para definir o módulo padrão
+        setDefaultActiveModule();
 
-        // Oculta a sidebar automaticamente se a largura da janela for menor que 1000px
         window.addEventListener('resize', function() {
             if (window.innerWidth <= 1000) {
                 sidebar.classList.add('hidden');
@@ -174,11 +172,21 @@
             }
         });
 
-        // Esconder automaticamente se a tela já estiver menor que 1000px ao carregar
         if (window.innerWidth <= 1000) {
             sidebar.classList.add('hidden');
             content.classList.add('expanded');
         }
     </script>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Mensagem</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Operação realizada com sucesso!
+            </div>
+        </div>
+    </div>
 </body>
 </html>

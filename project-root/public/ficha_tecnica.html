@@ -1,38 +1,195 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ficha Técnica</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
 </head>
 <body>
-    <div class="container">
+    <div class="container ficha-tecnica">
         <h1>Ficha Técnica</h1>
+        <button id="edit-button" class="btn btn-warning mb-3">Editar ficha</button>
         <form id="technical-sheet-form">
-            <label for="client-name">Nome do Cliente:</label>
-            <input type="text" id="client-name" disabled>
+            <div class="mb-3">
+                <label for="client-name" class="form-label">Nome do Cliente:</label>
+                <input type="text" id="client-name" class="form-control" disabled>
+            </div>
+            <div class="mb-3">
+                <label for="datetime" class="form-label">Data/Hora do Cadastro:</label>
+                <input type="text" id="datetime" class="form-control" disabled>
+            </div>
+            <div class="mb-3">
+                <label>Está de rímel?</label>
+                <div>
+                    <input type="radio" id="rimel-sim" name="rimel" value="Sim">
+                    <label for="rimel-sim">Sim</label>
+                    <input type="radio" id="rimel-nao" name="rimel" value="Não">
+                    <label for="rimel-nao">Não</label>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label>Gestante?</label>
+                <div>
+                    <input type="radio" id="gestante-sim" name="gestante" value="Sim">
+                    <label for="gestante-sim">Sim</label>
+                    <input type="radio" id="gestante-nao" name="gestante" value="Não">
+                    <label for="gestante-nao">Não</label>
+                </div>
+            </div>
 
-            <label for="datetime">Data/Hora do Cadastro:</label>
-            <input type="text" id="datetime" disabled>
+            <div class="mb-3">
+                <label>Fez algum procedimento recentemente nos olhos?</label>
+                <div>
+                    <input type="radio" id="procedimento-olhos-sim" name="procedimento-olhos" value="Sim">
+                    <label for="procedimento-olhos-sim">Sim</label>
+                    <input type="radio" id="procedimento-olhos-nao" name="procedimento-olhos" value="Não">
+                    <label for="procedimento-olhos-nao">Não</label>
+                </div>
+            </div>
 
-            <label for="procedure">Procedimento:</label>
-            <select id="procedure" required>
-                <option value="Extensão de Cílios">Extensão de Cílios</option>
-                <option value="Design de Sobrancelhas">Design de Sobrancelhas</option>
-            </select>
+            <div class="mb-3">
+                <label>Possui alergia a esmaltes/cosméticos/cianoacrilato?</label>
+                <div>
+                    <input type="radio" id="alergia-sim" name="alergia" value="Sim">
+                    <label for="alergia-sim">Sim</label>
+                    <input type="radio" id="alergia-nao" name="alergia" value="Não">
+                    <label for="alergia-nao">Não</label>
+                </div>
+                <label for="especificar-alergia" class="form-label mt-2">Especifique:</label>
+                <input type="text" id="especificar-alergia" name="especificar-alergia" class="form-control">
+            </div>
 
-            <div id="procedure-details"></div>
+            <div class="mb-3">
+                <label>Possui problemas com tireoide?</label>
+                <div>
+                    <input type="radio" id="tireoide-sim" name="tireoide" value="Sim">
+                    <label for="tireoide-sim">Sim</label>
+                    <input type="radio" id="tireoide-nao" name="tireoide" value="Não">
+                    <label for="tireoide-nao">Não</label>
+                </div>
+            </div>
 
-            <div>
-                <button type="submit">Salvar Ficha Técnica</button>
-                <button type="button" onclick="window.location.href='clientes.html'">Voltar</button>
+            <div class="mb-3">
+                <label>Possui glaucoma/blefarite/algum problema ocular?</label>
+                <div>
+                    <input type="radio" id="problema-ocular-sim" name="problema-ocular" value="Sim">
+                    <label for="problema-ocular-sim">Sim</label>
+                    <input type="radio" id="problema-ocular-nao" name="problema-ocular" value="Não">
+                    <label for="problema-ocular-nao">Não</label>
+                </div>
+                <label for="especificar-ocular" class="form-label mt-2">Especifique:</label>
+                <input type="text" id="especificar-ocular" name="especificar-ocular" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Está em tratamento oncológico?</label>
+                <div>
+                    <input type="radio" id="oncologico-sim" name="oncologico" value="Sim">
+                    <label for="oncologico-sim">Sim</label>
+                    <input type="radio" id="oncologico-nao" name="oncologico" value="Não">
+                    <label for="oncologico-nao">Não</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label>Dorme de lado?</label>
+                <div>
+                    <input type="radio" id="dorme-lado-sim" name="dorme-lado" value="Sim">
+                    <label for="dorme-lado-sim">Sim</label>
+                    <input type="radio" id="dorme-lado-nao" name="dorme-lado" value="Não">
+                    <label for="dorme-lado-nao">Não</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="problema-informar" class="form-label">Existe algum problema que julgue pertinente informar ao profissional antes do procedimento?</label>
+                <input type="text" id="problema-informar" name="problema-informar" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label>Procedimento:</label>
+                <div>
+                    <input type="radio" id="fio-a-fio" name="procedimento" value="Fio a Fio">
+                    <label for="fio-a-fio">Fio a Fio</label>
+                    <input type="radio" id="volume-russo" name="procedimento" value="Volume Russo">
+                    <label for="volume-russo">Volume Russo</label>
+                    <input type="radio" id="megavolume" name="procedimento" value="Megavolume">
+                    <label for="megavolume">Megavolume</label>
+                    <input type="radio" id="hibrido" name="procedimento" value="Híbrido">
+                    <label for="hibrido">Híbrido</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="mapping" class="form-label">Mapping:</label>
+                    <input type="text" id="mapping" name="mapping" class="form-control">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="estilo" class="form-label">Estilo:</label>
+                    <input type="text" id="estilo" name="estilo" class="form-control">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="modelo-fios" class="form-label">Modelo dos fios:</label>
+                    <input type="text" id="modelo-fios" name="modelo-fios" class="form-control">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="espessura" class="form-label">Espessura:</label>
+                    <input type="text" id="espessura" name="espessura" class="form-control">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="curvatura" class="form-label">Curvatura:</label>
+                    <input type="text" id="curvatura" name="curvatura" class="form-control">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="adesivo" class="form-label">Adesivo/Cola:</label>
+                    <input type="text" id="adesivo" name="adesivo" class="form-control">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Salvar Ficha Técnica</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='clientes.html'">Voltar</button>
             </div>
         </form>
-        <div id="snackbar"></div>
+
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div id="snackbar-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Mensagem</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    <!-- A mensagem do toast será inserida aqui -->
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // Obtendo o clientId da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = window.location.pathname.split('/').pop();
+
+        // Inserindo o clientId no campo apropriado
+        document.addEventListener('DOMContentLoaded', function () {
+            const clientNameField = document.getElementById('client-name');
+            clientNameField.dataset.clientId = clientId;
+            // Você pode também inserir o nome do cliente se disponível
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
