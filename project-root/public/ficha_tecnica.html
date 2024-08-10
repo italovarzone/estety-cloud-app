@@ -101,12 +101,16 @@
             </div>
 
             <div class="mb-3">
-                <label>Dorme de lado?</label>
-                <div>
-                    <input type="radio" id="dorme-lado-sim" name="dorme-lado" value="Sim">
-                    <label for="dorme-lado-sim">Sim</label>
-                    <input type="radio" id="dorme-lado-nao" name="dorme-lado" value="Não">
-                    <label for="dorme-lado-nao">Não</label>
+                <div class="form-group">
+                    <label for="dorme-lado">Dorme de lado?</label><br>
+                    <input type="radio" id="dorme-lado-sim" name="dorme-lado" value="SIM"> Sim
+                    <input type="radio" id="dorme-lado-nao" name="dorme-lado" value="NÃO"> Não
+                </div>
+            
+                <div id="lado-posicao" class="form-group" style="display: none;">
+                    <label>De que lado?</label><br>
+                    <input type="radio" id="lado-esquerdo" name="dorme-lado-posicao" value="Esquerdo"> Esquerdo
+                    <input type="radio" id="lado-direito" name="dorme-lado-posicao" value="Direito"> Direito
                 </div>
             </div>
 

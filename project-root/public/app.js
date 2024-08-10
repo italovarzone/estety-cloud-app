@@ -36,7 +36,7 @@ function init() {
 
     const confirmButton = document.getElementById('confirm-delete');
     if (confirmButton) {
-        confirmButton.addEventListener('click', confirmDeleteClient);
+        confirmButton.addEventListener('click', confirmDeleteClient);''
     }
 
     const technicalSheetForm = document.getElementById('technical-sheet-form');
@@ -83,14 +83,7 @@ function loadClientsIntoSelect() {
 function addTechnicalSheet(e) {
     e.preventDefault();
 
-    // Captura o clientId do dataset do elemento client-name
     const clientId = document.getElementById('client-name').dataset.clientId;
-
-    if (!clientId || clientId === "{{clientId}}") {
-        console.error('Client ID inválido:', clientId);
-        return;
-    }
-    
     const datetime = document.getElementById('datetime').value || '';
     const rimel = document.querySelector('input[name="rimel"]:checked')?.value || '';
     const gestante = document.querySelector('input[name="gestante"]:checked')?.value || '';
@@ -102,6 +95,7 @@ function addTechnicalSheet(e) {
     const especificar_ocular = document.getElementById('especificar-ocular').value || '';
     const oncologico = document.querySelector('input[name="oncologico"]:checked')?.value || '';
     const dorme_lado = document.querySelector('input[name="dorme-lado"]:checked')?.value || '';
+    const dorme_lado_posicao = dorme_lado === 'SIM' ? document.querySelector('input[name="dorme-lado-posicao"]:checked')?.value : null;
     const problema_informar = document.getElementById('problema-informar').value || '';
     const procedimento = document.querySelector('input[name="procedimento"]:checked')?.value || '';
     const mapping = document.getElementById('mapping').value || '';
@@ -112,14 +106,14 @@ function addTechnicalSheet(e) {
     const adesivo = document.getElementById('adesivo').value || '';
 
     fetch('/api/technical-sheets', {
-        method: 'POST',
+        method: 'POST', // Veremos adiante como mudar isso para PUT quando necessário
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
-            tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, problema_informar,
-            procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
+            tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao,
+            problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
         })
     })
     .then(response => response.json())
@@ -189,6 +183,71 @@ function addClient(e) {
     });
 }
 
+// Função para carregar os dados do cliente para edição
+function loadClientForEdit(id) {
+    fetch(`/api/clients/${id}`)
+        .then(response => response.json())
+        .then(client => {
+            if (client.error) {
+                console.error('Erro ao carregar cliente:', client.error);
+                return;
+            }
+
+            document.getElementById('client-id').value = client.id;
+            document.getElementById('name').value = client.name;
+            document.getElementById('email').value = client.email;
+            document.getElementById('phone').value = client.phone;
+        })
+        .catch(error => console.error('Erro ao carregar cliente:', error));
+}
+
+// Função para editar um cliente
+function editClient(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('client-id').value;
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+
+    if (!id || !name || !email || !phone) {
+        alert('Todos os campos são obrigatórios');
+        return;
+    }
+
+    fetch(`/api/clients/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, phone })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(`Erro: ${data.error}`);
+        } else {
+            alert('Cliente editado com sucesso!');
+            window.location.href = 'clientes.html'; // Redireciona para a listagem de clientes
+        }
+    })
+    .catch(error => console.error('Erro ao editar cliente:', error));
+}
+
+// Carregar dados do cliente ao abrir a página de edição, se necessário
+document.addEventListener('DOMContentLoaded', function() {
+    const clientId = document.getElementById('client-id').value;
+    if (clientId) {
+        loadClientForEdit(clientId);
+    }
+
+    const clientForm = document.getElementById('client-form');
+    if (clientForm) {
+        clientForm.addEventListener('submit', editClient);
+    }
+});
+
+
 // Função para carregar a lista de clientes
 function loadClients() {
     fetch('/api/clients')
@@ -237,7 +296,6 @@ function addAppointment(e) {
     const btnText = document.getElementById('btn-text');
     const btnSpinner = document.getElementById('btn-spinner');
 
-    // btnText.style.display = 'none';
     btnSpinner.style.display = 'inline-block';
     addAppointmentBtn.disabled = true;
 
@@ -248,71 +306,91 @@ function addAppointment(e) {
         },
         body: JSON.stringify({ clientId, procedure, date, time })
     })
-    .then(response => response.json())
-    .then(data => {
-        setTimeout(() => {
-            btnText.style.display = 'inline';
-            btnSpinner.style.display = 'none';
-            addAppointmentBtn.disabled = false;
+    .then(response => {
+        btnSpinner.style.display = 'none';
+        addAppointmentBtn.disabled = false;
 
-            if (data.error) {
-                console.error(data.error);
-            } else {
-                document.getElementById('appointment-form').reset();
-            }
-        }, 3000);
+        if (!response.ok) {
+            return response.json().then(data => { throw new Error(data.error); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('appointment-form').reset();
+        window.location.href = 'agendamentos.html';
     })
     .catch(error => {
-        setTimeout(() => {
-            btnText.style.display = 'inline';
-            btnSpinner.style.display = 'none';
-            addAppointmentBtn.disabled = false;
-            console.error('Erro ao adicionar agendamento:', error);
-        }, 3000);
+        alert(error.message); // Exibe a mensagem de erro
     });
 }
 
+
+
 // Função para carregar a lista de agendamentos
-function loadAppointments() {
-    fetch('/api/appointments')
+function loadAppointmentsForDay(appointmentsDiv, year, month, day) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    fetch(`/api/appointments?date=${dateStr}`)
         .then(response => response.json())
         .then(data => {
-            const tbody = document.querySelector('#appointment-table tbody');
-            
-            if (!tbody) {
-                console.error('Tabela de agendamentos não encontrada.');
-                return;
-            }
+            appointmentsDiv.innerHTML = ''; // Limpa qualquer conteúdo existente na div de agendamentos
 
-            // Limpa o conteúdo atual da tabela
-            tbody.innerHTML = '';
-
-            if (data.appointments.length === 0) {
-                // Se não houver agendamentos, exibe uma mensagem amigável
-                const tr = document.createElement('tr');
-                const td = document.createElement('td');
-                td.colSpan = 5; // Supondo que sua tabela tenha 5 colunas
-                td.textContent = "Você não possui nenhum agendamento, bora agendar? :)";
-                td.style.textAlign = 'center';
-                tr.appendChild(td);
-                tbody.appendChild(tr);
-            } else {
-                // Preenche a tabela com os agendamentos existentes
+            if (data.appointments && data.appointments.length > 0) {
+                // Itera sobre os agendamentos e exibe apenas os do dia correto
+                let hasAppointments = false;
                 data.appointments.forEach(appointment => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${appointment.id}</td>
-                        <td>${appointment.client}</td>
-                        <td>${appointment.procedure}</td>
-                        <td>${appointment.date}</td>
-                        <td>${appointment.time}</td>
-                    `;
-                    tbody.appendChild(tr);
+                    if (appointment.date === dateStr) {
+                        hasAppointments = true;
+                        
+                        const appointmentCard = document.createElement('div');
+                        appointmentCard.classList.add('appointment-card');
+
+                        // Adiciona o nome do cliente e a hora
+                        const clientInfo = document.createElement('div');
+                        clientInfo.textContent = `${appointment.client} - ${appointment.time}`;
+                        appointmentCard.appendChild(clientInfo);
+
+                        // Adiciona o procedimento realizado
+                        const procedureInfo = document.createElement('div');
+                        procedureInfo.textContent = appointment.procedure;
+                        appointmentCard.appendChild(procedureInfo);
+
+                        appointmentCard.addEventListener('click', () => {
+                            showAppointmentDetails(appointment);
+                        });
+
+                        appointmentsDiv.appendChild(appointmentCard);
+                    }
                 });
+
+                // Se nenhum agendamento for encontrado, exibe a mensagem
+                if (!hasAppointments) {
+                    const noAppointmentsMessage = document.createElement('div');
+                    noAppointmentsMessage.classList.add('no-appointments-message');
+                    noAppointmentsMessage.textContent = "Sem nenhum agendamento, bora agendar fedô?";
+                    appointmentsDiv.appendChild(noAppointmentsMessage);
+                }
+            } else {
+                // Caso não haja nenhum agendamento no dia, exibe a mensagem
+                const noAppointmentsMessage = document.createElement('div');
+                noAppointmentsMessage.classList.add('no-appointments-message');
+                noAppointmentsMessage.textContent = "Sem nenhum agendamento, bora agendar fedô?";
+                appointmentsDiv.appendChild(noAppointmentsMessage);
             }
         })
-        .catch(error => console.error('Erro ao carregar agendamentos:', error));
+        .catch(error => {
+            console.error('Erro ao carregar agendamentos:', error);
+
+            // Em caso de erro, exibe a mensagem padrão
+            const noAppointmentsMessage = document.createElement('div');
+            noAppointmentsMessage.classList.add('no-appointments-message');
+            noAppointmentsMessage.textContent = "Sem nenhum agendamento, bora agendar fedô?";
+            appointmentsDiv.appendChild(noAppointmentsMessage);
+        });
 }
+
+
+
 
 // Função para editar um cliente
 function editClient(id) {
@@ -386,9 +464,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (document.querySelector(`input[name="oncologico"][value="${data.oncologico}"]`)) {
                         document.querySelector(`input[name="oncologico"][value="${data.oncologico}"]`).checked = true;
                     }
+
+                    // Dorme de lado
                     if (document.querySelector(`input[name="dorme-lado"][value="${data.dorme_lado}"]`)) {
                         document.querySelector(`input[name="dorme-lado"][value="${data.dorme_lado}"]`).checked = true;
+                        handleDormeLadoChange(data.dorme_lado);
                     }
+
+                    // Se dorme de lado for SIM, preencher o lado (esquerdo ou direito)
+                    if (data.dorme_lado === 'SIM' && data.dorme_lado_posicao) {
+                        document.querySelector(`input[name="dorme-lado-posicao"][value="${data.dorme_lado_posicao}"]`).checked = true;
+                    }
+
                     if (document.getElementById('problema-informar')) {
                         document.getElementById('problema-informar').value = data.problema_informar;
                     }
@@ -438,6 +525,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Lógica para exibir ou ocultar os radio buttons "esquerdo" e "direito"
+    const dormeLadoSim = document.getElementById('dorme-lado-sim');
+    const dormeLadoNao = document.getElementById('dorme-lado-nao');
+    const ladoPosicaoDiv = document.getElementById('lado-posicao');
+
+    dormeLadoSim.addEventListener('change', () => {
+        handleDormeLadoChange('SIM');
+    });
+
+    dormeLadoNao.addEventListener('change', () => {
+        handleDormeLadoChange('NÃO');
+    });
 });
 
 // Função para habilitar ou desabilitar os campos do formulário
@@ -445,6 +545,19 @@ function toggleFormFields(enable) {
     const fields = document.querySelectorAll('#technical-sheet-form input, #technical-sheet-form textarea');
     fields.forEach(field => field.disabled = !enable);
 }
+
+// Função para exibir ou ocultar o campo de lado ao selecionar "SIM" em "Dorme de lado"
+function handleDormeLadoChange(value) {
+    const ladoPosicaoDiv = document.getElementById('lado-posicao');
+    if (value === 'SIM') {
+        ladoPosicaoDiv.style.display = 'block';
+    } else {
+        ladoPosicaoDiv.style.display = 'none';
+        const radioButtons = document.querySelectorAll('input[name="dorme-lado-posicao"]');
+        radioButtons.forEach(radio => radio.checked = false); // Desmarca os radio buttons
+    }
+}
+
 
 let clientIdToDelete = null;
 

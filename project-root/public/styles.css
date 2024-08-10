@@ -189,6 +189,85 @@ td button:hover {
     transition: opacity 0.3s ease-in-out !important;
 }
 
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background-color: #ccc;
+}
+
+.calendar-row {
+    display: contents;
+}
+
+.calendar-cell, .calendar-header {
+    background-color: white;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.calendar-cell.empty {
+    background-color: #f4f4f4;
+    cursor: default;
+}
+
+.calendar-header {
+    background-color: #432A24;
+    color: white;
+}
+
+.calendar-cell.has-appointment {
+    background-color: #f2d5d5;
+    font-weight: bold;
+}
+
+.calendar-cell {
+    position: relative;
+    height: 100px; /* Altura fixa da célula */
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.day-number {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.appointments-container {
+    overflow-y: auto; /* Scroll aplicado apenas aos agendamentos */
+    max-height: calc(100% - 20px); /* Ajusta a altura com base no espaço disponível */
+}
+
+.appointments-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.appointments-container::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+}
+
+.appointments-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+.appointment-card {
+    background-color: #FFD700;
+    padding: 5px;
+    margin-top: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: center;
+    color: #000;
+    font-weight: bold;
+}
+
+.appointment-card:hover {
+    background-color: #FFA500;
+}
+
 .ficha-tecnica {
     display: flex;
     flex-direction: column;
@@ -246,7 +325,6 @@ input[type="radio"] {
 .mb-3 {
     margin-bottom: 1rem;
 }
-
 
 @-webkit-keyframes fadein {
     from { bottom: 0; opacity: 0; }

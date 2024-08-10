@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meus Agendamentos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 </head>
 <body>
     <div class="container my-5">
@@ -20,18 +22,122 @@
                 </tr>
             </thead>
             <tbody>
+                <!-- A mensagem será inserida aqui -->
             </tbody>
         </table>
     </div>
+
+    <!-- Modal de Confirmação de Conclusão -->
+    <div class="modal fade" id="confirmConcludeModal" tabindex="-1" aria-labelledby="confirmConcludeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmConcludeModalLabel">Confirmar Conclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja concluir este agendamento?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="confirmConcludeButton" class="btn btn-success">Concluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-        const message = sessionStorage.getItem('toastMessage');
-        if (message) {
-            showToast(message);
-            sessionStorage.removeItem('toastMessage'); // Remover a mensagem após exibir o Toast
-        }
-    });
+document.addEventListener('DOMContentLoaded', init);
+
+// Inicializa o app e carrega dados iniciais
+function init() {
+    loadAppointments(); // Carrega a lista de agendamentos ao iniciar
+}
+
+// Função para carregar a lista de agendamentos
+function loadAppointments() {
+    fetch('/api/appointments')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#appointment-table tbody');
+            tbody.innerHTML = ''; // Limpa o corpo da tabela antes de preencher
+
+            if (data.appointments && data.appointments.length > 0) {
+                let hasAppointments = false;
+
+                data.appointments.forEach(appointment => {
+                    if (appointment.concluida === null || appointment.concluida !== 1) { // Filtra apenas agendamentos não concluídos
+                        hasAppointments = true;
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${appointment.id}</td>
+                            <td>${appointment.client}</td>
+                            <td>${appointment.procedure}</td>
+                            <td>${appointment.date}</td>
+                            <td>${appointment.time}</td>
+                            <td>
+                                <button class="btn btn-sm btn-success" onclick="concludeAppointment(${appointment.id})">Concluir</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                });
+
+                if (!hasAppointments) {
+                    const noAppointmentsMessage = document.createElement('tr');
+                    noAppointmentsMessage.innerHTML = `
+                        <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
+                    `;
+                    tbody.appendChild(noAppointmentsMessage);
+                }
+            } else {
+                const noAppointmentsMessage = document.createElement('tr');
+                noAppointmentsMessage.innerHTML = `
+                    <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
+                `;
+                tbody.appendChild(noAppointmentsMessage);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar agendamentos:', error);
+            const tbody = document.querySelector('#appointment-table tbody');
+            const noAppointmentsMessage = document.createElement('tr');
+            noAppointmentsMessage.innerHTML = `
+                <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
+            `;
+            tbody.appendChild(noAppointmentsMessage);
+        });
+}
+
+let appointmentToConclude = null;
+
+function concludeAppointment(id) {
+    appointmentToConclude = id;
+    const modal = new bootstrap.Modal(document.getElementById('confirmConcludeModal'));
+    modal.show();
+}
+
+document.getElementById('confirmConcludeButton').addEventListener('click', () => {
+    if (appointmentToConclude !== null) {
+        fetch(`/api/appointments/${appointmentToConclude}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmConcludeModal'));
+                modal.hide();
+                loadAppointments(); // Recarrega a lista de agendamentos após a exclusão
+            } else {
+                console.error('Erro ao concluir e remover agendamento.');
+            }
+        })
+        .catch(error => console.error('Erro ao concluir e remover agendamento:', error));
+    }
+});
+
     </script>
 </body>
 </html>

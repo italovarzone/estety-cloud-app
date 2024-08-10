@@ -41,6 +41,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
             procedure TEXT,
             date TEXT,
             time TEXT,
+            concluida BOOLEAN,
             FOREIGN KEY(clientId) REFERENCES clients(id)
         );`);
 
@@ -59,6 +60,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
             especificar_ocular TEXT,
             oncologico TEXT,
             dorme_lado TEXT,
+            dorme_lado_posicao TEXT,
             problema_informar TEXT,
             procedimento TEXT,
             mapping TEXT,
@@ -149,32 +151,140 @@ app.post('/api/appointments', (req, res) => {
         return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
 
-    const query = `INSERT INTO appointments (clientId, procedure, date, time) VALUES (?, ?, ?, ?)`;
-
-    db.run(query, [clientId, procedure, date, time], function (err) {
+    // Verifica se já existe um agendamento para o mesmo dia e horário
+    const queryCheck = `SELECT * FROM appointments WHERE date = ? AND time = ?`;
+    db.get(queryCheck, [date, time], (err, row) => {
         if (err) {
-            console.error('Erro ao adicionar agendamento:', err.message);
-            return res.status(500).json({ error: 'Erro ao salvar o agendamento.' });
+            console.error('Erro ao verificar agendamento existente:', err.message);
+            return res.status(500).json({ error: 'Erro ao verificar agendamento.' });
         }
-        res.json({ id: this.lastID, clientId, procedure, date, time });
+
+        if (row) {
+            // Já existe um agendamento para o mesmo horário e data
+            return res.status(409).json({ error: 'Já existe um agendamento para este horário.' });
+        }
+
+        // Se não existir, insere o novo agendamento
+        const queryInsert = `INSERT INTO appointments (clientId, procedure, date, time) VALUES (?, ?, ?, ?)`;
+        db.run(queryInsert, [clientId, procedure, date, time], function(err) {
+            if (err) {
+                console.error('Erro ao adicionar agendamento:', err.message);
+                return res.status(500).json({ error: 'Erro ao salvar o agendamento.' });
+            }
+            res.status(201).json({ id: this.lastID, clientId, procedure, date, time });
+        });
     });
 });
 
-// Rota para listar todos os agendamentos
-app.get('/api/appointments', (req, res) => {
-    const query = `
-        SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
-        FROM appointments 
-        LEFT JOIN clients ON appointments.clientId = clients.id`;
 
-    db.all(query, [], (err, rows) => {
+
+// Rota para listar todos os agendamentos
+// app.get('/api/appointments', (req, res) => {
+//     const query = `
+//         SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
+//         FROM appointments 
+//         LEFT JOIN clients ON appointments.clientId = clients.id`;
+
+//     db.all(query, [], (err, rows) => {
+//         if (err) {
+//             console.error('Erro ao listar agendamentos:', err.message);
+//             return res.status(500).json({ error: err.message });
+//         }
+//         res.json({ appointments: rows });
+//     });
+// });
+
+app.get('/api/appointments', (req, res) => {
+    const { date } = req.query;
+    let query;
+    let params;
+
+    if (date) {
+        // Se uma data for fornecida, filtrar por essa data e status não concluído
+        query = `
+            SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
+            FROM appointments 
+            LEFT JOIN clients ON appointments.clientId = clients.id
+            WHERE appointments.date = ? AND (appointments.concluida IS NULL OR appointments.concluida <> 1)
+        `;
+        params = [date];
+    } else {
+        // Se nenhuma data for fornecida, retornar todos os agendamentos com status não concluído
+        query = `
+            SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
+            FROM appointments 
+            LEFT JOIN clients ON appointments.clientId = clients.id
+            WHERE (appointments.concluida IS NULL OR appointments.concluida <> 1)
+        `;
+        params = [];
+    }
+
+    db.all(query, params, (err, rows) => {
         if (err) {
             console.error('Erro ao listar agendamentos:', err.message);
             return res.status(500).json({ error: err.message });
         }
+
         res.json({ appointments: rows });
     });
 });
+
+
+app.put('/api/appointments/:id/conclude', (req, res) => {
+    const { id } = req.params;
+    const query = `UPDATE appointments SET concluida = TRUE WHERE id = ?`;
+
+    db.run(query, [id], function (err) {
+        if (err) {
+            console.error
+            ('Erro ao concluir agendamento:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+
+        res.json({ success: true });
+    });
+});
+
+// Rota para deletar um agendamento ao concluir
+app.delete('/api/appointments/:id', (req, res) => {
+    const { id } = req.params;
+    const query = `DELETE FROM appointments WHERE id = ?`;
+
+    db.run(query, [id], function (err) {
+        if (err) {
+            console.error('Erro ao concluir e remover agendamento:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+
+        res.json({ success: true });
+    });
+});
+
+// Rota para editar um cliente
+app.put('/api/clients/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, email, phone } = req.body;
+
+    if (!name || !email || !phone) {
+        return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+
+    const query = `UPDATE clients SET name = ?, email = ?, phone = ? WHERE id = ?`;
+    db.run(query, [name, email, phone, id], function(err) {
+        if (err) {
+            console.error('Erro ao editar cliente:', err.message);
+            return res.status(500).json({ error: 'Erro ao editar cliente.' });
+        }
+
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Cliente não encontrado.' });
+        }
+
+        res.json({ success: true });
+    });
+});
+
+
 
 // Rota para deletar cliente
 app.delete('/api/clients/:id', (req, res) => {
@@ -192,19 +302,19 @@ app.delete('/api/clients/:id', (req, res) => {
 app.post('/api/technical-sheets', (req, res) => {
     const {
         clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
-        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, problema_informar,
+        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
         procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
     } = req.body;
 
     const query = `INSERT INTO technical_sheets 
     (clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
-    tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, problema_informar,
+    tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
     procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.run(query, [
         clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
-        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, problema_informar,
+        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
         procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
     ], function (err) {
         if (err) {
@@ -214,6 +324,41 @@ app.post('/api/technical-sheets', (req, res) => {
         res.json({ id: this.lastID });
     });
 });
+
+
+// Rota para atualizar uma ficha técnica existente
+app.put('/api/technical-sheets/:clientId', (req, res) => {
+    const clientId = req.params.clientId;
+    const {
+        datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado,
+        dorme_lado_posicao, problema_informar, procedimento, mapping, estilo,
+        modelo_fios, espessura, curvatura, adesivo
+    } = req.body;
+
+    const query = `
+        UPDATE technical_sheets 
+        SET datetime = ?, rimel = ?, gestante = ?, procedimento_olhos = ?, alergia = ?, especificar_alergia = ?,
+            tireoide = ?, problema_ocular = ?, especificar_ocular = ?, oncologico = ?, dorme_lado = ?, 
+            dorme_lado_posicao = ?, problema_informar = ?, procedimento = ?, mapping = ?, estilo = ?, 
+            modelo_fios = ?, espessura = ?, curvatura = ?, adesivo = ?
+        WHERE clientId = ?
+    `;
+
+    db.run(query, [
+        datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao,
+        problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, clientId
+    ], function(err) {
+        if (err) {
+            console.error('Erro ao atualizar ficha técnica:', err.message);
+            return res.status(500).json({ error: 'Erro ao atualizar ficha técnica.' });
+        }
+
+        res.json({ success: true });
+    });
+});
+
 
 // Iniciar o servidor
 app.listen(PORT, () => {
