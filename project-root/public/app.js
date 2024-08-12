@@ -104,6 +104,7 @@ function addTechnicalSheet(e) {
     const espessura = document.getElementById('espessura').value || '';
     const curvatura = document.getElementById('curvatura').value || '';
     const adesivo = document.getElementById('adesivo').value || '';
+    const observacao = document.getElementById('observacao').value || '';
 
     fetch('/api/technical-sheets', {
         method: 'POST', // Veremos adiante como mudar isso para PUT quando necessário
@@ -113,7 +114,7 @@ function addTechnicalSheet(e) {
         body: JSON.stringify({
             clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
             tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao,
-            problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
+            problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
         })
     })
     .then(response => response.json())
@@ -498,6 +499,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     if (document.getElementById('adesivo')) {
                         document.getElementById('adesivo').value = data.adesivo;
+                    }
+                    if (document.getElementById('observacao')) {
+                        document.getElementById('observacao').value = data.observacao || '';
                     }
 
                     // Desabilitar todos os campos para visualização inicial
