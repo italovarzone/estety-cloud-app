@@ -297,6 +297,7 @@ function addAppointment(e) {
     const btnText = document.getElementById('btn-text');
     const btnSpinner = document.getElementById('btn-spinner');
 
+    btnText.style.display = 'none';
     btnSpinner.style.display = 'inline-block';
     addAppointmentBtn.disabled = true;
 
@@ -308,20 +309,26 @@ function addAppointment(e) {
         body: JSON.stringify({ clientId, procedure, date, time })
     })
     .then(response => {
-        btnSpinner.style.display = 'none';
-        addAppointmentBtn.disabled = false;
-
-        if (!response.ok) {
-            return response.json().then(data => { throw new Error(data.error); });
-        }
-        return response.json();
+        setTimeout( () => {
+            btnSpinner.style.display = 'none';
+            addAppointmentBtn.disabled = false;
+    
+            if (!response.ok) {
+                return response.json().then(data => { throw new Error(data.error); });
+            }
+            return response.json();
+        }, 3000);
     })
     .then(data => {
+        setTimeout(() => {
         document.getElementById('appointment-form').reset();
         window.location.href = 'agendamentos.html';
+        }, 3000);
     })
     .catch(error => {
+        setTimeout(() => {
         alert(error.message); // Exibe a mensagem de erro
+        });
     });
 }
 
