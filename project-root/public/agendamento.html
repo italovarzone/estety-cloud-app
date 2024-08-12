@@ -9,13 +9,13 @@
 <body>
     <div class="container my-5">
         <h1>Cadastrar Agendamento</h1>
+        <br>
         <form id="appointment-form" class="row g-3">
-            <div class="col-12">
-                <br>
+            <div class="col-md-3">
                 <label for="client" class="form-label">Cliente:</label>
                 <select id="client" class="form-control" required></select>
             </div>
-            <div class="col-12">
+            <div class="col-md-3">
                 <label for="procedure" class="form-label">Procedimento:</label>
                 <select id="procedure" class="form-control" required>
                     <option value="Colocação (Brasileiro)">Colocação (Brasileiro)</option>
@@ -28,21 +28,17 @@
                     <option value="Sobrancelha (Sem Rena)">Sobrancelha (Sem Rena)</option>
                 </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-3">
                 <label for="date" class="form-label">Dia do agendamento:</label>
                 <input type="date" id="date" class="form-control" required>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-3">
                 <label for="time" class="form-label">Hora do agendamento:</label>
                 <input type="time" id="time" class="form-control" required>
             </div>
             <div class="col-12">
                 <button type="submit" id="add-appointment-btn" class="btn btn-primary">
                     <span id="btn-text">Cadastrar Agendamento</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
-                      </svg>
                     <span id="btn-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
                 </button>
             </div>

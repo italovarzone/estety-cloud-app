@@ -1,11 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #F2DAB6; /* Cor de fundo aplicada ao body */
+    font-family: "Inter", sans-serif;
     margin: 0;
     padding: 0;
-    color: #1D1411; /* Cor do texto */
 }
 
 .form-label {
@@ -18,7 +16,6 @@ body {
 
 
 .container {
-    max-width: 1000px; /* Aumenta a largura máxima do container */
     margin: 0 auto; /* Centraliza o container */
     padding: 20px;
     margin: auto;
@@ -317,8 +314,6 @@ td button:hover {
 }
 
 h1, h2 {
-    font-family: 'Georgia', serif;
-    color: #4F2A17;
     text-align: center;
 }
 

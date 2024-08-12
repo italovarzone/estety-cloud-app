@@ -100,6 +100,10 @@ app.get('/agendamentos.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'agendamentos.html'));
 });
 
+app.get('/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
 // Rota para adicionar cliente
 app.post('/api/clients', (req, res) => {
     const { name, email, phone } = req.body;
@@ -357,7 +361,47 @@ app.put('/api/technical-sheets/:clientId', (req, res) => {
 
 });
 
+app.get('/api/dashboard', (req, res) => {
+    const totalAppointmentsQuery = 'SELECT COUNT(*) AS count FROM appointments';
+    const totalClientsQuery = 'SELECT COUNT(*) AS count FROM clients';
 
+    db.get(totalAppointmentsQuery, [], (err, totalAppointments) => {
+        if (err) {
+            console.error('Erro ao carregar total de agendamentos:', err.message);
+            return res.status(500).json({ error: 'Erro ao carregar o total de agendamentos.' });
+        }
+
+        db.get(totalClientsQuery, [], (err, totalClients) => {
+            if (err) {
+                console.error('Erro ao carregar total de clientes:', err.message);
+                return res.status(500).json({ error: 'Erro ao carregar o total de clientes.' });
+            }
+
+            res.json({
+                totalAppointments: totalAppointments.count,
+                totalClients: totalClients.count
+            });
+        });
+    });
+});
+
+app.get('/api/appointments-by-client', (req, res) => {
+    const query = `
+        SELECT clients.name AS client_name, COUNT(appointments.id) AS appointment_count
+        FROM clients
+        LEFT JOIN appointments ON clients.id = appointments.clientId
+        GROUP BY clients.name
+    `;
+
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Erro ao carregar dados dos agendamentos por cliente:', err.message);
+            return res.status(500).json({ error: 'Erro ao carregar dados dos agendamentos.' });
+        }
+
+        res.json(rows);
+    });
+});
 
 
 // Iniciar o servidor

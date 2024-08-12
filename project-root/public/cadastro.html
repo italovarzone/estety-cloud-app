@@ -11,28 +11,22 @@
         <h1>Cadastro de Clientes</h1>
         <br>
         <form id="client-form" class="row g-3">
-            <div style="display: flex; flex-direction: column; max-width: 500px; gap: 16px;">
-                <input type="hidden" id="client-id">
-                <div class="col-12">
-                    <input type="text" id="name" class="form-control" placeholder="Nome" required>
-                </div>
-                <div class="input-group col-12">
-                    <input type="email" id="email" type="text" class="form-control" placeholder="Digite o email..." aria-label="Recipient's username" aria-describedby="basic-addon2" required>
-                    <div class="input-group-append">
-                      <span class="input-group-text" id="basic-addon2">@email.com</span>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <input type="text" id="phone" class="form-control" placeholder="Telefone" required>
-                </div>
+            <input type="hidden" id="client-id">
+            <div class="col-md-3">
+                <label for="client" class="form-label">Cliente:</label>
+                <input type="text" id="name" class="form-control" placeholder="Nome" required>
+            </div>
+            <div class="col-md-3">
+                <label for="client" class="form-label">Telefone:</label>
+                <input type="text" id="phone" class="form-control" placeholder="Telefone" required>
+            </div>
+            <div class="col-md-3">
+                <label for="client" class="form-label">Email:</label>
+                <input type="email" id="email" type="text" class="form-control" placeholder="Digite o email..." aria-label="Recipient's username" aria-describedby="basic-addon2" required>
             </div>
             <div class="col-12">
                 <button type="submit" id="add-client-btn" class="btn btn-primary">
                     <span id="btn-text">Adicionar Cliente</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
-                      </svg>
                     <span id="btn-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
                 </button>
             </div>
