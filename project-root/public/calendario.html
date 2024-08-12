@@ -148,9 +148,6 @@
             }
 
 
-            // Carrega os agendamentos para o dia e exibe no calendário
-            // Carrega os agendamentos para o dia e exibe no calendário
-            // Carrega os agendamentos para o dia e exibe no calendário
             function loadAppointmentsForDay(appointmentsDiv, year, month, day) {
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -161,29 +158,30 @@
 
                         if (data.appointments.length > 0) {
                             data.appointments.forEach(appointment => {
-                                const appointmentCard = document.createElement('div');
-                                appointmentCard.classList.add('appointment-card');
+                                if (appointment.date === dateStr && appointment.concluida !== 1) { // Apenas agendamentos não concluídos
+                                    const appointmentCard = document.createElement('div');
+                                    appointmentCard.classList.add('appointment-card');
 
-                                // Adiciona o nome do cliente e a hora
-                                const clientInfo = document.createElement('div');
-                                clientInfo.textContent = `${appointment.client} - ${appointment.time}`;
-                                appointmentCard.appendChild(clientInfo);
+                                    const clientInfo = document.createElement('div');
+                                    clientInfo.textContent = `${appointment.client} - ${appointment.time}`;
+                                    appointmentCard.appendChild(clientInfo);
 
-                                // Adiciona o procedimento realizado
-                                const procedureInfo = document.createElement('div');
-                                procedureInfo.textContent = appointment.procedure;
-                                appointmentCard.appendChild(procedureInfo);
+                                    const procedureInfo = document.createElement('div');
+                                    procedureInfo.textContent = appointment.procedure;
+                                    appointmentCard.appendChild(procedureInfo);
 
-                                appointmentCard.addEventListener('click', () => {
-                                    showAppointmentDetails(appointment);
-                                });
+                                    appointmentCard.addEventListener('click', () => {
+                                        showAppointmentDetails(appointment);
+                                    });
 
-                                appointmentsDiv.appendChild(appointmentCard);
+                                    appointmentsDiv.appendChild(appointmentCard);
+                                }
                             });
                         }
                     })
                     .catch(error => console.error('Erro ao carregar agendamentos:', error));
             }
+
 
             function showAppointmentDetails(appointment) {
                 const modal = new bootstrap.Modal(document.getElementById('appointmentModal'));

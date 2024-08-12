@@ -11,6 +11,19 @@
 <body>
     <div class="container my-5">
         <h1 class="mb-4">Meus Agendamentos</h1>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="filter-status" class="form-label">Filtrar por Status:</label>
+                <select id="filter-status" class="form-select">
+                    <option value="nao-concluidos">Não Concluídos</option>
+                    <option value="concluidos">Concluídos</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="filter-name" class="form-label">Filtrar por Nome:</label>
+                <input type="text" id="filter-name" class="form-control" placeholder="Digite o nome do cliente...">
+            </div>
+        </div>
         <table id="appointment-table" class="table table-striped">
             <thead>
                 <tr>
@@ -45,6 +58,24 @@
             </div>
         </div>
     </div>
+    <!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmCancelModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja cancelar e remover este agendamento?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" id="confirmCancelButton" class="btn btn-danger">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="app.js"></script>
     <script>
@@ -55,21 +86,26 @@ function init() {
     loadAppointments(); // Carrega a lista de agendamentos ao iniciar
 }
 
-// Função para carregar a lista de agendamentos
 function loadAppointments() {
-    fetch('/api/appointments')
+    const filterStatus = document.getElementById('filter-status').value;
+    const filterName = document.getElementById('filter-name').value.toLowerCase();
+    let url = '/api/appointments';
+
+    if (filterStatus === 'concluidos') {
+        url += '?status=concluidos';
+    } else {
+        url += '?status=nao-concluidos';
+    }
+
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             const tbody = document.querySelector('#appointment-table tbody');
             tbody.innerHTML = ''; // Limpa o corpo da tabela antes de preencher
 
             if (data.appointments && data.appointments.length > 0) {
-                let hasAppointments = false;
-
                 data.appointments.forEach(appointment => {
-                    if (appointment.concluida === null || appointment.concluida !== 1) { // Filtra apenas agendamentos não concluídos
-                        hasAppointments = true;
-
+                    if (appointment.client.toLowerCase().includes(filterName)) {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>${appointment.id}</td>
@@ -78,20 +114,13 @@ function loadAppointments() {
                             <td>${appointment.date}</td>
                             <td>${appointment.time}</td>
                             <td>
-                                <button class="btn btn-sm btn-success" onclick="concludeAppointment(${appointment.id})">Concluir</button>
+                                <button class="btn btn-sm btn-success" ${filterStatus === 'concluidos' ? 'disabled' : ''} onclick="concludeAppointment(${appointment.id})">Concluir</button>
+                                <button class="btn btn-sm btn-danger" ${filterStatus === 'concluidos' ? 'disabled' : ''} onclick="cancelAppointment(${appointment.id})">Cancelar</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
                     }
                 });
-
-                if (!hasAppointments) {
-                    const noAppointmentsMessage = document.createElement('tr');
-                    noAppointmentsMessage.innerHTML = `
-                        <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
-                    `;
-                    tbody.appendChild(noAppointmentsMessage);
-                }
             } else {
                 const noAppointmentsMessage = document.createElement('tr');
                 noAppointmentsMessage.innerHTML = `
@@ -111,6 +140,11 @@ function loadAppointments() {
         });
 }
 
+// Adicionar eventos de mudança ao select-box e ao campo de texto
+document.getElementById('filter-status').addEventListener('change', loadAppointments);
+document.getElementById('filter-name').addEventListener('input', loadAppointments);
+
+
 let appointmentToConclude = null;
 
 function concludeAppointment(id) {
@@ -121,22 +155,50 @@ function concludeAppointment(id) {
 
 document.getElementById('confirmConcludeButton').addEventListener('click', () => {
     if (appointmentToConclude !== null) {
-        fetch(`/api/appointments/${appointmentToConclude}`, {
-            method: 'DELETE'
+        fetch(`/api/appointments/${appointmentToConclude}/conclude`, {
+            method: 'PUT'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('confirmConcludeModal'));
                 modal.hide();
-                loadAppointments(); // Recarrega a lista de agendamentos após a exclusão
+                loadAppointments(); // Recarrega a lista de agendamentos após a conclusão
             } else {
-                console.error('Erro ao concluir e remover agendamento.');
+                console.error('Erro ao concluir agendamento.');
             }
         })
-        .catch(error => console.error('Erro ao concluir e remover agendamento:', error));
+        .catch(error => console.error('Erro ao concluir agendamento:', error));
     }
 });
+
+let appointmentToCancel = null;
+
+function cancelAppointment(id) {
+    appointmentToCancel = id;
+    const modal = new bootstrap.Modal(document.getElementById('confirmCancelModal'));
+    modal.show();
+}
+
+document.getElementById('confirmCancelButton').addEventListener('click', () => {
+    if (appointmentToCancel !== null) {
+        fetch(`/api/appointments/${appointmentToCancel}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmCancelModal'));
+                modal.hide();
+                loadAppointments(); // Recarrega a lista de agendamentos após a exclusão
+            } else {
+                console.error('Erro ao cancelar e remover agendamento.');
+            }
+        })
+        .catch(error => console.error('Erro ao cancelar e remover agendamento:', error));
+    }
+});
+
 
     </script>
 </body>

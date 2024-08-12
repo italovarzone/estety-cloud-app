@@ -5,7 +5,7 @@ function init() {
     // Carrega lista de agendamentos e clientes uma vez na inicialização
     loadInitialData();
 
-    const clientForm = document.getElementById('client-form');
+    const clientForm = document.getElementById('client-form');  
     if (clientForm) {
         const clientToEdit = localStorage.getItem('clientToEdit');
         if (clientToEdit) {
@@ -413,10 +413,11 @@ function accessTechnicalSheet(clientId, clientName) {
 document.addEventListener('DOMContentLoaded', () => {
     const clientData = JSON.parse(localStorage.getItem('clientForTechnicalSheet'));
 
-    // Verifique se o elemento 'client-name' existe antes de tentar acessá-lo
+    // Verifique se os elementos necessários existem antes de tentar acessá-los
     const clientNameElement = document.getElementById('client-name');
     const datetimeElement = document.getElementById('datetime');
     const editButton = document.getElementById('edit-button');
+    const observacaoElement = document.getElementById('observacao'); // Elemento para o campo "Observacao"
 
     if (clientData && clientNameElement && datetimeElement) {
         fetch(`/api/technical-sheets/${clientData.clientId}`)
@@ -436,7 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     clientNameElement.dataset.clientId = clientData.clientId;
                     datetimeElement.value = data.datetime;
 
-                    // Preencher os outros campos somente se eles existirem
+                    // Preencher os campos do formulário
+                    if (observacaoElement) {
+                        observacaoElement.value = data.observacao || ''; // Preencher o campo "Observacao"
+                    }
+
                     if (document.querySelector(`input[name="rimel"][value="${data.rimel}"]`)) {
                         document.querySelector(`input[name="rimel"][value="${data.rimel}"]`).checked = true;
                     }
@@ -539,6 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
         handleDormeLadoChange('NÃO');
     });
 });
+
 
 // Função para habilitar ou desabilitar os campos do formulário
 function toggleFormFields(enable) {

@@ -68,7 +68,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
             modelo_fios TEXT,
             espessura TEXT,
             curvatura TEXT,
-            adesivo TEXT
+            adesivo TEXT,
+            observacao TEXT
         );`);
     }
 });
@@ -195,28 +196,24 @@ app.post('/api/appointments', (req, res) => {
 // });
 
 app.get('/api/appointments', (req, res) => {
-    const { date } = req.query;
+    const { date, status } = req.query;
     let query;
-    let params;
+    let params = [];
 
-    if (date) {
-        // Se uma data for fornecida, filtrar por essa data e status não concluído
+    if (status === 'concluidos') {
         query = `
             SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
             FROM appointments 
             LEFT JOIN clients ON appointments.clientId = clients.id
-            WHERE appointments.date = ? AND (appointments.concluida IS NULL OR appointments.concluida <> 1)
+            WHERE appointments.concluida = 1
         `;
-        params = [date];
-    } else {
-        // Se nenhuma data for fornecida, retornar todos os agendamentos com status não concluído
+    } else { // Para "não-concluídos" e default
         query = `
             SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
             FROM appointments 
             LEFT JOIN clients ON appointments.clientId = clients.id
             WHERE (appointments.concluida IS NULL OR appointments.concluida <> 1)
         `;
-        params = [];
     }
 
     db.all(query, params, (err, rows) => {
@@ -230,20 +227,22 @@ app.get('/api/appointments', (req, res) => {
 });
 
 
+
+
 app.put('/api/appointments/:id/conclude', (req, res) => {
     const { id } = req.params;
-    const query = `UPDATE appointments SET concluida = TRUE WHERE id = ?`;
+    const query = `UPDATE appointments SET concluida = 1 WHERE id = ?`;
 
     db.run(query, [id], function (err) {
         if (err) {
-            console.error
-            ('Erro ao concluir agendamento:', err.message);
+            console.error('Erro ao concluir agendamento:', err.message);
             return res.status(500).json({ error: err.message });
         }
 
         res.json({ success: true });
     });
 });
+
 
 // Rota para deletar um agendamento ao concluir
 app.delete('/api/appointments/:id', (req, res) => {
@@ -298,24 +297,23 @@ app.delete('/api/clients/:id', (req, res) => {
     });
 });
 
-// Rota para adicionar ficha técnica
 app.post('/api/technical-sheets', (req, res) => {
     const {
         clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
-        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
+        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
     } = req.body;
 
     const query = `INSERT INTO technical_sheets 
     (clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
     tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
-    procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.run(query, [
         clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
-        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
+        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
     ], function (err) {
         if (err) {
             console.error('Erro ao adicionar ficha técnica:', err.message);
@@ -325,15 +323,13 @@ app.post('/api/technical-sheets', (req, res) => {
     });
 });
 
-
-// Rota para atualizar uma ficha técnica existente
 app.put('/api/technical-sheets/:clientId', (req, res) => {
     const clientId = req.params.clientId;
     const {
         datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado,
         dorme_lado_posicao, problema_informar, procedimento, mapping, estilo,
-        modelo_fios, espessura, curvatura, adesivo
+        modelo_fios, espessura, curvatura, adesivo, observacao
     } = req.body;
 
     const query = `
@@ -341,14 +337,14 @@ app.put('/api/technical-sheets/:clientId', (req, res) => {
         SET datetime = ?, rimel = ?, gestante = ?, procedimento_olhos = ?, alergia = ?, especificar_alergia = ?,
             tireoide = ?, problema_ocular = ?, especificar_ocular = ?, oncologico = ?, dorme_lado = ?, 
             dorme_lado_posicao = ?, problema_informar = ?, procedimento = ?, mapping = ?, estilo = ?, 
-            modelo_fios = ?, espessura = ?, curvatura = ?, adesivo = ?
+            modelo_fios = ?, espessura = ?, curvatura = ?, adesivo = ?, observacao = ?
         WHERE clientId = ?
     `;
 
     db.run(query, [
         datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao,
-        problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, clientId
+        problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao, clientId
     ], function(err) {
         if (err) {
             console.error('Erro ao atualizar ficha técnica:', err.message);
@@ -358,6 +354,8 @@ app.put('/api/technical-sheets/:clientId', (req, res) => {
         res.json({ success: true });
     });
 });
+
+
 
 
 // Iniciar o servidor
