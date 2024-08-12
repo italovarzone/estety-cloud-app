@@ -30,7 +30,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         db.run(`CREATE TABLE IF NOT EXISTS clients (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            email TEXT,
+            birthdate TEXT,
             phone TEXT
         );`);
 
@@ -106,17 +106,17 @@ app.get('/dashboard.html', (req, res) => {
 
 // Rota para adicionar cliente
 app.post('/api/clients', (req, res) => {
-    const { name, email, phone } = req.body;
-    if (!name || !email || !phone) {
+    const { name, birthdate, phone } = req.body;
+    if (!name || !birthdate || !phone) {
         return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
 
-    db.run(`INSERT INTO clients (name, email, phone) VALUES (?, ?, ?)`, [name, email, phone], function (err) {
+    db.run(`INSERT INTO clients (name, birthdate, phone) VALUES (?, ?, ?)`, [name, birthdate, phone], function (err) {
         if (err) {
             console.error('Erro ao adicionar cliente:', err.message);
             return res.status(500).json({ error: err.message });
         }
-        res.json({ id: this.lastID, name, email, phone });
+        res.json({ id: this.lastID, name, birthdate, phone });
     });
 });
 
@@ -182,24 +182,7 @@ app.post('/api/appointments', (req, res) => {
     });
 });
 
-
-
 // Rota para listar todos os agendamentos
-// app.get('/api/appointments', (req, res) => {
-//     const query = `
-//         SELECT appointments.id, clients.name AS client, appointments.procedure, appointments.date, appointments.time 
-//         FROM appointments 
-//         LEFT JOIN clients ON appointments.clientId = clients.id`;
-
-//     db.all(query, [], (err, rows) => {
-//         if (err) {
-//             console.error('Erro ao listar agendamentos:', err.message);
-//             return res.status(500).json({ error: err.message });
-//         }
-//         res.json({ appointments: rows });
-//     });
-// });
-
 app.get('/api/appointments', (req, res) => {
     const { date, status } = req.query;
     let query;
@@ -231,9 +214,6 @@ app.get('/api/appointments', (req, res) => {
     });
 });
 
-
-
-
 app.put('/api/appointments/:id/conclude', (req, res) => {
     const { id } = req.params;
     const query = `UPDATE appointments SET concluida = 1 WHERE id = ?`;
@@ -247,7 +227,6 @@ app.put('/api/appointments/:id/conclude', (req, res) => {
         res.json({ success: true });
     });
 });
-
 
 // Rota para deletar um agendamento ao concluir
 app.delete('/api/appointments/:id', (req, res) => {
@@ -267,14 +246,14 @@ app.delete('/api/appointments/:id', (req, res) => {
 // Rota para editar um cliente
 app.put('/api/clients/:id', (req, res) => {
     const { id } = req.params;
-    const { name, email, phone } = req.body;
+    const { name, birthdate, phone } = req.body;
 
-    if (!name || !email || !phone) {
+    if (!name || !birthdate || !phone) {
         return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
     }
 
-    const query = `UPDATE clients SET name = ?, email = ?, phone = ? WHERE id = ?`;
-    db.run(query, [name, email, phone, id], function(err) {
+    const query = `UPDATE clients SET name = ?, birthdate = ?, phone = ? WHERE id = ?`;
+    db.run(query, [name, birthdate, phone, id], function(err) {
         if (err) {
             console.error('Erro ao editar cliente:', err.message);
             return res.status(500).json({ error: 'Erro ao editar cliente.' });
@@ -287,8 +266,6 @@ app.put('/api/clients/:id', (req, res) => {
         res.json({ success: true });
     });
 });
-
-
 
 // Rota para deletar cliente
 app.delete('/api/clients/:id', (req, res) => {

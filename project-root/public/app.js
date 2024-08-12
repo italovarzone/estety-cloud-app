@@ -12,7 +12,7 @@ function init() {
             const client = JSON.parse(clientToEdit);
             document.getElementById('client-id').value = client.id;
             document.getElementById('name').value = client.name;
-            document.getElementById('email').value = client.email;
+            document.getElementById('birthdate').value = client.birthdate;
             document.getElementById('phone').value = client.phone;
             localStorage.removeItem('clientToEdit');
         }
@@ -36,7 +36,7 @@ function init() {
 
     const confirmButton = document.getElementById('confirm-delete');
     if (confirmButton) {
-        confirmButton.addEventListener('click', confirmDeleteClient);''
+        confirmButton.addEventListener('click', confirmDeleteClient);
     }
 
     const technicalSheetForm = document.getElementById('technical-sheet-form');
@@ -130,15 +130,13 @@ function addTechnicalSheet(e) {
     });
 }
 
-
-
 // Função para adicionar um cliente
 function addClient(e) {
     e.preventDefault();
 
     const id = document.getElementById('client-id').value;
     const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
+    const birthdate = document.getElementById('birthdate').value;
     const phone = document.getElementById('phone').value;
 
     const addClientBtn = document.getElementById('add-client-btn');
@@ -157,7 +155,7 @@ function addClient(e) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, email, phone })
+        body: JSON.stringify({ name, birthdate, phone })
     })
     .then(response => response.json())
     .then(data => {
@@ -170,7 +168,6 @@ function addClient(e) {
                 console.error(data.error);
             } else {
                 window.location.href = 'clientes.html';
-                // document.getElementById('client-form').reset();
             }
         }, 3000);
     })
@@ -196,7 +193,7 @@ function loadClientForEdit(id) {
 
             document.getElementById('client-id').value = client.id;
             document.getElementById('name').value = client.name;
-            document.getElementById('email').value = client.email;
+            document.getElementById('birthdate').value = client.birthdate;
             document.getElementById('phone').value = client.phone;
         })
         .catch(error => console.error('Erro ao carregar cliente:', error));
@@ -208,10 +205,10 @@ function editClient(e) {
 
     const id = document.getElementById('client-id').value;
     const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
+    const birthdate = document.getElementById('birthdate').value;
     const phone = document.getElementById('phone').value;
 
-    if (!id || !name || !email || !phone) {
+    if (!id || !name || !birthdate || !phone) {
         alert('Todos os campos são obrigatórios');
         return;
     }
@@ -221,7 +218,7 @@ function editClient(e) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, email, phone })
+        body: JSON.stringify({ name, birthdate, phone })
     })
     .then(response => response.json())
     .then(data => {
@@ -248,6 +245,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function formatDateToBrazilian(dateString) {
+    const date = new Date(dateString);
+    const utcDay = date.getUTCDate();
+    const utcMonth = date.getUTCMonth() + 1; // Janeiro é 0!
+    const utcYear = date.getUTCFullYear();
+    const day = String(utcDay).padStart(2, '0');
+    const month = String(utcMonth).padStart(2, '0');
+    return `${day}/${month}/${utcYear}`;
+}
+
 
 // Função para carregar a lista de clientes
 function loadClients() {
@@ -258,11 +265,12 @@ function loadClients() {
         tbody.innerHTML = '';
 
         data.clients.forEach(client => {
+            const formattedBirthdate = formatDateToBrazilian(client.birthdate);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${client.id}</td>
                 <td>${client.name}</td>
-                <td>${client.email}</td>
+                <td>${formattedBirthdate}</td>
                 <td>${client.phone}</td>
                 <td class="action-buttons">
                     <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
@@ -332,8 +340,6 @@ function addAppointment(e) {
     });
 }
 
-
-
 // Função para carregar a lista de agendamentos
 function loadAppointmentsForDay(appointmentsDiv, year, month, day) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -396,9 +402,6 @@ function loadAppointmentsForDay(appointmentsDiv, year, month, day) {
             appointmentsDiv.appendChild(noAppointmentsMessage);
         });
 }
-
-
-
 
 // Função para editar um cliente
 function editClient(id) {
@@ -550,7 +553,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-
 // Função para habilitar ou desabilitar os campos do formulário
 function toggleFormFields(enable) {
     const fields = document.querySelectorAll('#technical-sheet-form input, #technical-sheet-form textarea');
@@ -568,7 +570,6 @@ function handleDormeLadoChange(value) {
         radioButtons.forEach(radio => radio.checked = false); // Desmarca os radio buttons
     }
 }
-
 
 let clientIdToDelete = null;
 
