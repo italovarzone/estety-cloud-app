@@ -417,7 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const clientNameElement = document.getElementById('client-name');
     const datetimeElement = document.getElementById('datetime');
     const editButton = document.getElementById('edit-button');
-    const observacaoElement = document.getElementById('observacao'); // Elemento para o campo "Observacao"
 
     if (clientData && clientNameElement && datetimeElement) {
         fetch(`/api/technical-sheets/${clientData.clientId}`)
@@ -436,11 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     clientNameElement.value = clientData.clientName;
                     clientNameElement.dataset.clientId = clientData.clientId;
                     datetimeElement.value = data.datetime;
-
-                    // Preencher os campos do formulário
-                    if (observacaoElement) {
-                        observacaoElement.value = data.observacao || ''; // Preencher o campo "Observacao"
-                    }
 
                     if (document.querySelector(`input[name="rimel"][value="${data.rimel}"]`)) {
                         document.querySelector(`input[name="rimel"][value="${data.rimel}"]`).checked = true;

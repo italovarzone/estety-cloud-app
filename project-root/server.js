@@ -68,8 +68,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
             modelo_fios TEXT,
             espessura TEXT,
             curvatura TEXT,
-            adesivo TEXT,
-            observacao TEXT
+            adesivo TEXT
         );`);
     }
 });
@@ -301,19 +300,19 @@ app.post('/api/technical-sheets', (req, res) => {
     const {
         clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
-        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
+        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
     } = req.body;
 
     const query = `INSERT INTO technical_sheets 
     (clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
     tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
-    procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao)
+    procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     db.run(query, [
         clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
-        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
+        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo
     ], function (err) {
         if (err) {
             console.error('Erro ao adicionar ficha técnica:', err.message);
@@ -329,7 +328,7 @@ app.put('/api/technical-sheets/:clientId', (req, res) => {
         datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado,
         dorme_lado_posicao, problema_informar, procedimento, mapping, estilo,
-        modelo_fios, espessura, curvatura, adesivo, observacao
+        modelo_fios, espessura, curvatura, adesivo
     } = req.body;
 
     const query = `
@@ -337,14 +336,14 @@ app.put('/api/technical-sheets/:clientId', (req, res) => {
         SET datetime = ?, rimel = ?, gestante = ?, procedimento_olhos = ?, alergia = ?, especificar_alergia = ?,
             tireoide = ?, problema_ocular = ?, especificar_ocular = ?, oncologico = ?, dorme_lado = ?, 
             dorme_lado_posicao = ?, problema_informar = ?, procedimento = ?, mapping = ?, estilo = ?, 
-            modelo_fios = ?, espessura = ?, curvatura = ?, adesivo = ?, observacao = ?
+            modelo_fios = ?, espessura = ?, curvatura = ?, adesivo = ?
         WHERE clientId = ?
     `;
 
     db.run(query, [
         datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
         tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao,
-        problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao, clientId
+        problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, clientId
     ], function(err) {
         if (err) {
             console.error('Erro ao atualizar ficha técnica:', err.message);
