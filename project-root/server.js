@@ -81,27 +81,27 @@ app.get('/', (req, res) => {
 });
 
 // Rota para clientes (clientes.html)
-app.get('/clientes.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'clientes.html'));
+app.get('/pages/clientes/listagem.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'pages', 'clientes', 'listagem.html'));
 });
 
 // Rota para ficha técnica (ficha_tecnica.html)
-app.get('/ficha_tecnica.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'ficha_tecnica.html'));
+app.get('/pages/clientes/ficha_tecnica/ficha_tecnica.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'pages', 'clientes', 'ficha_tecnica', 'ficha_tecnica.html'));
 });
 
 // Rota para cadastro (cadastro.html)
-app.get('/cadastro.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'cadastro.html'));
+app.get('pages/clientes/cadastro.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'pages', 'clientes', 'cadastro.html'));
 });
 
 // Rota para agendamentos (agendamentos.html)
-app.get('/agendamentos.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'agendamentos.html'));
+app.get('pages/agendamentos/listagem.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'pages', 'agendamentos', 'listagem.html'));
 });
 
-app.get('/dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+app.get('pages/dashboard/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'pages', 'dashboard', 'dashboard.html'));
 });
 
 // Rota para adicionar cliente
