@@ -276,9 +276,12 @@ function editClient(e) {
 
 // Carregar dados do cliente ao abrir a página de edição, se necessário
 document.addEventListener("DOMContentLoaded", function () {
-  const clientId = document.getElementById("client-id").value;
-  if (clientId) {
-    loadClientForEdit(clientId);
+  const clientIdElement = document.getElementById("client-id");
+  if (clientIdElement) {
+    const clientId = clientIdElement.value;
+    if (clientId) {
+      loadClientForEdit(clientId);
+    }
   }
 
   const clientForm = document.getElementById("client-form");
@@ -297,41 +300,64 @@ function formatDateToBrazilian(dateString) {
   return `${day}/${month}/${utcYear}`;
 }
 
-// Função para carregar a lista de clientes
-function loadClients() {
-  fetch("/api/clients")
+function loadClients(searchQuery = '') {
+  fetch(`/api/clients?search=${encodeURIComponent(searchQuery)}`)
     .then((response) => response.json())
     .then((data) => {
       const tbody = document.querySelector("#client-table tbody");
       tbody.innerHTML = "";
 
-      data.clients.forEach((client) => {
-        const formattedBirthdate = formatDateToBrazilian(client.birthdate);
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-                <td>${client.id}</td>
-                <td>${client.name}</td>
-                <td>${formattedBirthdate}</td>
-                <td>${client.phone}</td>
-                <td class="action-buttons">
-                    <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
-                        <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})">
-                            Editar
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="promptDeleteClient(${client.id})">
-                            Deletar
-                        </button>
-                        <button class="btn btn-sm btn-info" onclick="accessTechnicalSheet(${client.id}, '${client.name}')">
-                            Ficha Técnica
-                        </button>
-                    </div>
-                </td>
-            `;
-        tbody.appendChild(tr);
-      });
+      if (data.clients && Array.isArray(data.clients)) {
+        data.clients.forEach((client) => {
+          const formattedBirthdate = formatDateToBrazilian(client.birthdate);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                  <td>${client.id}</td>
+                  <td>${client.name}</td>
+                  <td>${formattedBirthdate}</td>
+                  <td>${client.phone}</td>
+                  <td class="action-buttons">
+                      <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
+                          <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})">
+                              Editar
+                          </button>
+                          <button class="btn btn-sm btn-danger" onclick="promptDeleteClient(${client.id})">
+                              Deletar
+                          </button>
+                          <button class="btn btn-sm btn-info" id="tech-sheet-${client.id}">
+                              Ficha Técnica
+                          </button>
+                      </div>
+                  </td>
+              `;
+          tbody.appendChild(tr);
+
+          const techSheetButton = document.getElementById(`tech-sheet-${client.id}`);
+          if (techSheetButton) {
+            techSheetButton.addEventListener("click", () => {
+              accessTechnicalSheet(client.id, client.name);
+            });
+          }
+        });
+      } else {
+        console.error("A estrutura de dados recebida não está correta:", data);
+      }
     })
     .catch((error) => console.error("Erro ao carregar clientes:", error));
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+  const filterNameInput = document.getElementById('filter-name');
+  if (filterNameInput) {
+    filterNameInput.addEventListener('input', function() {
+      const searchQuery = this.value.toLowerCase();
+      loadClients(searchQuery);
+    });
+  } else {
+    console.error("Elemento #filter-name não encontrado no DOM.");
+  }
+});
+
 
 // Função para adicionar um agendamento
 function addAppointment(e) {
