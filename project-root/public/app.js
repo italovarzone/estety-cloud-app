@@ -324,20 +324,16 @@ function loadClients(searchQuery = '') {
                           <button class="btn btn-sm btn-danger" onclick="promptDeleteClient(${client.id})">
                               Deletar
                           </button>
-                          <button class="btn btn-sm btn-info" id="tech-sheet-${client.id}">
+                          <button class="btn btn-sm btn-info" onclick="accessTechnicalSheet(${client.id}, '${client.name}')">
                               Ficha Técnica
+                          </button>
+                          <button class="btn btn-sm btn-success" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')">
+                              <i class="fab fa-whatsapp"></i>
                           </button>
                       </div>
                   </td>
               `;
           tbody.appendChild(tr);
-
-          const techSheetButton = document.getElementById(`tech-sheet-${client.id}`);
-          if (techSheetButton) {
-            techSheetButton.addEventListener("click", () => {
-              accessTechnicalSheet(client.id, client.name);
-            });
-          }
         });
       } else {
         console.error("A estrutura de dados recebida não está correta:", data);
@@ -357,6 +353,16 @@ document.addEventListener("DOMContentLoaded", function() {
     console.error("Elemento #filter-name não encontrado no DOM.");
   }
 });
+
+function sendWhatsAppMessage(phone, clientName) {
+  const firstName = clientName.split(' ')[0]; 
+  const defaultMessage = `Olá ${firstName}!! Tudo bem com você?`;
+  const formattedPhone = phone.replace(/\D/g, '');
+
+  const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(defaultMessage)}`;
+  window.open(whatsappUrl, '_blank');
+}
+
 
 
 // Função para adicionar um agendamento
