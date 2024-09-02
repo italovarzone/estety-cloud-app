@@ -241,7 +241,6 @@ function loadClientForEdit(id) {
     .catch((error) => console.error("Erro ao carregar cliente:", error));
 }
 
-// Função para editar um cliente
 function editClient(e) {
   e.preventDefault();
 
@@ -268,7 +267,7 @@ function editClient(e) {
         alert(`Erro: ${data.error}`);
       } else {
         alert("Cliente editado com sucesso!");
-        window.location.href = "listagem.html"; // Redireciona para a listagem de clientes
+        window.location.href = "listagem.html";
       }
     })
     .catch((error) => console.error("Erro ao editar cliente:", error));
@@ -318,18 +317,18 @@ function loadClients(searchQuery = '') {
                   <td>${client.phone}</td>
                   <td class="action-buttons">
                       <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
-                          <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})">
-                              Editar
-                          </button>
-                          <button class="btn btn-sm btn-danger" onclick="promptDeleteClient(${client.id})">
-                              Deletar
-                          </button>
-                          <button class="btn btn-sm btn-info" onclick="accessTechnicalSheet(${client.id}, '${client.name}')">
-                              Ficha Técnica
-                          </button>
-                          <button class="btn btn-sm btn-success" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')">
-                              <i class="fab fa-whatsapp"></i>
-                          </button>
+                        <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})" title="Editar cliente">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="promptDeleteClient(${client.id})" title="Excluir cliente">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn btn-sm btn-info" onclick="accessTechnicalSheet(${client.id}, '${client.name}')" title="Acessar ficha técnica">
+                            <i class="fas fa-file-lines"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')" title="Enviar mensagem via WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
                       </div>
                   </td>
               `;
