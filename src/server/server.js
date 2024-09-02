@@ -31,34 +31,34 @@ function ensureDbConnection(req, res, next) {
 }
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../app')));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, '../app', 'index.html'));
 });
 
 // Rota para clientes (clientes.html)
 app.get('/pages/clientes/listagem.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'pages', 'clientes', 'listagem.html'));
+    res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'listagem.html'));
 });
 
 // Rota para ficha técnica (ficha_tecnica.html)
 app.get('/pages/clientes/ficha_tecnica/ficha_tecnica.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'pages', 'clientes', 'ficha_tecnica', 'ficha_tecnica.html'));
+    res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'ficha_tecnica', 'ficha_tecnica.html'));
 });
 
 // Rota para cadastro (cadastro.html)
 app.get('/pages/clientes/cadastro.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'pages', 'clientes', 'cadastro.html'));
+    res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'cadastro.html'));
 });
 
 // Rota para agendamentos (agendamentos.html)
 app.get('/pages/agendamentos/listagem.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'pages', 'agendamentos', 'listagem.html'));
+    res.sendFile(path.join(__dirname, '../app', 'pages', 'agendamentos', 'listagem.html'));
 });
 
 app.get('/pages/dashboard/dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'pages', 'dashboard', 'dashboard.html'));
+    res.sendFile(path.join(__dirname, '../app', 'pages', 'dashboard', 'dashboard.html'));
 });
 
 // Rota para adicionar cliente
