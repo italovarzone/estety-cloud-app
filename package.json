@@ -2,7 +2,7 @@
   "name": "sistema-da-livia",
   "version": "1.0.0",
   "description": "Sistema de cadastro de clientes para uma lash designer",
-  "main": "server.js",
+  "main": "src/server/server.js",
   "scripts": {
     "start": "node src/server/server.js"
   },
