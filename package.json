@@ -2,9 +2,9 @@
   "name": "sistema-da-livia",
   "version": "1.0.0",
   "description": "Sistema de cadastro de clientes para uma lash designer",
-  "main": "mongodb.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node mongodb.js"
+    "start": "node src/server/server.js"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
