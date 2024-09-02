@@ -31,7 +31,7 @@ function ensureDbConnection(req, res, next) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rota para a página inicial (index.html)
+// Rota para a página inicial
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
