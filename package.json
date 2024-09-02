@@ -4,7 +4,7 @@
   "description": "Sistema de cadastro de clientes para uma lash designer",
   "main": "server.js",
   "scripts": {
-    "start": "node src/server/server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
