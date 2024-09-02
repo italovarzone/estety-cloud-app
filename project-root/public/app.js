@@ -356,14 +356,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function sendWhatsAppMessage(phone, clientName) {
   const firstName = clientName.split(' ')[0]; 
-  const defaultMessage = `Olá ${firstName}!! Tudo bem com você?`;
+  const defaultMessage = `Olá ${firstName}! Tudo bem com você?`;
   const formattedPhone = phone.replace(/\D/g, '');
+  const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(defaultMessage)}`;
 
-  const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(defaultMessage)}`;
   window.open(whatsappUrl, '_blank');
 }
-
-
 
 // Função para adicionar um agendamento
 function addAppointment(e) {
