@@ -4,25 +4,22 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-// URL de conexão do MongoDB Atlas (substitua <db_password> pela senha do banco)
 const mongoUrl = process.env.MONGODB_URI;
 const client = new MongoClient(mongoUrl);
 
-let db;  // Variável para armazenar a conexão ao banco de dados
+let db; 
 
-// Conectar ao MongoDB e selecionar o banco de dados
 async function connectDB() {
     try {
         await client.connect();
         console.log('Conectado ao MongoDB Atlas');
-        db = client.db('lashdb');  // Nome do banco de dados
+        db = client.db('lashdb');
     } catch (err) {
         console.error('Erro ao conectar ao MongoDB:', err);
     }
 }
 connectDB();
 
-// Middleware para verificar se o banco de dados está conectado
 function ensureDbConnection(req, res, next) {
     if (!db) {
         console.error('Erro: Banco de dados não conectado.');
@@ -31,7 +28,6 @@ function ensureDbConnection(req, res, next) {
     next();
 }
 
-// Configurar o body-parser para interpretar JSON
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
