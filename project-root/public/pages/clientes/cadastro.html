@@ -8,45 +8,52 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <style>
+      .error-message {
+        color: red;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+      }
+    </style>
   </head>
   <body>
-    <div class="container my-5">
+    <div style="margin: 36px;">
       <h1>Cadastro de Clientes</h1>
       <br />
       <form id="client-form" class="row g-3">
         <input type="hidden" id="client-id" />
         <div class="col-md-3">
-          <label for="client" class="form-label">Cliente:</label>
+          <label for="name" class="form-label">Cliente:</label>
           <input
             type="text"
             id="name"
             class="form-control"
             placeholder="Nome"
-            required
           />
+          <div id="name-error" class="error-message"></div>
         </div>
         <div class="col-md-3">
-          <label for="client" class="form-label">Telefone:</label>
+          <label for="phone" class="form-label">Telefone:</label>
           <input
             type="text"
             id="phone"
             class="form-control"
             placeholder="Telefone"
-            required
           />
+          <div id="phone-error" class="error-message"></div>
         </div>
         <div class="col-md-3">
-          <label for="client" class="form-label">Data de Nascimento:</label>
+          <label for="birthdate" class="form-label">Data de Nascimento:</label>
           <input
             type="date"
             id="birthdate"
             class="form-control"
             placeholder="Digite a data de nascimento..."
-            required
           />
+          <div id="birthdate-error" class="error-message"></div>
         </div>
         <div class="col-12">
-          <button type="submit" id="add-client-btn" class="btn btn-primary">
+          <button type="submit" id="add-client-btn" class="btn btn-primary" disabled>
             <span id="btn-text">Adicionar Cliente</span>
             <span
               id="btn-spinner"
@@ -62,20 +69,122 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-      const phoneInput = document.getElementById("phone");
+        const phoneInput = document.getElementById("phone");
+        const nameInput = document.getElementById("name");
+        const birthdateInput = document.getElementById("birthdate");
+        const addClientBtn = document.getElementById("add-client-btn");
 
-      if (phoneInput) {
-        // Verifica se o campo de telefone existe
-        phoneInput.addEventListener("input", function (e) {
-          let input = e.target;
-          input.value = input.value.replace(/\D/g, ""); // Remove todos os caracteres não numéricos
+        const nameError = document.getElementById("name-error");
+        const phoneError = document.getElementById("phone-error");
+        const birthdateError = document.getElementById("birthdate-error");
 
-          if (input.value.length > 11) {
-            input.value = input.value.substring(0, 11); // Limita o número de dígitos a 11
+        // Função para ativar o botão somente se todos os campos estiverem válidos
+        function checkFormValidity() {
+          validateName();
+          validatePhone();
+          validateBirthdate();
+
+          if (nameError.textContent === "" && phoneError.textContent === "" && birthdateError.textContent === "") {
+            addClientBtn.disabled = false; // Habilita o botão se todos os campos estiverem válidos
+          } else {
+            addClientBtn.disabled = true; // Desabilita o botão se algum campo for inválido
+          }
+        }
+
+        // Verifica se os campos existem e adiciona eventos de input e blur
+        if (phoneInput) {
+          phoneInput.addEventListener("input", function (e) {
+            let input = e.target;
+            input.value = formatPhone(input.value); // Formata o número de telefone enquanto o usuário digita
+            validatePhone();
+            checkFormValidity();
+          });
+
+          phoneInput.addEventListener("blur", validatePhone); // Valida o telefone ao perder o foco
+        }
+
+        if (nameInput) {
+          nameInput.addEventListener("blur", () => {
+            validateName();
+            checkFormValidity();
+          }); // Valida o nome ao perder o foco
+          nameInput.addEventListener("input", () => {
+            validateName();
+            checkFormValidity();
+          }); // Valida o nome ao digitar
+        }
+
+        if (birthdateInput) {
+          birthdateInput.addEventListener("blur", () => {
+            validateBirthdate();
+            checkFormValidity();
+          }); // Valida a data de nascimento ao perder o foco
+          birthdateInput.addEventListener("input", () => {
+            validateBirthdate();
+            checkFormValidity();
+          }); // Valida a data de nascimento ao digitar
+        }
+
+        // Função para formatar o número de telefone no formato (99) 99999-9999
+        function formatPhone(value) {
+          value = value.replace(/\D/g, ""); // Remove todos os caracteres não numéricos
+          value = value.replace(/^(\d{2})(\d)/g, "($1) $2"); // Adiciona parênteses em volta dos dois primeiros dígitos
+          value = value.replace(/(\d{5})(\d)/, "$1-$2"); // Adiciona um hífen após o quinto dígito
+          
+          // Limita o número de dígitos a 11
+          if (value.length > 15) {
+            value = value.substring(0, 15);
+          }
+
+          return value;
+        }
+
+        // Função de validação para o campo de telefone
+        function validatePhone() {
+          const phoneValue = phoneInput.value.replace(/\D/g, ''); // Remove a máscara
+          if (phoneValue.length === 0) {
+            phoneError.textContent = "Campo obrigatório.";
+          } else if (phoneValue.length < 10 || phoneValue.length > 11) {
+            phoneError.textContent = "Quantidade de caracteres no campo inválida.";
+          } else {
+            phoneError.textContent = "";
+          }
+        }
+
+        // Função de validação para o campo de nome
+        function validateName() {
+          if (nameInput.value.trim() === "") {
+            nameError.textContent = "Campo obrigatório.";
+          } else {
+            nameError.textContent = "";
+          }
+        }
+
+        // Função de validação para o campo de data de nascimento
+        function validateBirthdate() {
+          if (birthdateInput.value.trim() === "") {
+            birthdateError.textContent = "Campo obrigatório.";
+          } else {
+            birthdateError.textContent = "";
+          }
+        }
+
+        // Validações ao enviar o formulário
+        document.getElementById("client-form").addEventListener("submit", function (e) {
+          e.preventDefault(); // Impede o envio padrão do formulário
+
+          // Chama as funções de validação para cada campo
+          validateName();
+          validatePhone();
+          validateBirthdate();
+
+          // Se todos os campos forem válidos, prossiga com o envio
+          if (nameError.textContent === "" && phoneError.textContent === "" && birthdateError.textContent === "") {
+            console.log("Todos os campos são válidos. Enviando formulário...");
+            // Chame a função addClient ou outro processamento de envio do formulário aqui
           }
         });
-      }
-    });
+      });
     </script>
   </body>
 </html>

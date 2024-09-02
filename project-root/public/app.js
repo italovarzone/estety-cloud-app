@@ -172,6 +172,10 @@ function addTechnicalSheet(e) {
     });
 }
 
+function removePhoneMask(phone) {
+  return phone.replace(/\D/g, ''); // Remove todos os caracteres que não são dígitos
+}
+
 // Função para adicionar um cliente
 function addClient(e) {
   e.preventDefault();
@@ -179,7 +183,7 @@ function addClient(e) {
   const id = document.getElementById("client-id").value;
   const name = document.getElementById("name").value;
   const birthdate = document.getElementById("birthdate").value;
-  const phone = document.getElementById("phone").value;
+  const phone = removePhoneMask(document.getElementById("phone").value); // Remove a máscara antes de enviar
 
   const addClientBtn = document.getElementById("add-client-btn");
   const btnText = document.getElementById("btn-text");
@@ -197,7 +201,7 @@ function addClient(e) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name, birthdate, phone }),
+    body: JSON.stringify({ name, birthdate, phone }), // Envia o telefone sem a máscara
   })
     .then((response) => response.json())
     .then((data) => {
@@ -222,6 +226,7 @@ function addClient(e) {
       }, 3000);
     });
 }
+
 
 // Função para carregar os dados do cliente para edição
 function loadClientForEdit(id) {
@@ -317,23 +322,27 @@ function loadClients(searchQuery = '') {
                   <td>${client.phone}</td>
                   <td class="action-buttons">
                       <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
-                        <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})" title="Editar cliente">
+                        <button class="btn btn-sm btn-light" onclick="editClient(${client.id})" title="Editar Cliente">
                             <i class="fas fa-pen"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="promptDeleteClient(${client.id})" title="Excluir cliente">
-                            <i class="fas fa-trash"></i>
+                        <button class="btn btn-sm btn-light" onclick="accessTechnicalSheet(${client.id}, '${client.name}')" title="Ficha técnica">
+                            <i class="fab fa-solid fa-stethoscope"></i>
                         </button>
-                        <button class="btn btn-sm btn-info" onclick="accessTechnicalSheet(${client.id}, '${client.name}')" title="Acessar ficha técnica">
-                            <i class="fas fa-file-lines"></i>
-                        </button>
-                        <button class="btn btn-sm btn-success" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')" title="Enviar mensagem via WhatsApp">
+                        <button class="btn btn-sm btn-light" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')" title="Enviar Mensagem via WhatsApp">
                             <i class="fab fa-whatsapp"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light" onclick="promptDeleteClient(${client.id})" title="Excluir cliente">
+                            <i class="fas fa-trash"></i>
                         </button>
                       </div>
                   </td>
               `;
           tbody.appendChild(tr);
         });
+
+        // Atualiza a contagem de clientes fora da tabela
+        const clientCountElement = document.getElementById('client-count');
+        clientCountElement.textContent = `Total de clientes: ${data.clients.length}`;
       } else {
         console.error("A estrutura de dados recebida não está correta:", data);
       }
