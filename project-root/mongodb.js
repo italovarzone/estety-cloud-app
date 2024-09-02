@@ -5,7 +5,7 @@ const app = express();
 const PORT = 3000;
 
 // URL de conexão do MongoDB Atlas (substitua <db_password> pela senha do banco)
-const mongoUrl = 'mongodb+srv://lashappapi:admin@lashdb.ozmmg.mongodb.net/lashdb?retryWrites=true&w=majority';
+const mongoUrl = process.env.MONGODB_URI;
 const client = new MongoClient(mongoUrl);
 
 let db;  // Variável para armazenar a conexão ao banco de dados
