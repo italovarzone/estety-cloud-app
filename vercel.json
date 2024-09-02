@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "project-root/mongodb.js",
+      "src": "mongodb.js",
       "use": "@vercel/node"
     },
     {
@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "project-root/mongodb.js"
+      "dest": "mongodb.js"
     },
     {
       "src": "/(.*)",
