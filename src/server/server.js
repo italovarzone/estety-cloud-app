@@ -4,6 +4,8 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); 
+
 const mongoUrl = process.env.MONGODB_URI;
 const client = new MongoClient(mongoUrl);
 
