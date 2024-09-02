@@ -61,7 +61,7 @@ app.get('/pages/dashboard/dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../app', 'pages', 'dashboard', 'dashboard.html'));
 });
 
-// Rota para adicionar client
+// Rota para adicionar cliente
 app.post('/api/clients', async (req, res) => {
     const { name, birthdate, phone } = req.body;
     if (!name || !birthdate || !phone) {
