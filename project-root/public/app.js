@@ -172,6 +172,10 @@ function addTechnicalSheet(e) {
     });
 }
 
+function removePhoneMask(phone) {
+  return phone.replace(/\D/g, ''); // Remove todos os caracteres que não são dígitos
+}
+
 // Função para adicionar um cliente
 function addClient(e) {
   e.preventDefault();
@@ -179,7 +183,7 @@ function addClient(e) {
   const id = document.getElementById("client-id").value;
   const name = document.getElementById("name").value;
   const birthdate = document.getElementById("birthdate").value;
-  const phone = document.getElementById("phone").value;
+  const phone = removePhoneMask(document.getElementById("phone").value); // Remove a máscara antes de enviar
 
   const addClientBtn = document.getElementById("add-client-btn");
   const btnText = document.getElementById("btn-text");
@@ -197,7 +201,7 @@ function addClient(e) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name, birthdate, phone }),
+    body: JSON.stringify({ name, birthdate, phone }), // Envia o telefone sem a máscara
   })
     .then((response) => response.json())
     .then((data) => {
@@ -223,6 +227,7 @@ function addClient(e) {
     });
 }
 
+
 // Função para carregar os dados do cliente para edição
 function loadClientForEdit(id) {
   fetch(`/api/clients/${id}`)
@@ -241,7 +246,6 @@ function loadClientForEdit(id) {
     .catch((error) => console.error("Erro ao carregar cliente:", error));
 }
 
-// Função para editar um cliente
 function editClient(e) {
   e.preventDefault();
 
@@ -268,7 +272,7 @@ function editClient(e) {
         alert(`Erro: ${data.error}`);
       } else {
         alert("Cliente editado com sucesso!");
-        window.location.href = "listagem.html"; // Redireciona para a listagem de clientes
+        window.location.href = "listagem.html";
       }
     })
     .catch((error) => console.error("Erro ao editar cliente:", error));
@@ -276,9 +280,12 @@ function editClient(e) {
 
 // Carregar dados do cliente ao abrir a página de edição, se necessário
 document.addEventListener("DOMContentLoaded", function () {
-  const clientId = document.getElementById("client-id").value;
-  if (clientId) {
-    loadClientForEdit(clientId);
+  const clientIdElement = document.getElementById("client-id");
+  if (clientIdElement) {
+    const clientId = clientIdElement.value;
+    if (clientId) {
+      loadClientForEdit(clientId);
+    }
   }
 
   const clientForm = document.getElementById("client-form");
@@ -297,40 +304,71 @@ function formatDateToBrazilian(dateString) {
   return `${day}/${month}/${utcYear}`;
 }
 
-// Função para carregar a lista de clientes
-function loadClients() {
-  fetch("/api/clients")
+function loadClients(searchQuery = '') {
+  fetch(`/api/clients?search=${encodeURIComponent(searchQuery)}`)
     .then((response) => response.json())
     .then((data) => {
       const tbody = document.querySelector("#client-table tbody");
       tbody.innerHTML = "";
 
-      data.clients.forEach((client) => {
-        const formattedBirthdate = formatDateToBrazilian(client.birthdate);
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-                <td>${client.id}</td>
-                <td>${client.name}</td>
-                <td>${formattedBirthdate}</td>
-                <td>${client.phone}</td>
-                <td class="action-buttons">
-                    <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
-                        <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})">
-                            Editar
+      if (data.clients && Array.isArray(data.clients)) {
+        data.clients.forEach((client) => {
+          const formattedBirthdate = formatDateToBrazilian(client.birthdate);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                  <td>${client.id}</td>
+                  <td>${client.name}</td>
+                  <td>${formattedBirthdate}</td>
+                  <td>${client.phone}</td>
+                  <td class="action-buttons">
+                      <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
+                        <button class="btn btn-sm btn-light" onclick="editClient(${client.id})" title="Editar Cliente">
+                            <i class="fas fa-pen"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="promptDeleteClient(${client.id})">
-                            Deletar
+                        <button class="btn btn-sm btn-light" onclick="accessTechnicalSheet(${client.id}, '${client.name}')" title="Ficha técnica">
+                            <i class="fab fa-solid fa-stethoscope"></i>
                         </button>
-                        <button class="btn btn-sm btn-info" onclick="accessTechnicalSheet(${client.id}, '${client.name}')">
-                            Ficha Técnica
+                        <button class="btn btn-sm btn-light" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')" title="Enviar Mensagem via WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
                         </button>
-                    </div>
-                </td>
-            `;
-        tbody.appendChild(tr);
-      });
+                        <button class="btn btn-sm btn-light" onclick="promptDeleteClient(${client.id})" title="Excluir cliente">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                  </td>
+              `;
+          tbody.appendChild(tr);
+        });
+
+        // Atualiza a contagem de clientes fora da tabela
+        const clientCountElement = document.getElementById('client-count');
+        clientCountElement.textContent = `Total de clientes: ${data.clients.length}`;
+      } else {
+        console.error("A estrutura de dados recebida não está correta:", data);
+      }
     })
     .catch((error) => console.error("Erro ao carregar clientes:", error));
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const filterNameInput = document.getElementById('filter-name');
+  if (filterNameInput) {
+    filterNameInput.addEventListener('input', function() {
+      const searchQuery = this.value.toLowerCase();
+      loadClients(searchQuery);
+    });
+  } else {
+    console.error("Elemento #filter-name não encontrado no DOM.");
+  }
+});
+
+function sendWhatsAppMessage(phone, clientName) {
+  const firstName = clientName.split(' ')[0]; 
+  const defaultMessage = `Olá ${firstName}! Tudo bem com você?`;
+  const formattedPhone = phone.replace(/\D/g, '');
+  const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(defaultMessage)}`;
+
+  window.open(whatsappUrl, '_blank');
 }
 
 // Função para adicionar um agendamento

@@ -140,7 +140,14 @@ app.get('/api/technical-sheets/:clientId', (req, res) => {
 
 // Rota para listar todos os clientes
 app.get('/api/clients', (req, res) => {
-    db.all(`SELECT * FROM clients`, [], (err, rows) => {
+    const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
+    const query = searchQuery 
+        ? `SELECT * FROM clients WHERE LOWER(name) LIKE ?`
+        : `SELECT * FROM clients`;
+
+    const params = searchQuery ? [`%${searchQuery}%`] : [];
+
+    db.all(query, params, (err, rows) => {
         if (err) {
             console.error('Erro ao listar clientes:', err.message);
             return res.status(500).json({ error: err.message });

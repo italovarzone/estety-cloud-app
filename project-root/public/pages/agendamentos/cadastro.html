@@ -8,47 +8,54 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <style>
+      .error-message {
+        color: red;
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+      }
+    </style>
   </head>
   <body>
-    <div class="container my-5">
+    <div style="margin: 36px;">
       <h1>Cadastrar Agendamento</h1>
       <br />
       <form id="appointment-form" class="row g-3">
         <div class="col-md-3">
           <label for="client" class="form-label">Cliente:</label>
-          <select id="client" class="form-control" required></select>
+          <select id="client" class="form-control">
+            <option value="" selected>Selecione um cliente</option>
+            <!-- Outras opções de clientes serão carregadas dinamicamente -->
+          </select>
+          <div id="client-error" class="error-message"></div>
         </div>
         <div class="col-md-3">
           <label for="procedure" class="form-label">Procedimento:</label>
-          <select id="procedure" class="form-control" required>
-            <option value="Colocação (Brasileiro)">
-              Colocação (Brasileiro)
-            </option>
+          <select id="procedure" class="form-control">
+            <option value="" selected>Selecione um procedimento</option>
+            <option value="Colocação (Brasileiro)">Colocação (Brasileiro)</option>
             <option value="Colocação (Fox Eyes)">Colocação (Fox Eyes)</option>
             <option value="Colocação (Classico)">Colocação (Classico)</option>
             <option value="Colocação (Sirena)">Colocação (Sirena)</option>
             <option value="Manutenção">Manutenção</option>
             <option value="Remoção">Remoção</option>
             <option value="Sobrancelha (Rena)">Sobrancelha (Henna)</option>
-            <option value="Sobrancelha (Sem Rena)">
-              Sobrancelha (Sem Henna)
-            </option>
+            <option value="Sobrancelha (Sem Rena)">Sobrancelha (Sem Henna)</option>
           </select>
+          <div id="procedure-error" class="error-message"></div>
         </div>
         <div class="col-md-3">
           <label for="date" class="form-label">Dia do agendamento:</label>
-          <input type="date" id="date" class="form-control" required />
+          <input type="date" id="date" class="form-control" />
+          <div id="date-error" class="error-message"></div>
         </div>
         <div class="col-md-3">
           <label for="time" class="form-label">Hora do agendamento:</label>
-          <input type="time" id="time" class="form-control" required />
+          <input type="time" id="time" class="form-control" />
+          <div id="time-error" class="error-message"></div>
         </div>
         <div class="col-12">
-          <button
-            type="submit"
-            id="add-appointment-btn"
-            class="btn btn-primary"
-          >
+          <button type="submit" id="add-appointment-btn" class="btn btn-primary" disabled>
             <span id="btn-text">Cadastrar Agendamento</span>
             <span
               id="btn-spinner"
@@ -62,5 +69,109 @@
 
     <script src="../../app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const clientSelect = document.getElementById("client");
+        const procedureSelect = document.getElementById("procedure");
+        const dateInput = document.getElementById("date");
+        const timeInput = document.getElementById("time");
+        const addAppointmentBtn = document.getElementById("add-appointment-btn");
+
+        const clientError = document.getElementById("client-error");
+        const procedureError = document.getElementById("procedure-error");
+        const dateError = document.getElementById("date-error");
+        const timeError = document.getElementById("time-error");
+
+        // Função para ativar o botão somente se todos os campos estiverem válidos
+        function checkFormValidity() {
+          validateClient();
+          validateProcedure();
+          validateDate();
+          validateTime();
+
+          if (clientError.textContent === "" && procedureError.textContent === "" &&
+              dateError.textContent === "" && timeError.textContent === "") {
+            addAppointmentBtn.disabled = false; // Habilita o botão se todos os campos estiverem válidos
+          } else {
+            addAppointmentBtn.disabled = true; // Desabilita o botão se algum campo for inválido
+          }
+        }
+
+        // Validações em tempo real para cada campo
+        clientSelect.addEventListener("change", () => {
+          validateClient();
+          checkFormValidity();
+        });
+
+        procedureSelect.addEventListener("change", () => {
+          validateProcedure();
+          checkFormValidity();
+        });
+
+        dateInput.addEventListener("input", () => {
+          validateDate();
+          checkFormValidity();
+        });
+
+        timeInput.addEventListener("input", () => {
+          validateTime();
+          checkFormValidity();
+        });
+
+        // Função de validação para o campo de cliente
+        function validateClient() {
+          if (clientSelect.value === "") {
+            clientError.textContent = "Campo obrigatório.";
+          } else {
+            clientError.textContent = "";
+          }
+        }
+
+        // Função de validação para o campo de procedimento
+        function validateProcedure() {
+          if (procedureSelect.value === "") {
+            procedureError.textContent = "Campo obrigatório.";
+          } else {
+            procedureError.textContent = "";
+          }
+        }
+
+        // Função de validação para o campo de data
+        function validateDate() {
+          if (dateInput.value.trim() === "") {
+            dateError.textContent = "Campo obrigatório.";
+          } else {
+            dateError.textContent = "";
+          }
+        }
+
+        // Função de validação para o campo de hora
+        function validateTime() {
+          if (timeInput.value.trim() === "") {
+            timeError.textContent = "Campo obrigatório.";
+          } else {
+            timeError.textContent = "";
+          }
+        }
+
+        // Validações ao enviar o formulário
+        document.getElementById("appointment-form").addEventListener("submit", function (e) {
+          e.preventDefault(); // Impede o envio padrão do formulário
+
+          // Chama as funções de validação para cada campo
+          validateClient();
+          validateProcedure();
+          validateDate();
+          validateTime();
+
+          // Se todos os campos forem válidos, prossiga com o envio
+          if (clientError.textContent === "" && procedureError.textContent === "" &&
+              dateError.textContent === "" && timeError.textContent === "") {
+            console.log("Todos os campos são válidos. Enviando formulário...");
+            // Chame a função addAppointment ou outro processamento de envio do formulário aqui
+          }
+        });
+      });
+    </script>
   </body>
 </html>
