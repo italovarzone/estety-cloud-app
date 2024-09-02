@@ -17,9 +17,7 @@
       <h1 class="mb-4">Meus Agendamentos</h1>
       <div class="row mb-3">
         <div class="col-md-6">
-          <label for="filter-status" class="form-label"
-            >Filtrar por Status:</label
-          >
+          <label for="filter-status" class="form-label">Filtrar por Status:</label>
           <select id="filter-status" class="form-select">
             <option value="nao-concluidos">Não Concluídos</option>
             <option value="concluidos">Concluídos</option>
@@ -44,6 +42,7 @@
               <th>Procedimento</th>
               <th>Data</th>
               <th>Hora</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -140,20 +139,22 @@
       </div>
     </div>
 
-    <script src="../../app.js"></script>
+    <!-- <script src="../../app.js"></script> -->
     <script>
       document.addEventListener("DOMContentLoaded", init);
 
       // Inicializa o app e carrega dados iniciais
       function init() {
         loadAppointments(); // Carrega a lista de agendamentos ao iniciar
+
+        // Adicionar eventos de mudança ao select-box e ao campo de texto
+        document.getElementById("filter-status").addEventListener("change", loadAppointments);
+        document.getElementById("filter-name").addEventListener("input", loadAppointments);
       }
 
       function loadAppointments() {
         const filterStatus = document.getElementById("filter-status").value;
-        const filterName = document
-          .getElementById("filter-name")
-          .value.toLowerCase();
+        const filterName = document.getElementById("filter-name").value.toLowerCase();
         let url = "/api/appointments";
 
         if (filterStatus === "concluidos") {
@@ -170,39 +171,39 @@
 
             if (data.appointments && data.appointments.length > 0) {
               data.appointments.forEach((appointment) => {
-                if (appointment.client.toLowerCase().includes(filterName)) {
-                  const tr = document.createElement("tr");
-                  tr.innerHTML = `
-                            <td>${appointment.id}</td>
-                            <td>${appointment.client}</td>
-                            <td>${appointment.procedure}</td>
-                            <td>${appointment.date}</td>
-                            <td>${appointment.time}</td>
-                            <td>
-                                <button title="Concluir Agendamento" class="btn btn-sm btn-light" ${
-                                  filterStatus === "concluidos"
-                                    ? "disabled"
-                                    : ""
-                                } onclick="concludeAppointment(${
-                    appointment.id
-                  })"><i class="fa-regular fa-circle-check"></i></button>
-                                <button title="Cancelar Agendamento" class="btn btn-sm btn-light" ${
-                                  filterStatus === "concluidos"
-                                    ? "disabled"
-                                    : ""
-                                } onclick="cancelAppointment(${
-                    appointment.id
-                  })"><i class="fa-solid fa-ban"></i></button>
-                            </td>
-                        `;
-                  tbody.appendChild(tr);
+                if (appointment.client.name.toLowerCase().includes(filterName)) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${appointment.id}</td>  <!-- Certifique-se de que está usando 'appointment.id' -->
+                        <td>${appointment.client.name}</td>
+                        <td>${appointment.procedure}</td>
+                        <td>${appointment.date}</td>
+                        <td>${appointment.time}</td>
+                        <td>
+                            <button title="Concluir Agendamento" class="btn btn-sm btn-light" ${
+                              filterStatus === "concluidos"
+                                ? "disabled"
+                                : ""
+                            } onclick="concludeAppointment(${appointment.id})">
+                                <i class="fa-regular fa-circle-check"></i>
+                            </button>
+                            <button title="Cancelar Agendamento" class="btn btn-sm btn-light" ${
+                              filterStatus === "concluidos"
+                                ? "disabled"
+                                : ""
+                            } onclick="cancelAppointment(${appointment.id})">
+                                <i class="fa-solid fa-ban"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
                 }
-              });
+            });
             } else {
               const noAppointmentsMessage = document.createElement("tr");
               noAppointmentsMessage.innerHTML = `
-                    <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
-                `;
+                <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
+              `;
               tbody.appendChild(noAppointmentsMessage);
             }
           })
@@ -211,90 +212,65 @@
             const tbody = document.querySelector("#appointment-table tbody");
             const noAppointmentsMessage = document.createElement("tr");
             noAppointmentsMessage.innerHTML = `
-                <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
+              <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
             `;
             tbody.appendChild(noAppointmentsMessage);
           });
       }
 
-      // Adicionar eventos de mudança ao select-box e ao campo de texto
-      document
-        .getElementById("filter-status")
-        .addEventListener("change", loadAppointments);
-      document
-        .getElementById("filter-name")
-        .addEventListener("input", loadAppointments);
-
       let appointmentToConclude = null;
-      concludeAppointment;
-      concludeAppointment;
+
       function concludeAppointment(id) {
         appointmentToConclude = id;
-        const modal = new bootstrap.Modal(
-          document.getElementById("confirmConcludeModal")
-        );
+        const modal = new bootstrap.Modal(document.getElementById("confirmConcludeModal"));
         modal.show();
       }
 
-      document
-        .getElementById("confirmConcludeButton")
-        .addEventListener("click", () => {
-          if (appointmentToConclude !== null) {
-            fetch(`/api/appointments/${appointmentToConclude}/conclude`, {
-              method: "PUT",
+      document.getElementById("confirmConcludeButton").addEventListener("click", () => {
+        if (appointmentToConclude !== null) {
+          fetch(`/api/appointments/${appointmentToConclude}/conclude`, {
+            method: "PUT",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById("confirmConcludeModal"));
+                modal.hide();
+                loadAppointments();
+              } else {
+                console.error("Erro ao concluir agendamento.");
+              }
             })
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.success) {
-                  const modal = bootstrap.Modal.getInstance(
-                    document.getElementById("confirmConcludeModal")
-                  );
-                  modal.hide();
-                  loadAppointments();
-                } else {
-                  console.error("Erro ao concluir agendamento.");
-                }
-              })
-              .catch((error) =>
-                console.error("Erro ao concluir agendamento:", error)
-              );
-          }
-        });
+            .catch((error) => console.error("Erro ao concluir agendamento:", error));
+        }
+      });
 
       let appointmentToCancel = null;
 
       function cancelAppointment(id) {
         appointmentToCancel = id;
-        const modal = new bootstrap.Modal(
-          document.getElementById("confirmCancelModal")
-        );
+        const modal = new bootstrap.Modal(document.getElementById("confirmCancelModal"));
         modal.show();
       }
 
-      document
-        .getElementById("confirmCancelButton")
-        .addEventListener("click", () => {
-          if (appointmentToCancel !== null) {
-            fetch(`/api/appointments/${appointmentToCancel}`, {
-              method: "DELETE",
+      document.getElementById("confirmCancelButton").addEventListener("click", () => {
+        if (appointmentToCancel !== null) {
+          fetch(`/api/appointments/${appointmentToCancel}`, {
+            method: "DELETE",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById("confirmCancelModal"));
+                modal.hide();
+                loadAppointments(); // Recarrega a lista de agendamentos após a exclusão
+              } else {
+                console.error("Erro ao cancelar e remover agendamento.");
+              }
             })
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.success) {
-                  const modal = bootstrap.Modal.getInstance(
-                    document.getElementById("confirmCancelModal")
-                  );
-                  modal.hide();
-                  loadAppointments(); // Recarrega a lista de agendamentos após a exclusão
-                } else {
-                  console.error("Erro ao cancelar e remover agendamento.");
-                }
-              })
-              .catch((error) =>
-                console.error("Erro ao cancelar e remover agendamento:", error)
-              );
-          }
-        });
+            .catch((error) => console.error("Erro ao cancelar e remover agendamento:", error));
+        }
+      });
     </script>
   </body>
 </html>

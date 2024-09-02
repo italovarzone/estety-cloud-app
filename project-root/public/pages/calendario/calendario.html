@@ -71,7 +71,7 @@
       </div>
     </div>
 
-    <script src="../../app.js"></script>
+    <!-- <script src="../../app.js"></script> -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         let currentYear = new Date().getFullYear();
@@ -156,107 +156,56 @@
             calendar.appendChild(row);
           }
         }
-
         function loadAppointmentsForDay(appointmentsDiv, year, month, day) {
           const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(
-            day
+              day
           ).padStart(2, "0")}`;
 
           fetch(`/api/appointments?date=${dateStr}`)
-            .then((response) => response.json())
-            .then((data) => {
-              appointmentsDiv.innerHTML = ""; // Limpa qualquer conteúdo existente na div de agendamentos
+              .then((response) => response.json())
+              .then((data) => {
+                  appointmentsDiv.innerHTML = ""; // Limpa qualquer conteúdo existente na div de agendamentos
 
-              if (data.appointments.length > 0) {
-                data.appointments.forEach((appointment) => {
-                  if (appointment.date === dateStr && !appointment.concluida) {
-                    // Apenas agendamentos não concluídos
-                    const appointmentCard = document.createElement("div");
-                    appointmentCard.classList.add("appointment-card");
+                  if (data.appointments.length > 0) {
+                      data.appointments.forEach((appointment) => {
+                          if (appointment.date === dateStr && appointment.concluida !== 1) {
+                              // Apenas agendamentos não concluídos
+                              const appointmentCard = document.createElement("div");
+                              appointmentCard.classList.add("appointment-card");
 
-                    const clientInfo = document.createElement("div");
-                    clientInfo.textContent = `${appointment.client} - ${appointment.time}`;
-                    appointmentCard.appendChild(clientInfo);
+                              const clientInfo = document.createElement("div");
+                              // Acesse o nome do cliente de forma correta
+                              clientInfo.textContent = `${appointment.client.name} - ${appointment.time}`;
+                              appointmentCard.appendChild(clientInfo);
 
-                    const procedureInfo = document.createElement("div");
-                    procedureInfo.textContent = appointment.procedure;
-                    appointmentCard.appendChild(procedureInfo);
+                              const procedureInfo = document.createElement("div");
+                              procedureInfo.textContent = appointment.procedure;
+                              appointmentCard.appendChild(procedureInfo);
 
-                    appointmentCard.addEventListener("click", () => {
-                      showAppointmentDetails(appointment);
-                    });
+                              appointmentCard.addEventListener("click", () => {
+                                  showAppointmentDetails(appointment);
+                              });
 
-                    appointmentsDiv.appendChild(appointmentCard);
+                              appointmentsDiv.appendChild(appointmentCard);
+                          }
+                      });
                   }
-                });
-              }
-            })
-            .catch((error) =>
-              console.error("Erro ao carregar agendamentos:", error)
-            );
+              })
+              .catch((error) =>
+                  console.error("Erro ao carregar agendamentos:", error)
+              );
         }
-
-        function loadAppointmentsForDay(appointmentsDiv, year, month, day) {
-          const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(
-            day
-          ).padStart(2, "0")}`;
-
-          fetch(`/api/appointments?date=${dateStr}`)
-            .then((response) => response.json())
-            .then((data) => {
-              appointmentsDiv.innerHTML = ""; // Limpa qualquer conteúdo existente na div de agendamentos
-
-              if (data.appointments.length > 0) {
-                data.appointments.forEach((appointment) => {
-                  if (
-                    appointment.date === dateStr &&
-                    appointment.concluida !== 1
-                  ) {
-                    // Apenas agendamentos não concluídos
-                    const appointmentCard = document.createElement("div");
-                    appointmentCard.classList.add("appointment-card");
-
-                    const clientInfo = document.createElement("div");
-                    clientInfo.textContent = `${appointment.client} - ${appointment.time}`;
-                    appointmentCard.appendChild(clientInfo);
-
-                    const procedureInfo = document.createElement("div");
-                    procedureInfo.textContent = appointment.procedure;
-                    appointmentCard.appendChild(procedureInfo);
-
-                    appointmentCard.addEventListener("click", () => {
-                      showAppointmentDetails(appointment);
-                    });
-
-                    appointmentsDiv.appendChild(appointmentCard);
-                  }
-                });
-              }
-            })
-            .catch((error) =>
-              console.error("Erro ao carregar agendamentos:", error)
-            );
-        }
-
         function showAppointmentDetails(appointment) {
-          const modal = new bootstrap.Modal(
-            document.getElementById("appointmentModal")
-          );
-          document.getElementById(
-            "appointment-details"
-          ).textContent = `Cliente: ${appointment.client} - Horário: ${appointment.time}`;
+          const modal = new bootstrap.Modal(document.getElementById("appointmentModal"));
+          document.getElementById("appointment-details").textContent = `Cliente: ${appointment.client.name} - Horário: ${appointment.time} - Procedimento: ${appointment.procedure}`;
 
-          const concludeButton = document.getElementById(
-            "conclude-appointment"
-          );
-          concludeButton.onclick = () =>
-            concludeAppointment(appointment.id, modal);
+          const concludeButton = document.getElementById("conclude-appointment");
+          concludeButton.onclick = () => concludeAppointment(appointment._id, modal);
 
           modal.show();
         }
-
         function concludeAppointment(id, modal) {
-          fetch(`/api/appointments/${id}/conclude`, {
+          fetch(`/api/appointments/${id}/conclude`, { // Use _id ao invés de id
             method: "PUT",
           })
             .then((response) => response.json())
