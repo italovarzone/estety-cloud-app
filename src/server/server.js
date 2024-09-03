@@ -1,17 +1,32 @@
-const express = require('express');
-const { MongoClient, ObjectId } = require('mongodb');
-const path = require('path');
-const app = express();
-const PORT = 3000;
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = process.env.MONGODB_URI;
 
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); 
+// Crie um cliente MongoDB com as opções especificadas
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
-const mongoUrl = process.env.MONGODB_URI;
-const client = new MongoClient(mongoUrl, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    ssl: true,
-  });
+async function run() {
+  try {
+    // Conecta ao servidor
+    await client.connect();
+    // Envia um ping para confirmar uma conexão bem-sucedida
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } catch (err) {
+    console.error("Erro ao conectar ao MongoDB:", err);
+  } finally {
+    // Fecha o cliente após terminar ou em caso de erro
+    await client.close();
+  }
+}
+
+run().catch(console.dir);
+
 
 let db; 
 
