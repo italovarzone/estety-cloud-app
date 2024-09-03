@@ -7,7 +7,11 @@ const PORT = 3000;
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); 
 
 const mongoUrl = process.env.MONGODB_URI;
-const client = new MongoClient(mongoUrl);
+const client = new MongoClient(mongoUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    ssl: true,
+  });
 
 let db; 
 
