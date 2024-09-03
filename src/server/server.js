@@ -5,10 +5,8 @@ const PORT = 3000;
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-// URI do MongoDB
 const uri = process.env.MONGODB_URI;
 
-// Criação do cliente MongoDB com as opções especificadas
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
