@@ -184,14 +184,14 @@
                               filterStatus === "concluidos"
                                 ? "disabled"
                                 : ""
-                            } onclick="concludeAppointment(${appointment.id})">
+                            } onclick="concludeAppointment('${appointment.id}')">
                                 <i class="fa-regular fa-circle-check"></i>
                             </button>
                             <button title="Cancelar Agendamento" class="btn btn-sm btn-light" ${
                               filterStatus === "concluidos"
                                 ? "disabled"
                                 : ""
-                            } onclick="cancelAppointment(${appointment.id})">
+                            } onclick="cancelAppointment('${appointment.id}')">
                                 <i class="fa-solid fa-ban"></i>
                             </button>
                         </td>
