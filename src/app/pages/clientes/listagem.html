@@ -93,6 +93,9 @@
             tbody.innerHTML = "";
 
             if (data.clients && Array.isArray(data.clients)) {
+              // Armazenar a lista de clientes no sessionStorage
+              sessionStorage.setItem("clientsList", JSON.stringify(data.clients));
+
               data.clients.forEach((client) => {
                 const formattedBirthdate = formatDateToBrazilian(client.birthdate);
                 const tr = document.createElement("tr");
@@ -102,20 +105,20 @@
                   <td>${formattedBirthdate}</td>
                   <td>${client.phone}</td>
                   <td class="action-buttons">
-                      <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
-                        <button class="btn btn-sm btn-light" onclick="editClient('${client._id}')" title="Editar Cliente">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light" onclick="accessTechnicalSheet('${client._id}', '${client.name}')" title="Ficha técnica">
-                            <i class="fab fa-solid fa-stethoscope"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')" title="Enviar Mensagem via WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light" onclick="promptDeleteClient('${client._id}')" title="Excluir cliente">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                      </div>
+                    <div style="display: flex; gap: 8px; margin-left: auto; margin-right: auto;">
+                      <button class="btn btn-sm btn-light" onclick="editClient('${client._id}')" title="Editar Cliente">
+                        <i class="fas fa-pen"></i>
+                      </button>
+                      <button class="btn btn-sm btn-light" onclick="accessTechnicalSheet('${client._id}', '${client.name}')" title="Ficha técnica">
+                        <i class="fab fa-solid fa-stethoscope"></i>
+                      </button>
+                      <button class="btn btn-sm btn-light" onclick="sendWhatsAppMessage('${client.phone}', '${client.name}')" title="Enviar Mensagem via WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                      </button>
+                      <button class="btn btn-sm btn-light" onclick="promptDeleteClient('${client._id}')" title="Excluir cliente">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 `;
                 tbody.appendChild(tr);
@@ -204,6 +207,8 @@
         if (client) {
           localStorage.setItem("clientToEdit", JSON.stringify(client));
           window.location.href = "cadastro.html";
+        } else {
+          console.error('Cliente não encontrado para edição.');
         }
       }
 

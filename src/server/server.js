@@ -174,6 +174,50 @@ app.put('/api/technical-sheets/:clientId', ensureDbConnection, async (req, res) 
     }
 });
 
+// Rota para deletar um cliente
+app.delete('/api/clients/:id', ensureDbConnection, async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      const result = await db.collection('clients').deleteOne({ _id: new ObjectId(id) });
+      
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: 'Cliente não encontrado.' });
+      }
+      
+      res.json({ success: true, message: 'Cliente deletado com sucesso.' });
+    } catch (err) {
+      console.error('Erro ao deletar cliente:', err.message);
+      res.status(500).json({ error: 'Erro ao deletar cliente.' });
+    }
+  });
+
+  // Rota para editar cliente
+app.put('/api/clients/:id', ensureDbConnection, async (req, res) => {
+    const { id } = req.params;
+    const { name, birthdate, phone } = req.body;
+  
+    if (!name || !birthdate || !phone) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+  
+    try {
+      const result = await db.collection('clients').updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { name, birthdate, phone } }
+      );
+  
+      if (result.modifiedCount === 0) {
+        return res.status(404).json({ error: 'Cliente não encontrado.' });
+      }
+  
+      res.json({ success: true, message: 'Cliente atualizado com sucesso.' });
+    } catch (err) {
+      console.error('Erro ao editar cliente:', err.message);
+      res.status(500).json({ error: 'Erro ao editar cliente.' });
+    }
+});
+
 // Rota para listar todos os clientes
 app.get('/api/clients', ensureDbConnection, async (req, res) => {
   const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
