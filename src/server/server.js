@@ -270,6 +270,46 @@ app.put('/api/appointments/:id/conclude', ensureDbConnection, async (req, res) =
   }
 });
 
+// Rota para o dashboard
+app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
+    try {
+      const totalAppointments = await db.collection('appointments').countDocuments();
+      const totalClients = await db.collection('clients').countDocuments();
+      res.json({
+        totalAppointments,
+        totalClients
+      });
+    } catch (err) {
+      console.error('Erro ao carregar o dashboard:', err.message);
+      res.status(500).json({ error: 'Erro ao carregar o dashboard.' });
+    }
+  });
+  
+  // Rota para listar agendamentos por cliente
+  app.get('/api/appointments-by-client', ensureDbConnection, async (req, res) => {
+    try {
+      const appointmentsByClient = await db.collection('appointments').aggregate([
+        { $lookup: {
+          from: 'clients',
+          localField: 'clientId',
+          foreignField: '_id',
+          as: 'client'
+        }},
+        { $unwind: '$client' },
+        { $group: {
+          _id: '$client._id',
+          client_name: { $first: '$client.name' },
+          appointment_count: { $sum: 1 }
+        }}
+      ]).toArray();
+  
+      res.json(appointmentsByClient);
+    } catch (err) {
+      console.error('Erro ao carregar dados dos agendamentos por cliente:', err.message);
+      res.status(500).json({ error: 'Erro ao carregar dados dos agendamentos.' });
+    }
+  });
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando...`);
 });
