@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const PORT = 3000;
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); 
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // URI do MongoDB
@@ -107,6 +107,73 @@ app.get('/api/technical-sheets/:clientId', ensureDbConnection, async (req, res) 
   }
 });
 
+// Rota para adicionar ficha técnica
+app.post('/api/technical-sheets', ensureDbConnection, async (req, res) => {
+    const {
+      clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+      tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
+      procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
+    } = req.body;
+  
+    // Verificação dos campos obrigatórios
+    if (!clientId || !datetime || !rimel || !gestante) {
+      return res.status(400).json({ error: 'Campos obrigatórios faltando.' });
+    }
+  
+    try {
+      const result = await db.collection('technical_sheets').insertOne({
+        clientId: new ObjectId(clientId), datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
+        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
+      });
+      res.status(201).json({
+        id: result.insertedId,
+        clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+        tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
+        procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
+      });
+    } catch (err) {
+      console.error('Erro ao adicionar ficha técnica:', err.message);
+      res.status(500).json({ error: err.message });
+    }
+});
+
+// Rota para editar ficha técnica
+app.put('/api/technical-sheets/:clientId', ensureDbConnection, async (req, res) => {
+    const clientId = req.params.clientId;
+    const {
+      datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+      tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado,
+      dorme_lado_posicao, problema_informar, procedimento, mapping, estilo,
+      modelo_fios, espessura, curvatura, adesivo, observacao
+    } = req.body;
+  
+    // Verificação dos campos obrigatórios
+    if (!datetime || !rimel || !gestante) {
+      return res.status(400).json({ error: 'Campos obrigatórios faltando.' });
+    }
+  
+    try {
+      const result = await db.collection('technical_sheets').updateOne(
+        { clientId: new ObjectId(clientId) },
+        {
+          $set: {
+            datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
+            tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao,
+            problema_informar, procedimento, mapping, estilo, modelo_fios, espessura, curvatura, adesivo, observacao
+          }
+        }
+      );
+      if (result.modifiedCount === 0) {
+        return res.status(404).json({ error: 'Ficha técnica não encontrada.' });
+      }
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Erro ao atualizar ficha técnica:', err.message);
+      res.status(500).json({ error: 'Erro ao atualizar ficha técnica.' });
+    }
+});
+
 // Rota para listar todos os clientes
 app.get('/api/clients', ensureDbConnection, async (req, res) => {
   const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
@@ -188,9 +255,21 @@ app.get('/api/appointments', ensureDbConnection, async (req, res) => {
   }
 });
 
-// Outras rotas para concluir, editar, deletar agendamentos e clientes
-// (Assegure-se de que todas as rotas usem ensureDbConnection)
+// Rota para concluir agendamento
+app.put('/api/appointments/:id/conclude', ensureDbConnection, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.collection('appointments').updateOne({ _id: new ObjectId(id) }, { $set: { concluida: true } });
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ error: 'Agendamento não encontrado.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao concluir agendamento:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando...`);
 });
