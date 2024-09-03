@@ -1,0 +1,45 @@
+trigger:
+  - develop  # Substitua pelo nome da sua branch principal se necessário
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  # Step 1: Use Node.js version 16.x (ou uma versão compatível)
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '16.x'
+    displayName: 'Instalar Node.js'
+
+  # Step 2: Instalar dependências e build da aplicação
+  - script: |
+      npm install
+      npm run build  # Altere se você tiver outro script de build
+    displayName: 'Instalar dependências e build da aplicação'
+
+  # Step 3: Arquivar arquivos para deploy
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)'  # Diretório do código
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+      replaceExistingArchive: true
+    displayName: 'Arquivar arquivos para deploy'
+
+  # Step 4: Publicar Artefatos
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+    displayName: 'Publicar artefatos'
+
+# Step 5: Deploy para Azure Web App
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: 'italovarzone'  # Substitua pelo seu Service Connection
+      appName: 'lash-app'  # Nome do seu App Service no Azure
+      appType: 'webApp'  # Especifica que o tipo de app é Web App
+      package: '$(Build.ArtifactStagingDirectory)/*.zip'
+    displayName: 'Deploy para Azure Web App'
+
