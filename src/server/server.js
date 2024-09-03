@@ -1,5 +1,10 @@
+const express = require('express');
+const path = require('path');
+const app = express();
+const PORT = 3000;
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = process.env.MONGODB_URI;
+const uri = process.env.MONGODB_URI;  // Mude a URI para ser lida do .env
 
 // Crie um cliente MongoDB com as opções especificadas
 const client = new MongoClient(uri, {
@@ -26,7 +31,6 @@ async function run() {
 }
 
 run().catch(console.dir);
-
 
 let db; 
 
