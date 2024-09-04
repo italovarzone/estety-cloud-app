@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const app = express();
+const axios = require('axios'); 
 const PORT = 3000;
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -357,3 +358,13 @@ app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando...`);
 });
+
+setInterval(() => {
+  axios.get(`http://localhost:${PORT}/api/clients`)
+    .then(response => {
+      console.log('GET fake realizado com sucesso');
+    })
+    .catch(error => {
+      console.error('Erro ao realizar o GET fake:', error.message);
+    });
+}, 10 * 60 * 1000);  // 10 minutos em milissegundos
