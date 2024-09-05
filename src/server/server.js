@@ -423,7 +423,7 @@ app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
   
   // Rota fake de GET para manter a conexão
   setInterval(() => {
-    axios.get(`http://localhost:${PORT}/api/clients`)
+    axios.get(`https://lash-app.onrender.com/api/clients`)
       .then(response => {
         console.log('GET realizado com sucesso');
       })
