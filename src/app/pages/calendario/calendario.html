@@ -11,9 +11,57 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="../../../styles.css">
+    <style>
+      /* Estilo para Desktop */
+      .desktop-view {
+        display: block;
+      }
+
+      .mobile-view {
+        display: none;
+      }
+
+      /* Estilos para Mobile */
+      @media (max-width: 767px) {
+        .desktop-view {
+          display: none; /* Oculta o layout de desktop no mobile */
+        }
+
+        .mobile-view {
+          display: block; /* Exibe o layout de mobile */
+        }
+
+        .calendar-header-mobile {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .calendar-header-mobile h2 {
+          margin: 0;
+          font-size: 18px;
+        }
+
+        .calendar-grid-mobile {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .calendar-cell-mobile {
+          border: 1px solid #ddd;
+          padding: 10px;
+          min-height: 80px;
+          position: relative;
+          overflow-y: auto;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div style="margin: 36px;">
+    <!-- Layout para Desktop -->
+    <div class="desktop-view" style="margin: 36px;">
       <h1 class="mb-4 text-center">Calendário de Agendamentos</h1>
 
       <div class="d-flex justify-content-between mb-3">
@@ -25,6 +73,17 @@
       </div>
 
       <div id="calendar" class="calendar-grid"></div>
+    </div>
+
+    <!-- Layout para Mobile -->
+    <div class="mobile-view container mt-4">
+      <div class="calendar-header-mobile text-center">
+        <button id="prev-month-mobile" class="btn btn-primary">&lt;</button>
+        <h2 id="current-month-year-mobile"></h2>
+        <button id="next-month-mobile" class="btn btn-primary">&gt;</button>
+      </div>
+
+      <div id="calendar-mobile" class="calendar-grid-mobile"></div>
     </div>
 
     <!-- Dialog para exibir informações do agendamento -->
@@ -71,130 +130,91 @@
       </div>
     </div>
 
-    <!-- <script src="../../app.js"></script> -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth();
 
-        // Atualiza o título com o mês e ano atuais
-        function updateMonthYearDisplay() {
+        function updateMonthYearDisplay(desktop) {
           const monthNames = [
-            "Janeiro",
-            "Fevereiro",
-            "Março",
-            "Abril",
-            "Maio",
-            "Junho",
-            "Julho",
-            "Agosto",
-            "Setembro",
-            "Outubro",
-            "Novembro",
-            "Dezembro",
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
           ];
-          document.getElementById(
-            "current-month-year"
-          ).textContent = `${monthNames[currentMonth]} ${currentYear}`;
+          const elementId = desktop ? "current-month-year" : "current-month-year-mobile";
+          document.getElementById(elementId).textContent = `${monthNames[currentMonth]} ${currentYear}`;
         }
 
-        // Renderiza o calendário
-        function renderCalendar(month, year) {
-          const calendar = document.getElementById("calendar");
-          calendar.innerHTML = ""; // Limpa o conteúdo atual do calendário
+        function renderCalendar(month, year, desktop) {
+          const calendar = document.getElementById(desktop ? "calendar" : "calendar-mobile");
+          calendar.innerHTML = ""; 
 
           const daysInMonth = new Date(year, month + 1, 0).getDate();
           const firstDayIndex = new Date(year, month, 1).getDay();
 
-          // Cabeçalho com os dias da semana
           const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-          const headerRow = document.createElement("div");
-          headerRow.classList.add("calendar-row");
-          weekDays.forEach((day) => {
-            const dayDiv = document.createElement("div");
-            dayDiv.classList.add("calendar-header");
-            dayDiv.textContent = day;
-            headerRow.appendChild(dayDiv);
-          });
-          calendar.appendChild(headerRow);
-
+          
           let day = 1;
           for (let i = 0; i < 6; i++) {
-            // Máximo de 6 semanas por mês
-            const row = document.createElement("div");
-            row.classList.add("calendar-row");
-
             for (let j = 0; j < 7; j++) {
               const cell = document.createElement("div");
-              cell.classList.add("calendar-cell");
+              cell.classList.add(desktop ? "calendar-cell" : "calendar-cell-mobile");
 
               if (i === 0 && j < firstDayIndex) {
                 cell.classList.add("empty");
               } else if (day > daysInMonth) {
                 break;
               } else {
-                // Adiciona o número do dia na parte superior da célula, fora da área de scroll
+                const dayOfWeek = weekDays[(firstDayIndex + day - 1) % 7]; // Calcula o dia da semana
+
                 const dayNumberDiv = document.createElement("div");
                 dayNumberDiv.classList.add("day-number");
-                dayNumberDiv.textContent = day;
 
-                // Div para os agendamentos com scroll
+                // Para o mobile, exibe o número do dia e o dia da semana juntos
+                dayNumberDiv.textContent = desktop ? day : `${String(day).padStart(2, '0')} - ${dayOfWeek}`;
+
                 const appointmentsDiv = document.createElement("div");
                 appointmentsDiv.classList.add("appointments-container");
 
-                // Adiciona o número do dia fixo e a div de agendamentos na célula
                 cell.appendChild(dayNumberDiv);
                 cell.appendChild(appointmentsDiv);
 
-                // Carrega os agendamentos para o dia atual, garantindo que o número do dia não seja duplicado
                 loadAppointmentsForDay(appointmentsDiv, year, month + 1, day);
-
                 day++;
               }
-              row.appendChild(cell);
+              calendar.appendChild(cell);
             }
-            calendar.appendChild(row);
           }
         }
+
         function loadAppointmentsForDay(appointmentsDiv, year, month, day) {
-          const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(
-              day
-          ).padStart(2, "0")}`;
-
+          const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           fetch(`/api/appointments?date=${dateStr}`)
-              .then((response) => response.json())
-              .then((data) => {
-                  appointmentsDiv.innerHTML = ""; // Limpa qualquer conteúdo existente na div de agendamentos
+            .then(response => response.json())
+            .then(data => {
+              appointmentsDiv.innerHTML = "";
+              if (data.appointments.length > 0) {
+                data.appointments.forEach(appointment => {
+                  if (appointment.date === dateStr && appointment.concluida !== 1) {
+                    const appointmentCard = document.createElement("div");
+                    appointmentCard.classList.add("appointment-card");
 
-                  if (data.appointments.length > 0) {
-                      data.appointments.forEach((appointment) => {
-                          if (appointment.date === dateStr && appointment.concluida !== 1) {
-                              // Apenas agendamentos não concluídos
-                              const appointmentCard = document.createElement("div");
-                              appointmentCard.classList.add("appointment-card");
+                    const clientInfo = document.createElement("div");
+                    clientInfo.textContent = `${appointment.client.name} - ${appointment.time}`;
+                    appointmentCard.appendChild(clientInfo);
 
-                              const clientInfo = document.createElement("div");
-                              // Acesse o nome do cliente de forma correta
-                              clientInfo.textContent = `${appointment.client.name} - ${appointment.time}`;
-                              appointmentCard.appendChild(clientInfo);
+                    const procedureInfo = document.createElement("div");
+                    procedureInfo.textContent = appointment.procedure;
+                    appointmentCard.appendChild(procedureInfo);
 
-                              const procedureInfo = document.createElement("div");
-                              procedureInfo.textContent = appointment.procedure;
-                              appointmentCard.appendChild(procedureInfo);
-
-                              appointmentCard.addEventListener("click", () => {
-                                  showAppointmentDetails(appointment);
-                              });
-
-                              appointmentsDiv.appendChild(appointmentCard);
-                          }
-                      });
+                    appointmentCard.addEventListener("click", () => showAppointmentDetails(appointment));
+                    appointmentsDiv.appendChild(appointmentCard);
                   }
-              })
-              .catch((error) =>
-                  console.error("Erro ao carregar agendamentos:", error)
-              );
+                });
+              }
+            })
+            .catch(error => console.error("Erro ao carregar agendamentos:", error));
         }
+
         function showAppointmentDetails(appointment) {
           const modal = new bootstrap.Modal(document.getElementById("appointmentModal"));
           document.getElementById("appointment-details").textContent = `Cliente: ${appointment.client.name} - Horário: ${appointment.time} - Procedimento: ${appointment.procedure}`;
@@ -204,53 +224,67 @@
 
           modal.show();
         }
+
         function concludeAppointment(id, modal) {
-          fetch(`/api/appointments/${id}/conclude`, { // Use _id ao invés de id
-            method: "PUT",
-          })
-            .then((response) => response.json())
-            .then((data) => {
+          fetch(`/api/appointments/${id}/conclude`, { method: "PUT" })
+            .then(response => response.json())
+            .then(data => {
               if (data.success) {
                 modal.hide();
-                location.reload(); // Recarrega a página para atualizar o calendário
+                location.reload();
               } else {
                 console.error("Erro ao concluir agendamento.");
               }
             })
-            .catch((error) =>
-              console.error("Erro ao concluir agendamento:", error)
-            );
+            .catch(error => console.error("Erro ao concluir agendamento:", error));
         }
 
-        // Eventos de navegação entre meses e anos
+        // Navegação para o Desktop
         document.getElementById("prev-month").addEventListener("click", () => {
           currentMonth = currentMonth === 0 ? 11 : currentMonth - 1;
           currentYear = currentMonth === 11 ? currentYear - 1 : currentYear;
-          updateMonthYearDisplay();
-          renderCalendar(currentMonth, currentYear);
+          updateMonthYearDisplay(true);
+          renderCalendar(currentMonth, currentYear, true);
         });
 
         document.getElementById("next-month").addEventListener("click", () => {
           currentMonth = currentMonth === 11 ? 0 : currentMonth + 1;
           currentYear = currentMonth === 0 ? currentYear + 1 : currentYear;
-          updateMonthYearDisplay();
-          renderCalendar(currentMonth, currentYear);
+          updateMonthYearDisplay(true);
+          renderCalendar(currentMonth, currentYear, true);
         });
 
         document.getElementById("prev-year").addEventListener("click", () => {
           currentYear--;
-          updateMonthYearDisplay();
-          renderCalendar(currentMonth, currentYear);
+          updateMonthYearDisplay(true);
+          renderCalendar(currentMonth, currentYear, true);
         });
 
         document.getElementById("next-year").addEventListener("click", () => {
           currentYear++;
-          updateMonthYearDisplay();
-          renderCalendar(currentMonth, currentYear);
+          updateMonthYearDisplay(true);
+          renderCalendar(currentMonth, currentYear, true);
         });
 
-        updateMonthYearDisplay();
-        renderCalendar(currentMonth, currentYear);
+        // Navegação para o Mobile
+        document.getElementById("prev-month-mobile").addEventListener("click", () => {
+          currentMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+          currentYear = currentMonth === 11 ? currentYear - 1 : currentYear;
+          updateMonthYearDisplay(false);
+          renderCalendar(currentMonth, currentYear, false);
+        });
+
+        document.getElementById("next-month-mobile").addEventListener("click", () => {
+          currentMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+          currentYear = currentMonth === 0 ? currentYear + 1 : currentYear;
+          updateMonthYearDisplay(false);
+          renderCalendar(currentMonth, currentYear, false);
+        });
+
+        updateMonthYearDisplay(true);
+        renderCalendar(currentMonth, currentYear, true); 
+        updateMonthYearDisplay(false);
+        renderCalendar(currentMonth, currentYear, false);
       });
     </script>
   </body>
