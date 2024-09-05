@@ -63,10 +63,6 @@
             display: none;
         }
 
-        .sidebar a:hover {
-            background-color: #9c5fb1;
-        }
-
         .content {
             flex: 1;
             padding: 0;
@@ -112,6 +108,44 @@
         .sidebar.minimized a i {
             margin: 0;
         }
+
+        .sidebar.minimized hr {
+            display: none; /* Remove o texto do grupo e o separador */
+        }
+        
+        .sidebar-group {
+        display: block;
+        padding: 10px 15px;
+        font-weight: bold;
+        color: #f8f9fa;
+        text-transform: uppercase;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .sidebar-logout {
+        margin-top: auto; /* Empurra o botão de logout para o canto inferior */
+        padding: 10px 15px;
+        background-color: #d42c19; /* Cor de fundo vermelho */
+    }
+
+    .sidebar-logout a:hover {
+        background-color: #9a534b !important; /* Cor de fundo vermelho */
+    }
+
+    /* Estilos adicionais para a sidebar e conteúdo */
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+    }
+
+    .sidebar-link i {
+        margin-right: 10px;
+    }
+
+    .sidebar-link:hover {
+        background-color: #9c5fb1;
+    }
     </style>
 </head>
 <body>
@@ -120,6 +154,9 @@
         <div class="sidebar-header">
             <button class="toggle-btn" id="toggle-btn"><i class="fas fa-bars"></i></button>
         </div>
+        <a href="pages/agendamentos/cadastro.html" target="content-frame" class="sidebar-link">
+            <i class="fas fa-calendar-plus"></i><span> Cadastrar Agendamento</span>
+        </a>
         <a href="pages/agendamentos/listagem.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-calendar-alt"></i><span> Meus Agendamentos</span>
         </a>
@@ -130,18 +167,18 @@
         <a href="pages/clientes/listagem.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-users"></i><span> Meus Clientes</span>
         </a>
-        <a href="pages/agendamentos/cadastro.html" target="content-frame" class="sidebar-link">
-            <i class="fas fa-calendar-plus"></i><span> Cadastrar Agendamento</span>
-        </a>
+        <hr>
         <a href="pages/dashboard/dashboard.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-chart-line"></i><span> Dashboard</span>
         </a>
         <a href="pages/calendario/calendario.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-calendar"></i><span> Calendário</span>
         </a>
-        <a href="#" id="logout-link" class="sidebar-link">
+        <hr>
+        <a href="#" id="logout-link" class="sidebar-logout">
             <i class="fas fa-sign-out-alt"></i><span> Logout</span>
         </a>
+
     </div>
     <div class="content expanded">
         <iframe name="content-frame" id="content-frame" src="pages/agendamentos/listagem.html"></iframe>
