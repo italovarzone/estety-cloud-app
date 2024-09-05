@@ -48,6 +48,7 @@
             justify-content: flex-start; /* Alinhar ícones à esquerda quando expandida */
             font-size: 16px;
             transition: all 0.3s ease;
+            width: 100%;
         }
 
         .sidebar.minimized a {
@@ -60,6 +61,10 @@
         }
 
         .sidebar.minimized a span {
+            display: none;
+        }
+
+        .sidebar.minimized span {
             display: none;
         }
 
@@ -89,12 +94,21 @@
         }
 
         .toggle-btn {
+            display: flex;
+            gap: 48px;
+            align-items: center;
             font-size: 24px;
             background-color: transparent;
             color: white;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
+        }
+
+        .sidebar.minimized {
+            button {
+                display: contents;
+            }
         }
 
         .sidebar a i {
@@ -124,8 +138,11 @@
     }
 
     .sidebar-logout {
+        display: flex;
+        justify-content: center;
         margin-top: auto; /* Empurra o botão de logout para o canto inferior */
         padding: 10px 15px;
+        text-align: center;
         background-color: #d42c19; /* Cor de fundo vermelho */
     }
 
@@ -151,8 +168,14 @@
 <body>
 <div class="wrapper">
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <button class="toggle-btn" id="toggle-btn"><i class="fas fa-bars"></i></button>
+        <div class="sidebar-header" style="display: flex; flex-direction: column;">
+            <button class="toggle-btn" id="toggle-btn">
+                <i class="fas fa-bars"></i>
+                <span>Lash App</span>
+            </button>
+            <a style="margin-top: 16px; justify-content: center;" href="#" id="logout-link" class="sidebar-logout">
+                <i class="fas fa-sign-out-alt"></i><span>Sair</span>
+            </a>
         </div>
         <a href="pages/agendamentos/cadastro.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-calendar-plus"></i><span> Cadastrar Agendamento</span>
@@ -174,11 +197,6 @@
         <a href="pages/calendario/calendario.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-calendar"></i><span> Calendário</span>
         </a>
-        <hr>
-        <a href="#" id="logout-link" class="sidebar-logout">
-            <i class="fas fa-sign-out-alt"></i><span> Logout</span>
-        </a>
-
     </div>
     <div class="content expanded">
         <iframe name="content-frame" id="content-frame" src="pages/agendamentos/listagem.html"></iframe>
