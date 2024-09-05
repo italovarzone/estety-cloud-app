@@ -54,14 +54,12 @@
     </div>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Previne o comportamento padrão do formulário de recarregar a página
+            event.preventDefault();
             
-            // Captura os dados do formulário
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
             try {
-                // Envia a requisição POST para o servidor
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
@@ -69,13 +67,12 @@
                     },
                     body: JSON.stringify({ username, password })
                 });
-    
+
                 if (response.ok) {
-                    const data = await response.json(); // Recebe o token do servidor
-                    localStorage.setItem('authToken', data.token); // Salva o token no localStorage
-                    window.location.href = '/'; // Redireciona para a página principal
+                    const data = await response.json();
+                    localStorage.setItem('authToken', data.token);  // Armazena o token no localStorage
+                    window.location.href = '/';  // Redireciona para a página principal
                 } else {
-                    // Exibe mensagem de erro
                     document.getElementById('error-message').style.display = 'block';
                 }
             } catch (error) {

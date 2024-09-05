@@ -22,37 +22,47 @@ const client = new MongoClient(uri, {
 });
 
 let db;
-let isConnected = false;
+let isConnected = false; // Estado de conexão com o banco de dados
 
 // Conecta ao MongoDB
 async function connectDB() {
-  try {
-    await client.connect();
-    console.log('Conectado ao MongoDB Atlas');
-    db = client.db('lashdb');
-    isConnected = true;
-  } catch (err) {
-    console.error('Erro ao conectar ao MongoDB:', err);
+  if (!isConnected) { // Conecta apenas se não estiver conectado
+    try {
+      await client.connect();
+      console.log('Conectado ao MongoDB Atlas');
+      db = client.db('lashdb');
+      isConnected = true;
+    } catch (err) {
+      console.error('Erro ao conectar ao MongoDB:', err);
+    }
   }
 }
 
 // Middleware para garantir a conexão com o banco de dados
-function ensureDbConnection(req, res, next) {
-  if (!db) {
-    console.error('Erro: Banco de dados não conectado.');
-    return res.status(500).json({ error: 'Banco de dados não conectado.' });
+async function ensureDbConnection(req, res, next) {
+  try {
+    await connectDB(); // Garante que o MongoDB esteja conectado antes de qualquer operação
+    next();
+  } catch (err) {
+    console.error('Erro ao garantir a conexão com o MongoDB:', err);
+    res.status(500).json({ error: 'Erro ao garantir a conexão com o banco de dados.' });
   }
-  next();
 }
 
 // Middleware para verificar o token JWT
+// Middleware para verificar o token JWT
 function authenticateToken(req, res, next) {
-  const token = req.headers['authorization'];
+  const authHeader = req.headers['authorization']; // Obtenha o cabeçalho de autorização
+  const token = authHeader && authHeader.split(' ')[1]; // Extraia o token após "Bearer "
+
   if (!token) return res.status(401).json({ error: 'Token de autenticação é necessário' });
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Token inválido' });
-    req.user = user;
+    if (err) {
+      console.error('Erro ao verificar o token:', err);
+      return res.status(403).json({ error: 'Token inválido' });
+    }
+    req.user = user; // Adicione as informações do usuário ao request
     next();
   });
 }
@@ -83,7 +93,7 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    if (!isConnected) await connectDB();
+    await connectDB(); // Certifica-se de que está conectado antes de tentar fazer o login
 
     const user = await db.collection('users').findOne({ username, password });
 
@@ -102,6 +112,27 @@ app.post('/login', async (req, res) => {
     res.status(500).send('Erro no servidor');
   }
 });
+
+// Rota para logout
+app.get('/logout', async (req, res) => {
+  req.session.destroy(async (err) => {
+    if (err) {
+      return res.status(500).send('Erro ao sair');
+    }
+
+    // Desconectar do MongoDB
+    try {
+      await client.close();
+      console.log('Desconectado do MongoDB');
+      isConnected = false; // Atualiza o estado de conexão
+      res.redirect('/login'); // Redireciona para a página de login após o logout
+    } catch (error) {
+      console.error('Erro ao desconectar do MongoDB:', error);
+      res.status(500).send('Erro ao desconectar do servidor');
+    }
+  });
+});
+
 
 // Rota principal protegida (home)
 app.get('/', authenticateToken, ensureDbConnection, (req, res) => {
@@ -136,7 +167,7 @@ app.get('/pages/calendario/calendario.html', (req, res) => {
 // Rotas da API
 
 // Rota para adicionar cliente
-app.post('/api/clients', ensureDbConnection, async (req, res) => {
+app.post('/api/clients', ensureDbConnection, authenticateToken, async (req, res) => {
   const { name, birthdate, phone } = req.body;
   if (!name || !birthdate || !phone) {
     return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
@@ -377,6 +408,24 @@ app.put('/api/appointments/:id/conclude', ensureDbConnection, async (req, res) =
   }
 });
 
+// Rota para deletar um agendamento
+app.delete('/api/appointments/:id', authenticateToken, ensureDbConnection, async (req, res) => {
+  const { id } = req.params; // Obtenha o ID do agendamento dos parâmetros da URL
+
+  try {
+    const result = await db.collection('appointments').deleteOne({ _id: new ObjectId(id) }); // Deleta o agendamento pelo ID
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Agendamento não encontrado.' }); // Retorna erro se o agendamento não foi encontrado
+    }
+
+    res.json({ success: true, message: 'Agendamento deletado com sucesso.' }); // Retorna sucesso se o agendamento foi deletado
+  } catch (err) {
+    console.error('Erro ao deletar agendamento:', err.message); // Loga erro
+    res.status(500).json({ error: 'Erro ao deletar agendamento.' }); // Retorna erro de servidor
+  }
+});
+
 // Rota para o dashboard
 app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
     try {
@@ -391,6 +440,17 @@ app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
       res.status(500).json({ error: 'Erro ao carregar o dashboard.' });
     }
   });
+
+app.get('/api/get', async (req, res) => {
+  const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
+  try {
+    const query = searchQuery ? { name: { $regex: searchQuery, $options: 'i' } } : {};
+    const clients = await db.collection('clients').find(query).toArray();
+    res.json({ clients });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
   
   // Rota para listar agendamentos por cliente
   app.get('/api/appointments-by-client', ensureDbConnection, async (req, res) => {
@@ -423,11 +483,11 @@ app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
   
   // Rota fake de GET para manter a conexão
   setInterval(() => {
-    axios.get(`https://lash-app.onrender.com/api/clients`)
+    axios.get(`https://lash-app.onrender.com/api/get`)
       .then(response => {
         console.log('GET realizado com sucesso');
       })
       .catch(error => {
-        console.error('Erro ao realizar o GET fake:', error.message);
+        console.error('GET feito.');
       });
   }, 1 * 60 * 1000);  // 1 minuto em milissegundos

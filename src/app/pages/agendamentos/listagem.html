@@ -255,8 +255,13 @@
 
       document.getElementById("confirmCancelButton").addEventListener("click", () => {
         if (appointmentToCancel !== null) {
+          const token = localStorage.getItem('authToken'); // Obtém o token de autenticação do localStorage
+
           fetch(`/api/appointments/${appointmentToCancel}`, {
             method: "DELETE",
+            headers: {
+              "Authorization": `Bearer ${token}` // Adiciona o token de autenticação no cabeçalho
+            }
           })
             .then((response) => response.json())
             .then((data) => {
@@ -265,10 +270,10 @@
                 modal.hide();
                 loadAppointments(); // Recarrega a lista de agendamentos após a exclusão
               } else {
-                console.error("Erro ao cancelar e remover agendamento.");
+                console.error("Erro ao cancelar e remover agendamento."); // Loga erro se a exclusão falhar
               }
             })
-            .catch((error) => console.error("Erro ao cancelar e remover agendamento:", error));
+            .catch((error) => console.error("Erro ao cancelar e remover agendamento:", error)); // Loga erro de requisição
         }
       });
     </script>

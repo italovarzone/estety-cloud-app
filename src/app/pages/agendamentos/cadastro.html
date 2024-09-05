@@ -190,6 +190,9 @@
                 const btnText = document.getElementById("btn-text");
                 const btnSpinner = document.getElementById("btn-spinner");
 
+                // Obter o token de autenticação do localStorage
+                const token = localStorage.getItem('authToken');
+
                 btnText.style.display = "none";
                 btnSpinner.style.display = "inline-block";
                 addClientBtn.disabled = true;
@@ -198,31 +201,32 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
                     },
                     body: JSON.stringify({ clientId, procedure, date, time })
                 })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        setTimeout(() => {
-                            btnText.style.display = "inline";
-                            btnSpinner.style.display = "none";
-                            addClientBtn.disabled = false;
+                .then((response) => response.json())
+                .then((data) => {
+                    setTimeout(() => {
+                        btnText.style.display = "inline";
+                        btnSpinner.style.display = "none";
+                        addClientBtn.disabled = false;
 
-                            if (data.error) {
-                                console.error(data.error);
-                            } else {
-                                window.location.href = "listagem.html";
-                            }
-                        }, 3000);
-                    })
-                    .catch((error) => {
-                        setTimeout(() => {
-                            btnText.style.display = "inline";
-                            btnSpinner.style.display = "none";
-                            addClientBtn.disabled = false;
-                            console.error("Erro ao adicionar agendamento:", error);
-                        }, 3000);
-                    });
+                        if (data.error) {
+                            console.error(data.error);
+                        } else {
+                            window.location.href = "listagem.html";
+                        }
+                    }, 3000);
+                })
+                .catch((error) => {
+                    setTimeout(() => {
+                        btnText.style.display = "inline";
+                        btnSpinner.style.display = "none";
+                        addClientBtn.disabled = false;
+                        console.error("Erro ao adicionar agendamento:", error);
+                    }, 3000);
+                });
             }
         });
     </script>

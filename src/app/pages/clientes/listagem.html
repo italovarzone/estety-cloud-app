@@ -169,8 +169,14 @@
 
       function confirmDeleteClient() {
         if (window.clientIdToDelete !== null) {
+          const token = localStorage.getItem('authToken'); // Obter o token do localStorage
+
           fetch(`/api/clients/${window.clientIdToDelete}`, {
             method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
+            }
           })
             .then((response) => {
               if (!response.ok) {

@@ -139,6 +139,9 @@
         <a href="pages/calendario/calendario.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-calendar"></i><span> Calendário</span>
         </a>
+        <a href="#" id="logout-link" class="sidebar-link">
+            <i class="fas fa-sign-out-alt"></i><span> Logout</span>
+        </a>
     </div>
     <div class="content expanded">
         <iframe name="content-frame" id="content-frame" src="pages/agendamentos/listagem.html"></iframe>
@@ -195,6 +198,28 @@
     }
 
     setDefaultActiveModule();
+
+    document.getElementById('logout-link').addEventListener('click', function(event) {
+    event.preventDefault();
+
+    localStorage.removeItem('authToken');
+
+    fetch('/logout', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.href = '/login';
+        } else {
+            console.error('Erro ao desconectar do servidor');
+        }
+    })
+    .catch(error => console.error('Erro ao fazer logout:', error));
+});
+
 </script>
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
