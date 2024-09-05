@@ -1,13 +1,18 @@
 const express = require('express');
 const path = require('path');
-const app = express();
-const axios = require('axios'); 
-const PORT = 3000;
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const axios = require('axios');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+
+const app = express();
+const PORT = 3000;
+
+const JWT_SECRET = process.env.JWT_SECRET || 'mysecretkey';
 
 const uri = process.env.MONGODB_URI;
-
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -16,20 +21,22 @@ const client = new MongoClient(uri, {
   },
 });
 
-let db; // Variável para armazenar a referência do banco de dados
+let db;
+let isConnected = false;
 
-// Função para conectar ao MongoDB
+// Conecta ao MongoDB
 async function connectDB() {
   try {
     await client.connect();
     console.log('Conectado ao MongoDB Atlas');
-    db = client.db('lashdb'); // Conecte-se ao banco de dados específico
+    db = client.db('lashdb');
+    isConnected = true;
   } catch (err) {
     console.error('Erro ao conectar ao MongoDB:', err);
   }
 }
 
-// Função middleware para garantir que o banco de dados esteja conectado
+// Middleware para garantir a conexão com o banco de dados
 function ensureDbConnection(req, res, next) {
   if (!db) {
     console.error('Erro: Banco de dados não conectado.');
@@ -38,17 +45,70 @@ function ensureDbConnection(req, res, next) {
   next();
 }
 
-// Conectar ao MongoDB
-connectDB().catch(console.error);
+// Middleware para verificar o token JWT
+function authenticateToken(req, res, next) {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).json({ error: 'Token de autenticação é necessário' });
 
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Token inválido' });
+    req.user = user;
+    next();
+  });
+}
+
+// Configuração da sessão
+app.use(session({
+  secret: 'secretkey',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
+
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../app')));
 
-// Rotas para arquivos estáticos
-app.get('/', (req, res) => {
+// Rota de login
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../app/auth.html'));
+});
+
+// Rota para processar o login
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).send('Login e senha são obrigatórios');
+  }
+
+  try {
+    if (!isConnected) await connectDB();
+
+    const user = await db.collection('users').findOne({ username, password });
+
+    if (!user) {
+      return res.status(401).send('Credenciais inválidas');
+    }
+
+    app.use(express.static(path.join(__dirname, '../app')));
+    console.log('Autenticação bem-sucedida');
+    
+    const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({ token });
+  } catch (err) {
+    console.error('Erro na autenticação:', err);
+    res.status(500).send('Erro no servidor');
+  }
+});
+
+// Rota principal protegida (home)
+app.get('/', authenticateToken, ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'index.html'));
 });
 
+// Rotas para arquivos estáticos
 app.get('/pages/clientes/listagem.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'listagem.html'));
 });
@@ -67,6 +127,10 @@ app.get('/pages/agendamentos/listagem.html', (req, res) => {
 
 app.get('/pages/dashboard/dashboard.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'dashboard', 'dashboard.html'));
+});
+
+app.get('/pages/calendario/calendario.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../app', 'pages', 'calendario', 'calendario.html'));
 });
 
 // Rotas da API
@@ -88,7 +152,7 @@ app.post('/api/clients', ensureDbConnection, async (req, res) => {
 });
 
 // Rota para recuperar a ficha técnica de um cliente
-app.get('/api/technical-sheets/:clientId', ensureDbConnection, async (req, res) => {
+app.get('/api/technical-sheets/:clientId', authenticateToken, ensureDbConnection, async (req, res) => {
   try {
     const technicalSheet = await db.collection('technical_sheets')
       .find({ clientId: new ObjectId(req.params.clientId) })
@@ -138,7 +202,7 @@ app.post('/api/technical-sheets', ensureDbConnection, async (req, res) => {
 });
 
 // Rota para editar ficha técnica
-app.put('/api/technical-sheets/:clientId', ensureDbConnection, async (req, res) => {
+app.put('/api/technical-sheets/:clientId', authenticateToken, ensureDbConnection, async (req, res) => {
     const clientId = req.params.clientId;
     const {
       datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
@@ -174,7 +238,7 @@ app.put('/api/technical-sheets/:clientId', ensureDbConnection, async (req, res) 
 });
 
 // Rota para deletar um cliente
-app.delete('/api/clients/:id', ensureDbConnection, async (req, res) => {
+app.delete('/api/clients/:id', authenticateToken, ensureDbConnection, async (req, res) => {
     const { id } = req.params;
   
     try {
@@ -192,7 +256,7 @@ app.delete('/api/clients/:id', ensureDbConnection, async (req, res) => {
   });
 
   // Rota para editar cliente
-app.put('/api/clients/:id', ensureDbConnection, async (req, res) => {
+app.put('/api/clients/:id', authenticateToken, ensureDbConnection, async (req, res) => {
     const { id } = req.params;
     const { name, birthdate, phone } = req.body;
   
@@ -231,7 +295,7 @@ app.get('/api/clients', ensureDbConnection, async (req, res) => {
 });
 
 // Rota para adicionar agendamento
-app.post('/api/appointments', ensureDbConnection, async (req, res) => {
+app.post('/api/appointments', authenticateToken, ensureDbConnection, async (req, res) => {
   const { clientId, procedure, date, time } = req.body;
 
   if (!clientId || !procedure || !date || !time) {
@@ -353,16 +417,17 @@ app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
     }
   });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando...`);
-});
-
-setInterval(() => {
-  axios.get(`https://lash-app.onrender.com/api/clients`)
-    .then(response => {
-      console.log('GET realizado com sucesso');
-    })
-    .catch(error => {
-      console.error('Erro ao realizar o GET fake:', error.message);
-    });
-}, 1 * 60 * 1000);  // 10 minutos em milissegundos
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}...`);
+  });
+  
+  // Rota fake de GET para manter a conexão
+  setInterval(() => {
+    axios.get(`http://localhost:${PORT}/api/clients`)
+      .then(response => {
+        console.log('GET realizado com sucesso');
+      })
+      .catch(error => {
+        console.error('Erro ao realizar o GET fake:', error.message);
+      });
+  }, 1 * 60 * 1000);  // 1 minuto em milissegundos
