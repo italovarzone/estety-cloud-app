@@ -144,7 +144,7 @@ app.post('/api/clients', ensureDbConnection, async (req, res) => {
 
   try {
     const result = await db.collection('clients').insertOne({ name, birthdate, phone });
-    res.json({ id: result.insertedId, name, birthdate, phone }); // Retorna o cliente adicionado
+    res.json({ id: result.insertedId, name, birthdate, phone });
   } catch (err) {
     console.error('Erro ao adicionar cliente:', err.message);
     res.status(500).json({ error: err.message });
