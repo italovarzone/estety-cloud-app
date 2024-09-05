@@ -30,7 +30,7 @@ async function connectDB() {
     try {
       await client.connect();
       console.log('Conectado ao MongoDB Atlas');
-      db = client.db('lashdb');
+      db = client.db(process.env.NAME_DB);
       isConnected = true;
     } catch (err) {
       console.error('Erro ao conectar ao MongoDB:', err);
@@ -96,7 +96,7 @@ app.post('/login', async (req, res) => {
     await connectDB(); // Certifica-se de que está conectado antes de tentar fazer o login
 
     const user = await db.collection('users').findOne({ username, password });
-
+    
     if (!user) {
       return res.status(401).send('Credenciais inválidas');
     }
