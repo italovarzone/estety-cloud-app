@@ -202,7 +202,7 @@ app.get('/api/technical-sheets/:clientId', authenticateToken, ensureDbConnection
 });
 
 // Rota para adicionar ficha técnica
-app.post('/api/technical-sheets', ensureDbConnection, async (req, res) => {
+app.post('/api/technical-sheets', authenticateToken, ensureDbConnection, async (req, res) => {
     const {
       clientId, datetime, rimel, gestante, procedimento_olhos, alergia, especificar_alergia,
       tireoide, problema_ocular, especificar_ocular, oncologico, dorme_lado, dorme_lado_posicao, problema_informar,
@@ -313,7 +313,7 @@ app.put('/api/clients/:id', authenticateToken, ensureDbConnection, async (req, r
 });
 
 // Rota para listar todos os clientes
-app.get('/api/clients', ensureDbConnection, async (req, res) => {
+app.get('/api/clients', authenticateToken, ensureDbConnection, async (req, res) => {
   const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
   try {
     const query = searchQuery ? { name: { $regex: searchQuery, $options: 'i' } } : {};
@@ -361,7 +361,7 @@ app.post('/api/appointments', authenticateToken, ensureDbConnection, async (req,
 });
 
 // Rota para listar todos os agendamentos
-app.get('/api/appointments', ensureDbConnection, async (req, res) => {
+app.get('/api/appointments', authenticateToken, ensureDbConnection, async (req, res) => {
   const { status } = req.query;
   try {
     const query = status === 'concluidos'
@@ -394,7 +394,7 @@ app.get('/api/appointments', ensureDbConnection, async (req, res) => {
 });
 
 // Rota para concluir agendamento
-app.put('/api/appointments/:id/conclude', ensureDbConnection, async (req, res) => {
+app.put('/api/appointments/:id/conclude', authenticateToken, ensureDbConnection, async (req, res) => {
   const { id } = req.params;
   try {
     const result = await db.collection('appointments').updateOne({ _id: new ObjectId(id) }, { $set: { concluida: true } });
@@ -427,7 +427,7 @@ app.delete('/api/appointments/:id', authenticateToken, ensureDbConnection, async
 });
 
 // Rota para o dashboard
-app.get('/api/dashboard', ensureDbConnection, async (req, res) => {
+app.get('/api/dashboard', authenticateToken, ensureDbConnection, async (req, res) => {
     try {
       const totalAppointments = await db.collection('appointments').countDocuments();
       const totalClients = await db.collection('clients').countDocuments();
@@ -453,7 +453,7 @@ app.get('/api/get', async (req, res) => {
 });
   
   // Rota para listar agendamentos por cliente
-  app.get('/api/appointments-by-client', ensureDbConnection, async (req, res) => {
+  app.get('/api/appointments-by-client', authenticateToken, ensureDbConnection, async (req, res) => {
     try {
       const appointmentsByClient = await db.collection('appointments').aggregate([
         { $lookup: {
