@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -152,6 +152,71 @@
             // Listener para mudança no filtro
             filterSelect.addEventListener('change', () => {
                 loadTasks(filterSelect.value);  // Recarrega as tarefas ao mudar o filtro
+            });
+
+            // Validação dos campos e ativação do botão
+            taskNameInput.addEventListener("input", () => {
+                validateTaskName();
+                checkFormValidity();
+            });
+
+            taskDateInput.addEventListener("input", () => {
+                validateTaskDate();
+                checkFormValidity();
+            });
+
+            taskTimeInput.addEventListener("input", () => {
+                validateTaskTime();
+                checkFormValidity();
+            });
+
+            // Função de validação para o campo de nome da tarefa
+            function validateTaskName() {
+                if (taskNameInput.value.trim() === "") {
+                    taskNameError.textContent = "Campo obrigatório.";
+                } else {
+                    taskNameError.textContent = "";
+                }
+            }
+
+            // Função de validação para o campo de data da tarefa
+            function validateTaskDate() {
+                if (taskDateInput.value.trim() === "") {
+                    taskDateError.textContent = "Campo obrigatório.";
+                } else {
+                    taskDateError.textContent = "";
+                }
+            }
+
+            // Função de validação para o campo de hora da tarefa
+            function validateTaskTime() {
+                if (taskTimeInput.value.trim() === "") {
+                    taskTimeError.textContent = "Campo obrigatório.";
+                } else {
+                    taskTimeError.textContent = "";
+                }
+            }
+
+            // Função para verificar a validade do formulário
+            function checkFormValidity() {
+                if (taskNameError.textContent === "" && taskDateError.textContent === "" && taskTimeError.textContent === "") {
+                    addTaskBtn.disabled = false; // Habilita o botão se todos os campos estiverem válidos
+                } else {
+                    addTaskBtn.disabled = true; // Desabilita o botão se algum campo for inválido
+                }
+            }
+
+            // Validações ao enviar o formulário
+            document.getElementById("task-form").addEventListener("submit", function (e) {
+                e.preventDefault(); // Impede o envio padrão do formulário
+
+                validateTaskName();
+                validateTaskDate();
+                validateTaskTime();
+
+                if (taskNameError.textContent === "" && taskDateError.textContent === "" && taskTimeError.textContent === "") {
+                    addTask();
+                }
             });
 
             function addTask() {
