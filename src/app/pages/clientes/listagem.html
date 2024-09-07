@@ -84,31 +84,43 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", initClientList);
-
+    
         function initClientList() {
             loadClients();
             setupFilter();
             setupDeleteConfirmation();
         }
-
+    
+        // Função para realizar fetch com o token de autenticação
+        function fetchWithToken(url, options = {}) {
+            const token = localStorage.getItem('authToken');  // Obter o token do localStorage
+            const headers = {
+                ...options.headers,
+                'Authorization': token ? `Bearer ${token}` : '',  // Inclui o token no cabeçalho de autorização
+                'Content-Type': 'application/json',  // Define o tipo de conteúdo como JSON
+            };
+    
+            return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
+        }
+    
         function loadClients(searchQuery = '') {
-            fetch(`/api/clients?search=${encodeURIComponent(searchQuery)}`)
+            fetchWithToken(`/api/clients?search=${encodeURIComponent(searchQuery)}`)
                 .then((response) => response.json())
                 .then((data) => {
                     // Atualiza a tabela para desktop
                     const tbody = document.querySelector("#client-table tbody");
                     tbody.innerHTML = "";
-
+    
                     // Atualiza os cards para mobile
                     const container = document.getElementById("clients-container");
                     container.innerHTML = ""; // Limpa o container antes de preencher
-
+    
                     if (data.clients && Array.isArray(data.clients)) {
                         sessionStorage.setItem("clientsList", JSON.stringify(data.clients)); // Armazenar a lista de clientes
-
+    
                         data.clients.forEach((client) => {
                             const formattedBirthdate = formatDateToBrazilian(client.birthdate);
-
+    
                             // Cria linha para a tabela (Desktop)
                             const tr = document.createElement("tr");
                             tr.innerHTML = `
@@ -134,7 +146,7 @@
                                 </td>
                             `;
                             tbody.appendChild(tr);
-
+    
                             // Cria card para mobile
                             const card = document.createElement("div");
                             card.classList.add("col-md-6", "col-lg-4");
@@ -164,7 +176,7 @@
                             `;
                             container.appendChild(card);
                         });
-
+    
                         document.getElementById('client-count').textContent = `Total de clientes: ${data.clients.length}`;
                     } else {
                         console.error("A estrutura de dados recebida não está correta:", data);
@@ -172,7 +184,7 @@
                 })
                 .catch((error) => console.error("Erro ao carregar clientes:", error));
         }
-
+    
         function formatDateToBrazilian(dateString) {
             const date = new Date(dateString);
             const utcDay = date.getUTCDate();
@@ -182,7 +194,7 @@
             const month = String(utcMonth).padStart(2, "0");
             return `${day}/${month}/${utcYear}`;
         }
-
+    
         function setupFilter() {
             const filterNameInput = document.getElementById('filter-name');
             if (filterNameInput) {
@@ -194,30 +206,24 @@
                 console.error("Elemento #filter-name não encontrado no DOM.");
             }
         }
-
+    
         function promptDeleteClient(id) {
             window.clientIdToDelete = id;
             const dialog = new bootstrap.Modal(document.getElementById("dialog"));
             dialog.show();
         }
-
+    
         function setupDeleteConfirmation() {
             const confirmButton = document.getElementById("confirm-delete");
             if (confirmButton) {
                 confirmButton.addEventListener("click", confirmDeleteClient);
             }
         }
-
+    
         function confirmDeleteClient() {
             if (window.clientIdToDelete !== null) {
-                const token = localStorage.getItem('authToken'); // Obter o token do localStorage
-
-                fetch(`/api/clients/${window.clientIdToDelete}`, {
+                fetchWithToken(`/api/clients/${window.clientIdToDelete}`, {
                     method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
-                    }
                 })
                     .then((response) => {
                         if (!response.ok) {
@@ -234,16 +240,16 @@
                     .catch((error) => console.error("Erro ao remover cliente:", error));
             }
         }
-
+    
         function sendWhatsAppMessage(phone, clientName) {
             const firstName = clientName.split(' ')[0]; 
             const defaultMessage = `Olá ${firstName}! Tudo bem com você?`;
             const formattedPhone = phone.replace(/\D/g, '');
             const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(defaultMessage)}`;
-
+    
             window.open(whatsappUrl, '_blank');
         }
-
+    
         function editClient(id) {
             const clientsList = JSON.parse(sessionStorage.getItem("clientsList")) || [];
             const client = clientsList.find((c) => c._id === id);
@@ -254,12 +260,12 @@
                 console.error('Cliente não encontrado para edição.');
             }
         }
-
+    
         function accessTechnicalSheet(clientId, clientName) {
             const clientData = { clientId, clientName };
             localStorage.setItem("clientForTechnicalSheet", JSON.stringify(clientData));
             window.location.href = "ficha_tecnica/ficha_tecnica.html";
         }
-    </script>
+    </script>    
 </body>
 </html>

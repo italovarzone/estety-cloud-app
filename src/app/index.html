@@ -37,7 +37,7 @@
 
         .sidebar.minimized {
             width: 60px;
-            align-items: center; /* Centralizar ícones quando minimizada */
+            align-items: center;
         }
 
         .sidebar a {
@@ -46,14 +46,14 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: flex-start; /* Alinhar ícones à esquerda quando expandida */
+            justify-content: flex-start;
             font-size: 16px;
             transition: all 0.3s ease;
             width: 100%;
         }
 
         .sidebar.minimized a {
-            justify-content: center; /* Centralizar ícones quando minimizada */
+            justify-content: center;
         }
 
         .sidebar a i {
@@ -91,7 +91,7 @@
         }
 
         .sidebar.minimized .sidebar-header {
-            justify-content: center; /* Centralizar ícone de hambúrguer quando minimizada */
+            justify-content: center;
         }
 
         .toggle-btn {
@@ -106,10 +106,8 @@
             transition: all 0.3s ease;
         }
 
-        .sidebar.minimized {
-            button {
-                display: contents;
-            }
+        .sidebar.minimized button {
+            display: contents;
         }
 
         .sidebar a i {
@@ -125,45 +123,44 @@
         }
 
         .sidebar.minimized hr {
-            display: none; /* Remove o texto do grupo e o separador */
+            display: none;
         }
         
         .sidebar-group {
-        display: block;
-        padding: 10px 15px;
-        font-weight: bold;
-        color: #f8f9fa;
-        text-transform: uppercase;
-        font-size: 14px;
-        margin-top: 10px;
-    }
+            display: block;
+            padding: 10px 15px;
+            font-weight: bold;
+            color: #f8f9fa;
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-top: 10px;
+        }
 
-    .sidebar-logout {
-        display: flex;
-        justify-content: center;
-        margin-top: auto; /* Empurra o botão de logout para o canto inferior */
-        padding: 10px 15px;
-        text-align: center;
-        background-color: #d42c19; /* Cor de fundo vermelho */
-    }
+        .sidebar-logout {
+            display: flex;
+            justify-content: center;
+            margin-top: auto;
+            padding: 10px 15px;
+            text-align: center;
+            background-color: #d42c19;
+        }
 
-    .sidebar-logout a:hover {
-        background-color: #9a534b !important; /* Cor de fundo vermelho */
-    }
+        .sidebar-logout a:hover {
+            background-color: #9a534b !important;
+        }
 
-    /* Estilos adicionais para a sidebar e conteúdo */
-    .sidebar-link {
-        display: flex;
-        align-items: center;
-    }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+        }
 
-    .sidebar-link i {
-        margin-right: 10px;
-    }
+        .sidebar-link i {
+            margin-right: 10px;
+        }
 
-    .sidebar-link:hover {
-        background-color: #9c5fb1;
-    }
+        .sidebar-link:hover {
+            background-color: #9c5fb1;
+        }
     </style>
 </head>
 <body>
@@ -198,6 +195,11 @@
         <a href="pages/calendario/calendario.html" target="content-frame" class="sidebar-link">
             <i class="fas fa-calendar"></i><span> Calendário</span>
         </a>
+        <!-- Novo link para acessar a página de tarefas -->
+        <hr>
+        <a href="pages/tarefas/cadastro.html" target="content-frame" class="sidebar-link">
+            <i class="fas fa-tasks"></i><span> Cadastrar Tarefa</span>
+        </a>
     </div>
     <div class="content expanded">
         <iframe name="content-frame" id="content-frame" src="pages/agendamentos/listagem.html"></iframe>
@@ -226,9 +228,8 @@ function adjustSidebarBasedOnScreenWidth() {
         // Minimize a sidebar automaticamente em telas pequenas
         sidebar.classList.add('minimized');
         content.classList.add('expanded');
-        localStorage.setItem('sidebarState', 'minimized'); // Salva o estado da sidebar como minimizado
+        localStorage.setItem('sidebarState', 'minimized');
     } else if (sidebarState === 'expanded' || !sidebarState) {
-        // Se a tela for maior que 768px e o estado da sidebar não for 'minimized'
         sidebar.classList.remove('minimized');
         content.classList.remove('expanded');
     }
@@ -241,7 +242,6 @@ toggleBtn.addEventListener('click', function () {
     sidebar.classList.toggle('minimized');
     content.classList.toggle('expanded');
 
-    // Save the sidebar state in local storage
     if (sidebar.classList.contains('minimized')) {
         localStorage.setItem('sidebarState', 'minimized');
     } else {

@@ -39,14 +39,26 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        fetch("/api/appointments-by-client")
+        // Função para realizar fetch com o token de autenticação
+        function fetchWithToken(url, options = {}) {
+          const token = localStorage.getItem('authToken');  // Obter o token do localStorage
+          const headers = {
+            ...options.headers,
+            'Authorization': token ? `Bearer ${token}` : '',  // Inclui o token no cabeçalho de autorização
+            'Content-Type': 'application/json',  // Define o tipo de conteúdo como JSON
+          };
+    
+          return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
+        }
+    
+        fetchWithToken("/api/appointments-by-client")
           .then((response) => response.json())
           .then((data) => {
             const clientNames = data.map((item) => item.client_name);
             const appointmentCounts = data.map(
               (item) => item.appointment_count
             );
-
+    
             const ctx = document
               .getElementById("appointmentsChart")
               .getContext("2d");
@@ -111,8 +123,8 @@
           .catch((error) =>
             console.error("Erro ao carregar os dados do gráfico:", error)
           );
-
-        fetch("/api/dashboard")
+    
+        fetchWithToken("/api/dashboard")
           .then((response) => response.json())
           .then((data) => {
             document.getElementById("total-appointments").textContent =
@@ -124,6 +136,6 @@
             console.error("Erro ao carregar o dashboard:", error)
           );
       });
-    </script>
+    </script>    
   </body>
 </html>
