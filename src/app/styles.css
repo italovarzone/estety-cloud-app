@@ -287,12 +287,10 @@ td button:hover {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: 50px;
-    margin-bottom: 50px;
+    margin-bottom: 100px;
     background-color: #fdfdfd;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .header-container {
@@ -434,4 +432,10 @@ input[type="radio"] {
 
 .edit-btn:hover, .delete-btn:hover {
     opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .ficha-tecnica input[type="text"] {
+        width: 100%;
+    }
 }

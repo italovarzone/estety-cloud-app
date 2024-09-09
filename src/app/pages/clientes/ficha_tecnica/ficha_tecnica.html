@@ -6,187 +6,231 @@
     <title>Ficha Técnica</title>
     <link rel="stylesheet" href="../../../styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Esconde as abas de navegação no mobile */
+        @media (max-width: 768px) {
+            #technicalSheetTabs {
+                display: none;
+            }
+            .tab-content {
+                border: none;
+                padding-top: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div style="margin: 36px;" class="ficha-tecnica">
-        <div class="header-container">
+    <div class="ficha-tecnica">
+        <div class="header-container mb-4">
             <h1>Ficha de Anamnese</h1>
             <button id="edit-button" class="btn btn-sm btn-primary">
                 Editar ficha
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                  </svg>
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1-.11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                </svg>
             </button>
         </div>
-        <div style="max-height: 750px; overflow-x: hidden; width: 100%;">
-            <form id="technical-sheet-form">
-                <div class="mb-3">
-                    <label for="client-name" class="form-label">Nome do Cliente:</label>
-                    <input type="text" id="client-name" class="form-control" disabled>
-                </div>
-                <div class="mb-3">
-                    <label for="datetime" class="form-label">Data/Hora do Cadastro:</label>
-                    <input type="text" id="datetime" class="form-control" disabled>
-                </div>
-                <div class="mb-3">
-                    <label>Gestante?</label>
-                    <div>
-                        <input type="radio" id="gestante-sim" name="gestante" value="Sim">
-                        <label for="gestante-sim">Sim</label>
-                        <input type="radio" id="gestante-nao" name="gestante" value="Não">
-                        <label for="gestante-nao">Não</label>
+
+        <!-- Abas para o Formulário -->
+        <ul class="nav nav-tabs" id="technicalSheetTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="info-geral-tab" data-bs-toggle="tab" data-bs-target="#info-geral" type="button" role="tab" aria-controls="info-geral" aria-selected="true">Informações Gerais</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="condicoes-medicas-tab" data-bs-toggle="tab" data-bs-target="#condicoes-medicas" type="button" role="tab" aria-controls="condicoes-medicas" aria-selected="false">Condições Médicas</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="preferencias-tab" data-bs-toggle="tab" data-bs-target="#preferencias" type="button" role="tab" aria-controls="preferencias" aria-selected="false">Preferências</button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content" id="technicalSheetTabsContent">
+            <!-- Informações Gerais -->
+            <div class="tab-pane fade show active" id="info-geral" role="tabpanel" aria-labelledby="info-geral-tab">
+                <div class="mt-3">
+                    <div class="mb-3">
+                        <label for="client-name" class="form-label">Nome do Cliente:</label>
+                        <input type="text" id="client-name" class="form-control" disabled>
                     </div>
+                    <div class="mb-3">
+                        <label for="datetime" class="form-label">Data/Hora do Cadastro:</label>
+                        <input type="text" id="datetime" class="form-control" disabled>
+                    </div>
+                    <button class="btn btn-primary next-tab" data-next="condicoes-medicas-tab">Próxima</button>
                 </div>
-                <div class="mb-3">
-                    <label>Está de rímel?</label>
-                    <div>
-                        <input type="radio" id="rimel-sim" name="rimel" value="Sim">
-                        <label for="rimel-sim">Sim</label>
-                        <input type="radio" id="rimel-nao" name="rimel" value="Não">
-                        <label for="rimel-nao">Não</label>
+            </div>
+
+            <!-- Condições Médicas -->
+            <div class="tab-pane fade" id="condicoes-medicas" role="tabpanel" aria-labelledby="condicoes-medicas-tab">
+                <div class="mt-3">
+                    <div class="mb-3">
+                        <label>Gestante?</label>
+                        <div>
+                            <input type="radio" id="gestante-sim" name="gestante" value="Sim">
+                            <label for="gestante-sim">Sim</label>
+                            <input type="radio" id="gestante-nao" name="gestante" value="Não">
+                            <label for="gestante-nao">Não</label>
+                        </div>
                     </div>
+                    <div class="mb-3">
+                        <label>Está de rímel?</label>
+                        <div>
+                            <input type="radio" id="rimel-sim" name="rimel" value="Sim">
+                            <label for="rimel-sim">Sim</label>
+                            <input type="radio" id="rimel-nao" name="rimel" value="Não">
+                            <label for="rimel-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Usa lente de contato?</label>
+                        <div>
+                            <input type="radio" id="procedimento-olhos-sim" name="procedimento-olhos" value="Sim">
+                            <label for="procedimento-olhos-sim">Sim</label>
+                            <input type="radio" id="procedimento-olhos-nao" name="procedimento-olhos" value="Não">
+                            <label for="procedimento-olhos-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Possui alergia a esmaltes/cosméticos/cianoacrilato?</label>
+                        <div>
+                            <input type="radio" id="alergia-sim" name="alergia" value="Sim">
+                            <label for="alergia-sim">Sim</label>
+                            <input type="radio" id="alergia-nao" name="alergia" value="Não">
+                            <label for="alergia-nao">Não</label>
+                        </div>
+                        <label for="especificar-alergia" class="form-label mt-2">Especifique:</label>
+                        <input type="text" id="especificar-alergia" name="especificar-alergia" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Possui problemas com tireoide?</label>
+                        <div>
+                            <input type="radio" id="tireoide-sim" name="tireoide" value="Sim">
+                            <label for="tireoide-sim">Sim</label>
+                            <input type="radio" id="tireoide-nao" name="tireoide" value="Não">
+                            <label for="tireoide-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Possui glaucoma/blefarite/algum problema ocular?</label>
+                        <div>
+                            <input type="radio" id="problema-ocular-sim" name="problema-ocular" value="Sim">
+                            <label for="problema-ocular-sim">Sim</label>
+                            <input type="radio" id="problema-ocular-nao" name="problema-ocular" value="Não">
+                            <label for="problema-ocular-nao">Não</label>
+                        </div>
+                        <label for="especificar-ocular" class="form-label mt-2">Especifique:</label>
+                        <input type="text" id="especificar-ocular" name="especificar-ocular" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Está em tratamento oncológico?</label>
+                        <div>
+                            <input type="radio" id="oncologico-sim" name="oncologico" value="Sim">
+                            <label for="oncologico-sim">Sim</label>
+                            <input type="radio" id="oncologico-nao" name="oncologico" value="Não">
+                            <label for="oncologico-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-group">
+                            <label for="dorme-lado">Dorme de lado?</label><br>
+                            <input type="radio" id="dorme-lado-sim" name="dorme-lado" value="SIM"> Sim
+                            <input type="radio" id="dorme-lado-nao" name="dorme-lado" value="NÃO"> Não
+                        </div>
+                        <div id="lado-posicao" class="form-group" style="display: none;">
+                            <label>De que lado?</label><br>
+                            <input type="radio" id="lado-esquerdo" name="dorme-lado-posicao" value="Esquerdo"> Esquerdo
+                            <input type="radio" id="lado-direito" name="dorme-lado-posicao" value="Direito"> Direito
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary prev-tab" data-prev="info-geral-tab">Anterior</button>
+                    <button class="btn btn-primary next-tab" data-next="preferencias-tab">Próxima</button>
                 </div>
-    
-                <div class="mb-3">
-                    <label>Usa lente de contato?</label>
-                    <div>
-                        <input type="radio" id="procedimento-olhos-sim" name="procedimento-olhos" value="Sim">
-                        <label for="procedimento-olhos-sim">Sim</label>
-                        <input type="radio" id="procedimento-olhos-nao" name="procedimento-olhos" value="Não">
-                        <label for="procedimento-olhos-nao">Não</label>
+            </div>
+
+            <!-- Preferências e Observações -->
+            <div class="tab-pane fade" id="preferencias" role="tabpanel" aria-labelledby="preferencias-tab">
+                <div class="mt-3">
+                    <div class="mb-3">
+                        <label>Procedimento de preferência:</label>
+                        <div style="flex-wrap: wrap;">
+                            <input type="radio" id="brasileiro" name="procedimento" value="Brasileiro">
+                            <label for="brasileiro">Brasileiro</label>
+                            <input type="radio" id="fox-eyes" name="procedimento" value="Fox Eyes">
+                            <label for="fox-eyes">Fox Eyes</label>
+                            <input type="radio" id="classico" name="procedimento" value="Clássico">
+                            <label for="classico">Clássico</label>
+                            <input type="radio" id="sirena" name="procedimento" value="Sirena">
+                            <label for="sirena">Sirena</label>
+                        </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="mapping" class="form-label">Mapping:</label>
+                            <input type="text" id="mapping" name="mapping" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="estilo" class="form-label">Estilo:</label>
+                            <input type="text" id="estilo" name="estilo" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="modelo-fios" class="form-label">Modelo dos fios:</label>
+                            <input type="text" id="modelo-fios" name="modelo-fios" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="espessura" class="form-label">Espessura:</label>
+                            <input type="text" id="espessura" name="espessura" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="curvatura" class="form-label">Curvatura:</label>
+                            <input type="text" id="curvatura" name="curvatura" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="adesivo" class="form-label">Adesivo/Cola:</label>
+                            <input type="text" id="adesivo" name="adesivo" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="problema-informar" class="form-label">Existe algum problema que julgue pertinente informar ao profissional antes do procedimento?</label>
+                        <input type="text" id="problema-informar" name="problema-informar" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="observacao" class="form-label">Observação:</label>
+                        <textarea id="observacao" name="observacao" class="form-control"></textarea>
+                    </div>
+                    <button class="btn btn-secondary prev-tab" data-prev="condicoes-medicas-tab">Anterior</button>
+                    <button id="save-technical-sheet" class="btn btn-success">Salvar Ficha Técnica</button>
                 </div>
-    
-                <div class="mb-3">
-                    <label>Possui alergia a esmaltes/cosméticos/cianoacrilato?</label>
-                    <div>
-                        <input type="radio" id="alergia-sim" name="alergia" value="Sim">
-                        <label for="alergia-sim">Sim</label>
-                        <input type="radio" id="alergia-nao" name="alergia" value="Não">
-                        <label for="alergia-nao">Não</label>
-                    </div>
-                    <label for="especificar-alergia" class="form-label mt-2">Especifique:</label>
-                    <input type="text" id="especificar-alergia" name="especificar-alergia" class="form-control">
-                </div>
-    
-                <div class="mb-3">
-                    <label>Possui problemas com tireoide?</label>
-                    <div>
-                        <input type="radio" id="tireoide-sim" name="tireoide" value="Sim">
-                        <label for="tireoide-sim">Sim</label>
-                        <input type="radio" id="tireoide-nao" name="tireoide" value="Não">
-                        <label for="tireoide-nao">Não</label>
-                    </div>
-                </div>
-    
-                <div class="mb-3">
-                    <label>Possui glaucoma/blefarite/algum problema ocular?</label>
-                    <div>
-                        <input type="radio" id="problema-ocular-sim" name="problema-ocular" value="Sim">
-                        <label for="problema-ocular-sim">Sim</label>
-                        <input type="radio" id="problema-ocular-nao" name="problema-ocular" value="Não">
-                        <label for="problema-ocular-nao">Não</label>
-                    </div>
-                    <label for="especificar-ocular" class="form-label mt-2">Especifique:</label>
-                    <input type="text" id="especificar-ocular" name="especificar-ocular" class="form-control">
-                </div>
-    
-                <div class="mb-3">
-                    <label>Está em tratamento oncológico?</label>
-                    <div>
-                        <input type="radio" id="oncologico-sim" name="oncologico" value="Sim">
-                        <label for="oncologico-sim">Sim</label>
-                        <input type="radio" id="oncologico-nao" name="oncologico" value="Não">
-                        <label for="oncologico-nao">Não</label>
-                    </div>
-                </div>
-    
-                <div class="mb-3">
-                    <div class="form-group">
-                        <label for="dorme-lado">Dorme de lado?</label><br>
-                        <input type="radio" id="dorme-lado-sim" name="dorme-lado" value="SIM"> Sim
-                        <input type="radio" id="dorme-lado-nao" name="dorme-lado" value="NÃO"> Não
-                    </div>
-                
-                    <div id="lado-posicao" class="form-group" style="display: none;">
-                        <label>De que lado?</label><br>
-                        <input type="radio" id="lado-esquerdo" name="dorme-lado-posicao" value="Esquerdo"> Esquerdo
-                        <input type="radio" id="lado-direito" name="dorme-lado-posicao" value="Direito"> Direito
-                    </div>
-                </div>
-    
-                <div class="mb-3">
-                    <label for="problema-informar" class="form-label">Existe algum problema que julgue pertinente informar ao profissional antes do procedimento?</label>
-                    <input type="text" id="problema-informar" name="problema-informar" class="form-control">
-                </div>
-    
-                <div class="mb-3">
-                    <label>Procedimento de preferência:</label>
-                    <div>
-                        <input type="radio" id="brasileiro" name="procedimento" value="Brasileiro">
-                        <label for="brasileiro">Brasileiro</label>
-                        <input type="radio" id="fox-eyes" name="procedimento" value="Fox Eyes">
-                        <label for="fox-eyes">Fox Eyes</label>
-                        <input type="radio" id="classico" name="procedimento" value="Clássico">
-                        <label for="classico">Clássico</label>
-                        <input type="radio" id="sirena" name="procedimento" value="Sirena">
-                        <label for="sirena">Sirena</label>
-                    </div>
-                </div>
-    
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="mapping" class="form-label">Mapping:</label>
-                        <input type="text" id="mapping" name="mapping" class="form-control">
-                    </div>
-    
-                    <div class="col-md-4 mb-3">
-                        <label for="estilo" class="form-label">Estilo:</label>
-                        <input type="text" id="estilo" name="estilo" class="form-control">
-                    </div>
-    
-                    <div class="col-md-4 mb-3">
-                        <label for="modelo-fios" class="form-label">Modelo dos fios:</label>
-                        <input type="text" id="modelo-fios" name="modelo-fios" class="form-control">
-                    </div>
-                </div>
-    
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="espessura" class="form-label">Espessura:</label>
-                        <input type="text" id="espessura" name="espessura" class="form-control">
-                    </div>
-    
-                    <div class="col-md-4 mb-3">
-                        <label for="curvatura" class="form-label">Curvatura:</label>
-                        <input type="text" id="curvatura" name="curvatura" class="form-control">
-                    </div>
-    
-                    <div class="col-md-4 mb-3">
-                        <label for="adesivo" class="form-label">Adesivo/Cola:</label>
-                        <input type="text" id="adesivo" name="adesivo" class="form-control">
-                    </div>
-                </div>
-                <div class="mb-3" style="width: 925px;">
-                    <label for="observacao" class="form-label">Observação:</label>
-                    <textarea id="observacao" name="observacao" class="form-control"></textarea>
-                </div>
-                <div style="display: flex; flex-direction: row; gap: 16px;">
-                    <button type="submit" class="btn btn-primary">Salvar Ficha Técnica</button>
-                    <button type="button" class="btn btn-danger"onclick="window.location.href='/pages/clientes/listagem.html'">Voltar</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const clientId = window.location.pathname.split('/').pop();
+        // Navegação entre as Tabs
+        document.querySelectorAll('.next-tab').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const nextTab = document.querySelector(`#${this.getAttribute('data-next')}`);
+                new bootstrap.Tab(nextTab).show();
+            });
+        });
 
+        document.querySelectorAll('.prev-tab').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const prevTab = document.querySelector(`#${this.getAttribute('data-prev')}`);
+                new bootstrap.Tab(prevTab).show();
+            });
+        });
+
+        // Lógica original de carregar e manipular a ficha técnica
         document.addEventListener("DOMContentLoaded", function () {
             const urlParams = new URLSearchParams(window.location.search);
             const clientId = window.location.pathname.split('/').pop();
-            const token = localStorage.getItem('authToken'); // Obtenha o token de autenticação do localStorage
+            const token = localStorage.getItem('authToken');
 
             const clientData = JSON.parse(localStorage.getItem("clientForTechnicalSheet"));
             const clientNameElement = document.getElementById("client-name");
@@ -198,7 +242,7 @@
                     method: 'GET',
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
+                        "Authorization": token ? `Bearer ${token}` : ''
                     }
                 })
                 .then((response) => response.json())
@@ -223,7 +267,7 @@
                 });
             }
 
-            document.getElementById('technical-sheet-form').addEventListener('submit', addTechnicalSheet);
+            document.getElementById('save-technical-sheet').addEventListener('click', addTechnicalSheet);
 
             function preencherFormulario(data) {
                 clientNameElement.value = clientData.clientName;
@@ -297,7 +341,7 @@
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",
-                        "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
+                        "Authorization": token ? `Bearer ${token}` : '' 
                     },
                     body: JSON.stringify(data)
                 })
@@ -318,7 +362,7 @@
             }
 
             function toggleFormFields(enable) {
-                const fields = document.querySelectorAll("#technical-sheet-form input, #technical-sheet-form textarea");
+                const fields = document.querySelectorAll("input, textarea");
                 fields.forEach((field) => (field.disabled = !enable));
             }
 
@@ -343,6 +387,5 @@
         });        
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- <script src="../../../app.js"></script> -->
 </body>
 </html>
