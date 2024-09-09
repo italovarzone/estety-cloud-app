@@ -208,7 +208,6 @@ td button:hover {
 
 .calendar-cell, .calendar-header {
     background-color: white;
-    padding: 15px;
     text-align: center;
     cursor: pointer;
 }
