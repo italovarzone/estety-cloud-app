@@ -16,6 +16,13 @@
                 border: none;
                 padding-top: 20px;
             }
+
+            .buttons-navegations {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -57,7 +64,9 @@
                         <label for="datetime" class="form-label">Data/Hora do Cadastro:</label>
                         <input type="text" id="datetime" class="form-control" disabled>
                     </div>
-                    <button class="btn btn-primary next-tab" data-next="condicoes-medicas-tab">Próxima</button>
+                    <div class="buttons-navegations">
+                        <button class="btn btn-primary next-tab" data-next="condicoes-medicas-tab">Próxima</button>
+                    </div>
                 </div>
             </div>
 
@@ -143,25 +152,35 @@
                             <input type="radio" id="lado-direito" name="dorme-lado-posicao" value="Direito"> Direito
                         </div>
                     </div>
-                    <button class="btn btn-secondary prev-tab" data-prev="info-geral-tab">Anterior</button>
-                    <button class="btn btn-primary next-tab" data-next="preferencias-tab">Próxima</button>
+                    <div class="buttons-navegations">
+                        <button class="btn btn-secondary prev-tab" data-prev="info-geral-tab">Anterior</button>
+                        <button class="btn btn-primary next-tab" data-next="preferencias-tab">Próxima</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Preferências e Observações -->
             <div class="tab-pane fade" id="preferencias" role="tabpanel" aria-labelledby="preferencias-tab">
                 <div class="mt-3">
-                    <div class="mb-3">
+                    <div class="mb-6">
                         <label>Procedimento de preferência:</label>
-                        <div style="flex-wrap: wrap;">
-                            <input type="radio" id="brasileiro" name="procedimento" value="Brasileiro">
-                            <label for="brasileiro">Brasileiro</label>
-                            <input type="radio" id="fox-eyes" name="procedimento" value="Fox Eyes">
-                            <label for="fox-eyes">Fox Eyes</label>
-                            <input type="radio" id="classico" name="procedimento" value="Clássico">
-                            <label for="classico">Clássico</label>
-                            <input type="radio" id="sirena" name="procedimento" value="Sirena">
-                            <label for="sirena">Sirena</label>
+                        <div style="display: flex; flex-direction: column; padding: 16px 0 16px 0;">
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="brasileiro" name="procedimento" value="Brasileiro">
+                                <label for="brasileiro">Brasileiro</label>
+                            </div>
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="fox-eyes" name="procedimento" value="Fox Eyes">
+                                <label for="fox-eyes">Fox Eyes</label>
+                            </div>
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="classico" name="procedimento" value="Clássico">
+                                <label for="classico">Clássico</label>
+                            </div>
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="sirena" name="procedimento" value="Sirena">
+                                <label for="sirena">Sirena</label>
+                            </div>
                         </div>
                     </div>
                     <div class="row">
@@ -200,8 +219,10 @@
                         <label for="observacao" class="form-label">Observação:</label>
                         <textarea id="observacao" name="observacao" class="form-control"></textarea>
                     </div>
-                    <button class="btn btn-secondary prev-tab" data-prev="condicoes-medicas-tab">Anterior</button>
-                    <button id="save-technical-sheet" class="btn btn-success">Salvar Ficha Técnica</button>
+                    <div class="buttons-navegations">
+                        <button class="btn btn-secondary prev-tab" data-prev="condicoes-medicas-tab">Anterior</button>
+                        <button id="save-technical-sheet" class="btn btn-success">Salvar Ficha Técnica</button>
+                    </div>
                 </div>
             </div>
         </div>
