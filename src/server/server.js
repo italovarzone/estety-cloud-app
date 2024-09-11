@@ -585,4 +585,4 @@ app.get('/api/get', async (req, res) => {
       .catch(error => {
         console.error('GET feito.');
       });
-  }, 1 * 60 * 1000);  // 1 minuto em milissegundos
+  }, 5 * 60 * 1000);  // 5 minutos em milissegundos
