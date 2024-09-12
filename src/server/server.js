@@ -450,6 +450,29 @@ app.get('/api/dashboard', authenticateToken, ensureDbConnection, async (req, res
     }
   });
 
+// Endpoint para verificar o status de um outro endpoint
+app.get('/api/check-endpoint', async (req, res) => {
+  try {
+    const response = await axios.get('https://lash-app-microservice.onrender.com/api/status');
+    
+    if (response.status === 200) {
+      res.status(200).json({ status: 'online' });
+      console.log('Microserviço Email: Online.')
+    } else {
+      res.status(response.status).json({ status: 'offline' });
+      console.log('Microserviço Email: Offline.')
+    }
+  } catch (error) {
+    console.error('Erro ao verificar o endpoint:', error.message);
+
+    if (error.response) {
+      res.status(error.response.status).json({ status: 'offline', message: error.response.statusText });
+    } else {
+      res.status(500).json({ status: 'offline', message: 'Erro ao acessar o serviço externo.' });
+    }
+  }
+});
+
 app.get('/api/get', async (req, res) => {
   const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
   try {
