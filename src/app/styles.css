@@ -199,7 +199,6 @@ td button:hover {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
-    background-color: #e5a9f7;
 }
 
 .calendar-row {
@@ -218,7 +217,7 @@ td button:hover {
 }
 
 .calendar-header {
-    background-color: #c378dc;;
+    background-color: #c378dc;
     color: white;
 }
 

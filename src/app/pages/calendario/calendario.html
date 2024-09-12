@@ -195,38 +195,48 @@
           const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
           
           let day = 1;
+          const today = new Date(); // Data de hoje para comparação
+
           for (let i = 0; i < 6; i++) {
-            for (let j = 0; j < 7; j++) {
-              const cell = document.createElement("div");
-              cell.classList.add(desktop ? "calendar-cell" : "calendar-cell-mobile");
+              for (let j = 0; j < 7; j++) {
+                  const cell = document.createElement("div");
+                  cell.classList.add(desktop ? "calendar-cell" : "calendar-cell-mobile");
 
-              if (i === 0 && j < firstDayIndex) {
-                cell.classList.add("empty");
-              } else if (day > daysInMonth) {
-                break;
-              } else {
-                const dayOfWeek = weekDays[(firstDayIndex + day - 1) % 7]; // Calcula o dia da semana
+                  if (i === 0 && j < firstDayIndex) {
+                      cell.classList.add("empty");
+                  } else if (day > daysInMonth) {
+                      break;
+                  } else {
+                      const dayOfWeek = weekDays[(firstDayIndex + day - 1) % 7]; // Calcula o dia da semana
 
-                const dayNumberDiv = document.createElement("div");
-                dayNumberDiv.classList.add("day-number");
+                      const dayNumberDiv = document.createElement("div");
+                      dayNumberDiv.classList.add("day-number");
 
-                // Para o mobile, exibe o número do dia e o dia da semana juntos
-                dayNumberDiv.textContent = desktop ? day : `${String(day).padStart(2, '0')} - ${dayOfWeek}`;
+                      // Para o mobile, exibe o número do dia e o dia da semana juntos
+                      dayNumberDiv.textContent = desktop ? day : `${String(day).padStart(2, '0')} - ${dayOfWeek}`;
 
-                const appointmentsDiv = document.createElement("div");
-                appointmentsDiv.classList.add("appointments-container");
+                      const appointmentsDiv = document.createElement("div");
+                      appointmentsDiv.classList.add("appointments-container");
 
-                cell.appendChild(dayNumberDiv);
-                cell.appendChild(appointmentsDiv);
+                      cell.appendChild(dayNumberDiv);
+                      cell.appendChild(appointmentsDiv);
 
-                loadItemsForDay(appointmentsDiv, year, month + 1, day);
-                day++;
+                      // Verificação se é o dia atual
+                      if (
+                          day === today.getDate() &&
+                          month === today.getMonth() &&
+                          year === today.getFullYear()
+                      ) {
+                          cell.style.border = "2px solid #c378dc"; // Aplica o estilo de borda para o dia atual
+                      }
+
+                      loadItemsForDay(appointmentsDiv, year, month + 1, day);
+                      day++;
+                  }
+                  calendar.appendChild(cell);
               }
-              calendar.appendChild(cell);
-            }
           }
         }
-
         // Carrega tanto os agendamentos quanto as tarefas para um dia específico
         function loadItemsForDay(containerDiv, year, month, day) {
           const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
