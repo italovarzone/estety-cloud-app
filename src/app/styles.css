@@ -32,9 +32,17 @@ body {
     padding: 10px;
     font-size: 16px;
     border: none;
-    cursor: pointer;
     border-radius: 5px;
-    transition: background-color 0.3s ease;
+}
+
+.btn {
+    color: #bc61da !important;
+    background-color: white !important;
+    border-color: #c378dc !important;
+}
+
+.btn:hover {
+    background-color: #f1e2f6 !important;
 }
 
 #client-form div, #appointment-form div {
@@ -434,7 +442,24 @@ input[type="radio"] {
 }
 
 @media (max-width: 768px) {
+    .container {
+        box-shadow: none;
+    }
+
     .ficha-tecnica input[type="text"] {
         width: 100%;
+    }
+
+    .appointments-container {
+        max-height: 110px;
+    }
+
+    .container button {
+        color: #c378dc;
+        background-color: white;
+    }
+
+    .btn:hover {
+        background-color: #744a82;
     }
 }

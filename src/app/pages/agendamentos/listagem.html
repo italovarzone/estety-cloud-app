@@ -169,12 +169,12 @@
                                 <td>${appointment.date}</td>
                                 <td>${appointment.time}</td>
                                 <td>
-                                    <button title="Concluir Agendamento" class="btn btn-sm btn-light" ${
+                                    <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
                                         filterStatus === "concluidos" ? "disabled" : ""
                                     } onclick="concludeAppointment('${appointment.id}')">
                                         <i class="fa-regular fa-circle-check"></i>
                                     </button>
-                                    <button title="Cancelar Agendamento" class="btn btn-sm btn-light" ${
+                                    <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
                                         filterStatus === "concluidos" ? "disabled" : ""
                                     } onclick="cancelAppointment('${appointment.id}')">
                                         <i class="fa-solid fa-ban"></i>
@@ -196,12 +196,12 @@
                                         <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
                                     </div>
                                     <div class="card-footer d-flex justify-content-end">
-                                        <button title="Concluir Agendamento" class="btn btn-sm btn-light me-2" ${
+                                        <button title="Concluir Agendamento" class="btn btn-sm btn-success me-2" ${
                                             filterStatus === "concluidos" ? "disabled" : ""
                                         } onclick="concludeAppointment('${appointment.id}')">
                                             <i class="fa-regular fa-circle-check"></i>
                                         </button>
-                                        <button title="Cancelar Agendamento" class="btn btn-sm btn-light" ${
+                                        <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
                                             filterStatus === "concluidos" ? "disabled" : ""
                                         } onclick="cancelAppointment('${appointment.id}')">
                                             <i class="fa-solid fa-ban"></i>
