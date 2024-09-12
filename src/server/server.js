@@ -621,7 +621,7 @@ app.get('/api/get', async (req, res) => {
   
   // Rota fake de GET para manter a conexão
   setInterval(() => {
-    axios.get(`https://lash-app.onrender.com/api/get`)
+    axios.get(`https://lash-app-desenv.onrender.com/api/get`)
       .then(response => {
         console.log('GET realizado com sucesso');
       })
