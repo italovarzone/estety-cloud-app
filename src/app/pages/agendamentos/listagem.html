@@ -133,37 +133,70 @@
             const filterStatus = document.getElementById("filter-status").value;
             const filterName = document.getElementById("filter-name").value.toLowerCase();
             let url = "/api/appointments";
-    
-            if (filterStatus === "concluidos") {
-                url += "?status=concluidos";
-            } else {
-                url += "?status=nao-concluidos";
+
+            const params = new URLSearchParams();
+
+            // Adiciona o status ao parâmetro de consulta
+            params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
+            
+            // Adiciona o termo de pesquisa ao parâmetro de consulta
+            if (filterName) {
+                params.append('search', filterName);
             }
-    
+
+            // Atualiza a URL com os parâmetros de consulta
+            url += '?' + params.toString();
+
             fetchWithToken(url)
                 .then((response) => response.json())
                 .then((data) => {
                     // Atualiza a tabela para desktop
                     const tbody = document.querySelector("#appointment-table tbody");
                     tbody.innerHTML = "";
-    
+
                     // Atualiza os cards para mobile
                     const container = document.getElementById("appointments-container");
                     container.innerHTML = "";
-    
+
                     if (data.appointments && data.appointments.length > 0) {
                         data.appointments.forEach((appointment) => {
-                            if (appointment.client.name.toLowerCase().includes(filterName)) {
-                                // Cria linha para a tabela (Desktop)
-                                const tr = document.createElement("tr");
-                                tr.innerHTML = `
-                                    <td>${appointment.id}</td>
-                                    <td>${appointment.client.name}</td>
-                                    <td>${appointment.procedure}</td>
-                                    <td>${appointment.date}</td>
-                                    <td>${appointment.time}</td>
-                                    <td>
-                                        <button title="Concluir Agendamento" class="btn btn-sm btn-light" ${
+                            // Cria linha para a tabela (Desktop)
+                            const tr = document.createElement("tr");
+                            tr.innerHTML = `
+                                <td>${appointment.id}</td>
+                                <td>${appointment.client.name}</td>
+                                <td>${appointment.procedure}</td>
+                                <td>${appointment.date}</td>
+                                <td>${appointment.time}</td>
+                                <td>
+                                    <button title="Concluir Agendamento" class="btn btn-sm btn-light" ${
+                                        filterStatus === "concluidos" ? "disabled" : ""
+                                    } onclick="concludeAppointment('${appointment.id}')">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                    </button>
+                                    <button title="Cancelar Agendamento" class="btn btn-sm btn-light" ${
+                                        filterStatus === "concluidos" ? "disabled" : ""
+                                    } onclick="cancelAppointment('${appointment.id}')">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </button>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+
+                            // Cria card para mobile
+                            const card = document.createElement("div");
+                            card.classList.add("col-md-6", "col-lg-4");
+                            card.innerHTML = `
+                                <br>
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${appointment.client.name}</h5>
+                                        <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
+                                        <p class="card-text"><strong>Data:</strong> ${appointment.date}</p>
+                                        <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
+                                    </div>
+                                    <div class="card-footer d-flex justify-content-end">
+                                        <button title="Concluir Agendamento" class="btn btn-sm btn-light me-2" ${
                                             filterStatus === "concluidos" ? "disabled" : ""
                                         } onclick="concludeAppointment('${appointment.id}')">
                                             <i class="fa-regular fa-circle-check"></i>
@@ -173,51 +206,23 @@
                                         } onclick="cancelAppointment('${appointment.id}')">
                                             <i class="fa-solid fa-ban"></i>
                                         </button>
-                                    </td>
-                                `;
-                                tbody.appendChild(tr);
-    
-                                // Cria card para mobile
-                                const card = document.createElement("div");
-                                card.classList.add("col-md-6", "col-lg-4");
-                                card.innerHTML = `
-                                    <br>
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${appointment.client.name}</h5>
-                                            <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
-                                            <p class="card-text"><strong>Data:</strong> ${appointment.date}</p>
-                                            <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
-                                        </div>
-                                        <div class="card-footer d-flex justify-content-end">
-                                            <button title="Concluir Agendamento" class="btn btn-sm btn-light me-2" ${
-                                                filterStatus === "concluidos" ? "disabled" : ""
-                                            } onclick="concludeAppointment('${appointment.id}')">
-                                                <i class="fa-regular fa-circle-check"></i>
-                                            </button>
-                                            <button title="Cancelar Agendamento" class="btn btn-sm btn-light" ${
-                                                filterStatus === "concluidos" ? "disabled" : ""
-                                            } onclick="cancelAppointment('${appointment.id}')">
-                                                <i class="fa-solid fa-ban"></i>
-                                            </button>
-                                        </div>
                                     </div>
-                                `;
-                                container.appendChild(card);
-                            }
+                                </div>
+                            `;
+                            container.appendChild(card);
                         });
                     } else {
                         // Mensagem de nenhum agendamento
                         const noAppointmentsMessageTable = document.createElement("tr");
                         noAppointmentsMessageTable.innerHTML = `
-                            <td colspan="6" class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</td>
+                            <td colspan="6" class="text-center text-muted">Nenhum agendamento encontrado.</td>
                         `;
                         tbody.appendChild(noAppointmentsMessageTable);
-    
+
                         const noAppointmentsMessageCard = document.createElement("div");
                         noAppointmentsMessageCard.classList.add("col-12");
                         noAppointmentsMessageCard.innerHTML = `
-                            <p class="text-center text-muted">Sem nenhum agendamento, bora agendar fedô?</p>
+                            <p class="text-center text-muted">Nenhum agendamento encontrado.</p>
                         `;
                         container.appendChild(noAppointmentsMessageCard);
                     }
@@ -232,7 +237,7 @@
                         <td colspan="6" class="text-center text-muted">Erro ao carregar agendamentos. Tente novamente mais tarde.</td>
                     `;
                     tbody.appendChild(noAppointmentsMessageTable);
-    
+
                     const noAppointmentsMessageCard = document.createElement("div");
                     noAppointmentsMessageCard.classList.add("col-12");
                     noAppointmentsMessageCard.innerHTML = `

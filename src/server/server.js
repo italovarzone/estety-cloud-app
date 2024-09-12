@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const diacritics = require('diacritics');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const app = express();
@@ -312,13 +313,23 @@ app.put('/api/clients/:id', authenticateToken, ensureDbConnection, async (req, r
     }
 });
 
+// Função para remover acentuação e transformar em minúsculas
+function normalizeText(text) {
+  return diacritics.remove(text.toLowerCase());
+}
+
 // Rota para listar todos os clientes
 app.get('/api/clients', authenticateToken, ensureDbConnection, async (req, res) => {
-  const searchQuery = req.query.search ? req.query.search.toLowerCase() : '';
+  const searchQuery = req.query.search ? normalizeText(req.query.search) : '';
   try {
-    const query = searchQuery ? { name: { $regex: searchQuery, $options: 'i' } } : {};
-    const clients = await db.collection('clients').find(query).toArray();
-    res.json({ clients });
+    const clients = await db.collection('clients').find({}).toArray();
+
+    const filteredClients = clients.filter(client => {
+      const normalizedName = normalizeText(client.name);
+      return normalizedName.startsWith(searchQuery);
+    });
+
+    res.json({ clients: filteredClients });
   } catch (err) {
     console.error('Erro ao listar clientes:', err.message);
     res.status(500).json({ error: err.message });
@@ -361,16 +372,14 @@ app.post('/api/appointments', authenticateToken, ensureDbConnection, async (req,
 });
 
 app.get('/api/appointments', authenticateToken, ensureDbConnection, async (req, res) => {
-  const { status, date } = req.query;  // Adicione o parâmetro de data aqui
+  const { status, date, search } = req.query;
   try {
     const query = {};
 
-    // Adicione filtro de data, se fornecido
     if (date) {
       query.date = date;
     }
 
-    // Adicione filtro de status, se fornecido
     if (status === 'concluidos') {
       query.concluida = true;
     } else {
@@ -379,23 +388,34 @@ app.get('/api/appointments', authenticateToken, ensureDbConnection, async (req, 
 
     const appointments = await db.collection('appointments').aggregate([
       { $match: query },
-      { $lookup: {
-        from: 'clients',
-        localField: 'clientId',
-        foreignField: '_id',
-        as: 'client'
-      }},
+      {
+        $lookup: {
+          from: 'clients',
+          localField: 'clientId',
+          foreignField: '_id',
+          as: 'client'
+        }
+      },
       { $unwind: '$client' },
       { $project: { 
-        id: '$_id', 
-        procedure: 1, 
-        date: 1, 
-        time: 1, 
-        'client.name': 1 
-      }}
+          id: '$_id', 
+          procedure: 1, 
+          date: 1, 
+          time: 1, 
+          'client.name': 1 
+        }
+      }
     ]).toArray();
 
-    res.json({ appointments });
+    const filteredAppointments = search
+      ? appointments.filter(appointment => {
+          const normalizedClientName = normalizeText(appointment.client.name);
+          const normalizedSearch = normalizeText(search);
+          return normalizedClientName.startsWith(normalizedSearch);
+        })
+      : appointments;
+
+    res.json({ appointments: filteredAppointments });
   } catch (err) {
     console.error('Erro ao listar agendamentos:', err.message);
     res.status(500).json({ error: err.message });

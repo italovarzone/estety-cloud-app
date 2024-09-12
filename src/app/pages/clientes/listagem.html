@@ -197,12 +197,16 @@
             const month = String(utcMonth).padStart(2, "0");
             return `${day}/${month}/${utcYear}`;
         }
+
+        function normalizeText(text) {
+            return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        }
     
         function setupFilter() {
             const filterNameInput = document.getElementById('filter-name');
             if (filterNameInput) {
                 filterNameInput.addEventListener('input', function() {
-                    const searchQuery = this.value.toLowerCase();
+                    const searchQuery = normalizeText(this.value);  // Normaliza o texto de busca
                     loadClients(searchQuery);
                 });
             } else {
