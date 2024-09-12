@@ -9,7 +9,7 @@ const diacritics = require('diacritics');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const app = express();
-const PORT = 3000;
+const PORT = 10000;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mysecretkey';
 
