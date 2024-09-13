@@ -14,9 +14,9 @@ router.post(
   authenticateToken,
   ensureDbConnection,
   async (req, res) => {
-    const { clientId, procedure, date, time } = req.body;
+    const { clientId, procedureName, date, time } = req.body;
 
-    if (!clientId || !procedure || !date || !time) {
+    if (!clientId || !procedureName || !date || !time) {
       return res
         .status(400)
         .json({ error: "Todos os campos são obrigatórios" });
@@ -24,6 +24,8 @@ router.post(
 
     try {
       const db = req.db; // Use 'req.db' para acessar o banco de dados
+
+      // Verifica se o horário já está ocupado
       const existingAppointment = await db
         .collection("appointments")
         .findOne({ date, time });
@@ -33,17 +35,30 @@ router.post(
           .json({ error: "Já existe um agendamento para este horário." });
       }
 
+      // Busca o procedimento pelo nome
+      const procedure = await db
+        .collection("procedures")
+        .findOne({ name: procedureName }); // Busca pelo nome, não pelo ID
+
+      if (!procedure) {
+        return res
+          .status(404)
+          .json({ error: "Procedimento não encontrado." });
+      }
+
+      // Cria o agendamento usando o nome do procedimento encontrado
       const result = await db.collection("appointments").insertOne({
-        clientId: new ObjectId(clientId),
-        procedure,
+        clientId: new ObjectId(clientId), // O clientId é um ObjectId
+        procedure: procedure.name, // Armazena o nome do procedimento
         date,
         time,
         concluida: false,
       });
+
       res.status(201).json({
         id: result.insertedId,
         clientId,
-        procedure,
+        procedure: procedure.name, // Retorna o nome do procedimento
         date,
         time,
         concluida: false,
@@ -91,9 +106,18 @@ router.get(
           },
           { $unwind: "$client" },
           {
+            $lookup: {
+              from: "procedures", // Faz o lookup na coleção 'procedures'
+              localField: "procedure", // Campo de referência no agendamento (o nome, não o ID)
+              foreignField: "name", // Campo de referência na coleção de procedimentos (pelo nome)
+              as: "procedureDetails", // Nome alternativo para os detalhes do procedimento
+            },
+          },
+          { $unwind: { path: "$procedureDetails", preserveNullAndEmptyArrays: true } }, // Mantém o documento se não houver correspondência
+          {
             $project: {
               id: "$_id",
-              procedure: 1,
+              procedure: { $ifNull: ["$procedureDetails.name", "$procedure"] }, // Se não encontrar, usa o nome armazenado no agendamento
               date: 1,
               time: 1,
               "client.name": 1,
@@ -117,6 +141,7 @@ router.get(
     }
   }
 );
+
 
 // Rota para concluir agendamento
 router.put(
@@ -168,49 +193,6 @@ router.delete(
     } catch (err) {
       console.error("Erro ao deletar agendamento:", err.message); // Loga erro
       res.status(500).json({ error: "Erro ao deletar agendamento." }); // Retorna erro de servidor
-    }
-  }
-);
-
-// Rota para listar agendamentos por cliente
-router.get(
-  "/api/appointments-by-client",
-  authenticateToken,
-  ensureDbConnection,
-  async (req, res) => {
-    try {
-      const db = req.db; // Use 'req.db' para acessar o banco de dados
-      const appointmentsByClient = await db
-        .collection("appointments")
-        .aggregate([
-          {
-            $lookup: {
-              from: "clients",
-              localField: "clientId",
-              foreignField: "_id",
-              as: "client",
-            },
-          },
-          { $unwind: "$client" },
-          {
-            $group: {
-              _id: "$client._id",
-              client_name: { $first: "$client.name" },
-              appointment_count: { $sum: 1 },
-            },
-          },
-        ])
-        .toArray();
-
-      res.json(appointmentsByClient);
-    } catch (err) {
-      console.error(
-        "Erro ao carregar dados dos agendamentos por cliente:",
-        err.message
-      );
-      res
-        .status(500)
-        .json({ error: "Erro ao carregar dados dos agendamentos." });
     }
   }
 );
