@@ -39,14 +39,7 @@
                 <label for="procedure" class="form-label">Procedimento:</label>
                 <select id="procedure" class="form-control">
                     <option value="" selected>Selecione um procedimento</option>
-                    <option value="Colocação (Brasileiro)">Colocação (Brasileiro)</option>
-                    <option value="Colocação (Fox Eyes)">Colocação (Fox Eyes)</option>
-                    <option value="Colocação (Classico)">Colocação (Classico)</option>
-                    <option value="Colocação (Sirena)">Colocação (Sirena)</option>
-                    <option value="Manutenção">Manutenção</option>
-                    <option value="Remoção">Remoção</option>
-                    <option value="Sobrancelha (Henna)">Sobrancelha (Henna)</option>
-                    <option value="Sobrancelha (Sem Henna)">Sobrancelha (Sem Henna)</option>
+                    <!-- Outras opções de procedimentos serão carregadas dinamicamente -->
                 </select>
                 <div id="procedure-error" class="error-message"></div>
             </div>
@@ -84,6 +77,7 @@
             const timeError = document.getElementById("time-error");
 
             loadClientsIntoSelect();
+            loadProceduresIntoSelect(); // Carrega procedimentos dinamicamente
 
             function loadClientsIntoSelect() {
                 const token = localStorage.getItem('authToken');  // Obter o token de autenticação do localStorage
@@ -105,6 +99,28 @@
                         });
                     })
                     .catch((error) => console.error("Erro ao carregar clientes:", error));
+            }
+
+            function loadProceduresIntoSelect() {
+                const token = localStorage.getItem('authToken');  // Obter o token de autenticação do localStorage
+                
+                fetch("/api/procedures", {
+                    headers: {
+                        "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
+                    }
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        procedureSelect.innerHTML = '<option value="" selected>Selecione um procedimento</option>'; // Limpa o select antes de preencher novamente
+
+                        data.procedures.forEach((procedure) => {
+                            const option = document.createElement("option");
+                            option.value = procedure._id;  // Use o campo correto para o ID
+                            option.textContent = procedure.name;
+                            procedureSelect.appendChild(option);
+                        });
+                    })
+                    .catch((error) => console.error("Erro ao carregar procedimentos:", error));
             }
 
             // Função para ativar o botão somente se todos os campos estiverem válidos
