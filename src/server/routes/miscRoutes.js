@@ -10,10 +10,8 @@ router.get('/api/check-endpoint', async (req, res) => {
         
         if (response.status === 200) {
           res.status(200).json({ status: 'online' });
-          console.log('Microserviço Email: Online.')
         } else {
           res.status(response.status).json({ status: 'offline' });
-          console.log('Microserviço Email: Offline.')
         }
       } catch (error) {
         console.error('Erro ao verificar o endpoint:', error.message);

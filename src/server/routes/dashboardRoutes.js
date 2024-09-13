@@ -13,6 +13,7 @@ router.get(
   ensureDbConnection,
   async (req, res) => {
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const totalAppointments = await db
         .collection("appointments")
         .countDocuments();

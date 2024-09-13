@@ -14,6 +14,7 @@ router.get(
   ensureDbConnection,
   async (req, res) => {
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const technicalSheet = await db
         .collection("technical_sheets")
         .find({ clientId: new ObjectId(req.params.clientId) })
@@ -69,6 +70,7 @@ router.post(
     }
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db.collection("technical_sheets").insertOne({
         clientId: new ObjectId(clientId),
         datetime,
@@ -162,6 +164,7 @@ router.put(
     }
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db.collection("technical_sheets").updateOne(
         { clientId: new ObjectId(clientId) },
         {

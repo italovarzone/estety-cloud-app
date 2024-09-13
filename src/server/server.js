@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const axios = require('axios');
 const bodyParser = require('body-parser');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { ensureDbConnection, authenticateToken } = require('./middlewares/authMiddleware');
@@ -17,13 +18,12 @@ const miscRoutes = require('./routes/miscRoutes');
 const app = express();
 const PORT = 3000;
 
-// Configuração da sessão
 app.use(session({ secret: 'secretkey', resave: false, saveUninitialized: true, cookie: { secure: false } }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../app')));
 
-// Uso das rotas
+// Rotas
 app.use(authRoutes);
 app.use(appointmentRoutes);
 app.use(clientRoutes);

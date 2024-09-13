@@ -8,6 +8,7 @@ const {
 
 const router = express.Router();
 
+// Rota para adicionar agendamento
 router.post(
   "/api/appointments",
   authenticateToken,
@@ -22,6 +23,7 @@ router.post(
     }
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const existingAppointment = await db
         .collection("appointments")
         .findOne({ date, time });
@@ -61,6 +63,8 @@ router.get(
   async (req, res) => {
     const { status, date, search } = req.query;
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
+
       const query = {};
 
       if (date) {
@@ -122,6 +126,7 @@ router.put(
   async (req, res) => {
     const { id } = req.params;
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db
         .collection("appointments")
         .updateOne({ _id: new ObjectId(id) }, { $set: { concluida: true } });
@@ -145,15 +150,21 @@ router.delete(
     const { id } = req.params; // Obtenha o ID do agendamento dos parâmetros da URL
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db
         .collection("appointments")
         .deleteOne({ _id: new ObjectId(id) }); // Deleta o agendamento pelo ID
 
       if (result.deletedCount === 0) {
-        return res.status(404).json({ error: "Agendamento não encontrado." }); // Retorna erro se o agendamento não foi encontrado
+        return res
+          .status(404)
+          .json({ error: "Agendamento não encontrado." }); // Retorna erro se o agendamento não foi encontrado
       }
 
-      res.json({ success: true, message: "Agendamento deletado com sucesso." }); // Retorna sucesso se o agendamento foi deletado
+      res.json({
+        success: true,
+        message: "Agendamento deletado com sucesso.",
+      }); // Retorna sucesso se o agendamento foi deletado
     } catch (err) {
       console.error("Erro ao deletar agendamento:", err.message); // Loga erro
       res.status(500).json({ error: "Erro ao deletar agendamento." }); // Retorna erro de servidor
@@ -168,6 +179,7 @@ router.get(
   ensureDbConnection,
   async (req, res) => {
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const appointmentsByClient = await db
         .collection("appointments")
         .aggregate([

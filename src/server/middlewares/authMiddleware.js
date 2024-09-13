@@ -1,5 +1,7 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const diacritics = require('diacritics');
+
 const JWT_SECRET = process.env.JWT_SECRET || 'mysecretkey';
 
 const uri = process.env.MONGODB_URI;
@@ -11,11 +13,11 @@ const client = new MongoClient(uri, {
   },
 });
 
-let isConnected = false; // Estado de conexão com o banco de dados
+let isConnected = false;
+let db;
 
-// Conecta ao MongoDB
 async function connectDB() {
-  if (!isConnected) { // Conecta apenas se não estiver conectado
+  if (!isConnected) {
     try {
       await client.connect();
       console.log('Conectado ao MongoDB Atlas');
@@ -23,11 +25,24 @@ async function connectDB() {
       isConnected = true;
     } catch (err) {
       console.error('Erro ao conectar ao MongoDB:', err);
+      isConnected = false;
     }
   }
 }
 
-// Middleware para verificar o token JWT
+async function ensureDbConnection(req, res, next) {
+  try {
+    if (!isConnected || !client.topology || !client.topology.isConnected()) {
+      await connectDB();
+    }
+    req.db = db;
+    next();
+  } catch (err) {
+    console.error('Erro ao garantir a conexão com o MongoDB:', err);
+    res.status(500).json({ error: 'Erro ao garantir a conexão com o banco de dados.' });
+  }
+}
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -44,20 +59,8 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Middleware para garantir a conexão com o banco de dados
-async function ensureDbConnection(req, res, next) {
-  try {
-    await connectDB(); // Garante que o MongoDB esteja conectado antes de qualquer operação
-    next();
-  } catch (err) {
-    console.error('Erro ao garantir a conexão com o MongoDB:', err);
-    res.status(500).json({ error: 'Erro ao garantir a conexão com o banco de dados.' });
-  }
+function normalizeText(text) {
+  return diacritics.remove(text.toLowerCase());
 }
 
-// Função para remover acentuação e transformar em minúsculas
-function normalizeText(text) {
-    return diacritics.remove(text.toLowerCase());
-  }
-
-module.exports = { authenticateToken, ensureDbConnection, normalizeText, connectDB };
+module.exports = { authenticateToken, ensureDbConnection, normalizeText, connectDB, client };

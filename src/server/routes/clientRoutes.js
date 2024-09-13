@@ -22,6 +22,7 @@ router.post(
     }
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db
         .collection("clients")
         .insertOne({ name, birthdate, phone });
@@ -40,6 +41,7 @@ router.get(
   async (req, res) => {
     const searchQuery = req.query.search ? normalizeText(req.query.search) : "";
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const clients = await db.collection("clients").find({}).toArray();
 
       const filteredClients = clients.filter((client) => {
@@ -71,6 +73,7 @@ router.put(
     }
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db
         .collection("clients")
         .updateOne(
@@ -99,6 +102,7 @@ router.delete(
     const { id } = req.params;
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db
         .collection("clients")
         .deleteOne({ _id: new ObjectId(id) });

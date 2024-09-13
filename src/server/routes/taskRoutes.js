@@ -23,6 +23,7 @@ router.post(
     }
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       // Inserção da tarefa no banco de dados MongoDB
       const result = await db
         .collection("tasks")
@@ -51,6 +52,7 @@ router.get(
     const { status, date } = req.query; // Adicione o parâmetro de data aqui
 
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const query = { userId };
 
       // Adicione filtro de data, se fornecido
@@ -82,6 +84,7 @@ router.put(
   async (req, res) => {
     const { id } = req.params;
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db.collection("tasks").updateOne(
         { _id: new ObjectId(id) },
         { $set: { concluida: true } } // Marca a tarefa como concluída
@@ -105,6 +108,7 @@ router.delete(
   async (req, res) => {
     const { id } = req.params;
     try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
       const result = await db
         .collection("tasks")
         .deleteOne({ _id: new ObjectId(id) });

@@ -1,17 +1,21 @@
 const express = require("express");
 const path = require("path");
 const jwt = require("jsonwebtoken");
-const { ensureDbConnection, authenticateToken, connectDB } = require("../middlewares/authMiddleware");
+const { client, connectDB, isConnected } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "mysecretkey";
 
-// Rota de login
+async function ensureClientConnection() {
+  if (!isConnected) {
+    await connectDB();
+  }
+}
+
 router.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "../../app/auth.html"));
 });
 
-// Rota para processar o login
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -20,11 +24,13 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    await connectDB(); // Certifica-se de que está conectado antes de tentar fazer o login
+    await ensureClientConnection();
 
+    const db = client.db(process.env.NAME_DB);
     const user = await db.collection("users").findOne({ username, password });
 
     if (!user) {
+      console.log("Usuário não encontrado ou credenciais incorretas.");
       return res.status(401).send("Credenciais inválidas");
     }
 
@@ -41,29 +47,15 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Rota para logout
-router.get(
-  "/logout",
-  authenticateToken,
-  ensureDbConnection,
-  async (req, res) => {
-    req.session.destroy(async (err) => {
-      if (err) {
-        return res.status(500).send("Erro ao sair");
-      }
+router.get("/logout", async (req, res) => {
+  req.session.destroy(async (err) => {
+    if (err) {
+      return res.status(500).send("Erro ao sair");
+    }
 
-      // Desconectar do MongoDB
-      try {
-        await client.close();
-        console.log("Desconectado do MongoDB");
-        isConnected = false; // Atualiza o estado de conexão
-        res.redirect("/login"); // Redireciona para a página de login após o logout
-      } catch (error) {
-        console.error("Erro ao desconectar do MongoDB:", error);
-        res.status(500).send("Erro ao desconectar do servidor");
-      }
-    });
-  }
-);
+    console.log("Sessão destruída");
+    res.redirect("/login");
+  });
+});
 
 module.exports = router;
