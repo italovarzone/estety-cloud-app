@@ -23,22 +23,21 @@ router.post(
     }
 
     try {
-      const db = req.db; // Use 'req.db' para acessar o banco de dados
+      const db = req.db;
+      const formattedDate = convertToDatabaseDate(date);
 
-      // Verifica se o horário já está ocupado
       const existingAppointment = await db
         .collection("appointments")
-        .findOne({ date, time });
+        .findOne({ date: formattedDate, time });
       if (existingAppointment) {
         return res
           .status(409)
           .json({ error: "Já existe um agendamento para este horário." });
       }
 
-      // Busca o procedimento pelo nome
       const procedure = await db
         .collection("procedures")
-        .findOne({ name: procedureName }); // Busca pelo nome, não pelo ID
+        .findOne({ name: procedureName });
 
       if (!procedure) {
         return res
@@ -46,11 +45,10 @@ router.post(
           .json({ error: "Procedimento não encontrado." });
       }
 
-      // Cria o agendamento usando o nome do procedimento encontrado
       const result = await db.collection("appointments").insertOne({
-        clientId: new ObjectId(clientId), // O clientId é um ObjectId
-        procedure: procedure.name, // Armazena o nome do procedimento
-        date,
+        clientId: new ObjectId(clientId),
+        procedure: procedure.name,
+        date: formattedDate,
         time,
         concluida: false,
       });
@@ -58,8 +56,8 @@ router.post(
       res.status(201).json({
         id: result.insertedId,
         clientId,
-        procedure: procedure.name, // Retorna o nome do procedimento
-        date,
+        procedure: procedure.name,
+        date: formattedDate,
         time,
         concluida: false,
       });
@@ -69,6 +67,12 @@ router.post(
     }
   }
 );
+
+function convertToDatabaseDate(date) {
+  const [day, month, year] = date.split('/');
+  return `${year}-${month}-${day}`;
+}
+
 
 // Rota para listar agendamentos
 router.get(

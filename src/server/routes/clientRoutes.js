@@ -14,12 +14,14 @@ router.post(
   ensureDbConnection,
   authenticateToken,
   async (req, res) => {
-    const { name, birthdate, phone } = req.body;
+    let { name, birthdate, phone } = req.body;
+
     if (!name || !birthdate || !phone) {
-      return res
-        .status(400)
-        .json({ error: "Todos os campos são obrigatórios" });
+      return res.status(400).json({ error: "Todos os campos são obrigatórios" });
     }
+
+    // Converter data de 'DD/MM/YYYY' para 'YYYY-MM-DD'
+    birthdate = convertToDatabaseDate(birthdate);
 
     try {
       const db = req.db; // Use 'req.db' para acessar o banco de dados
@@ -33,6 +35,13 @@ router.post(
     }
   }
 );
+
+// Conversão de data para o formato 'YYYY-MM-DD'
+function convertToDatabaseDate(birthdate) {
+  const [day, month, year] = birthdate.split('/');
+  return `${year}-${month}-${day}`;
+}
+
 
 router.get(
   "/api/clients",
@@ -64,13 +73,14 @@ router.put(
   ensureDbConnection,
   async (req, res) => {
     const { id } = req.params;
-    const { name, birthdate, phone } = req.body;
+    let { name, birthdate, phone } = req.body;
 
     if (!name || !birthdate || !phone) {
-      return res
-        .status(400)
-        .json({ error: "Todos os campos são obrigatórios" });
+      return res.status(400).json({ error: "Todos os campos são obrigatórios" });
     }
+
+    // Converter data de 'DD/MM/YYYY' para 'YYYY-MM-DD'
+    birthdate = convertToDatabaseDate(birthdate);
 
     try {
       const db = req.db; // Use 'req.db' para acessar o banco de dados
