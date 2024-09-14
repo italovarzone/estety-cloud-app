@@ -46,7 +46,6 @@
             <table id="client-table" class="table table-striped">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Nome</th>
                         <th>Data de Nascimento</th>
                         <th>Telefone</th>
@@ -127,7 +126,6 @@
                             // Cria linha para a tabela (Desktop)
                             const tr = document.createElement("tr");
                             tr.innerHTML = `
-                                <td>${client._id}</td>
                                 <td>${client.name}</td>
                                 <td>${formattedBirthdate}</td>
                                 <td>${client.phone}</td>

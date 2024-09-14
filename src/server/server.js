@@ -14,6 +14,7 @@ const taskRoutes = require('./routes/taskRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const authRoutes = require('./routes/authRoutes');
 const miscRoutes = require('./routes/miscRoutes');
+const proceduresRoutes = require('./routes/proceduresRoutes');
 
 const app = express();
 const PORT = 3000;
@@ -31,6 +32,7 @@ app.use(technicalSheetRoutes);
 app.use(taskRoutes);
 app.use(dashboardRoutes);
 app.use(miscRoutes);
+app.use(proceduresRoutes);
 
 // Rota principal protegida (home)
 app.get('/', authenticateToken, ensureDbConnection, (req, res) => {
@@ -60,6 +62,11 @@ app.get('/pages/dashboard/dashboard.html', (req, res) => {
 
 app.get('/pages/calendario/calendario.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'calendario', 'calendario.html'));
+});
+
+// Rota para a página de cadastro de procedimentos
+app.get('/pages/procedimentos/cadastro.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../app', 'pages', 'procedimentos', 'cadastro.html'));
 });
 
 app.listen(PORT, () => {

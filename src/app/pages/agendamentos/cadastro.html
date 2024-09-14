@@ -39,14 +39,7 @@
                 <label for="procedure" class="form-label">Procedimento:</label>
                 <select id="procedure" class="form-control">
                     <option value="" selected>Selecione um procedimento</option>
-                    <option value="Colocação (Brasileiro)">Colocação (Brasileiro)</option>
-                    <option value="Colocação (Fox Eyes)">Colocação (Fox Eyes)</option>
-                    <option value="Colocação (Classico)">Colocação (Classico)</option>
-                    <option value="Colocação (Sirena)">Colocação (Sirena)</option>
-                    <option value="Manutenção">Manutenção</option>
-                    <option value="Remoção">Remoção</option>
-                    <option value="Sobrancelha (Henna)">Sobrancelha (Henna)</option>
-                    <option value="Sobrancelha (Sem Henna)">Sobrancelha (Sem Henna)</option>
+                    <!-- Outras opções de procedimentos serão carregadas dinamicamente -->
                 </select>
                 <div id="procedure-error" class="error-message"></div>
             </div>
@@ -84,22 +77,21 @@
             const timeError = document.getElementById("time-error");
 
             loadClientsIntoSelect();
+            loadProceduresIntoSelect();
 
             function loadClientsIntoSelect() {
-                const token = localStorage.getItem('authToken');  // Obter o token de autenticação do localStorage
-                
+                const token = localStorage.getItem('authToken');  
                 fetch("/api/clients", {
                     headers: {
-                        "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
+                        "Authorization": token ? `Bearer ${token}` : ''  
                     }
                 })
                     .then((response) => response.json())
                     .then((data) => {
-                        clientSelect.innerHTML = '<option value="" selected>Selecione um cliente</option>'; // Limpa o select antes de preencher novamente
-
+                        clientSelect.innerHTML = '<option value="" selected>Selecione um cliente</option>';
                         data.clients.forEach((client) => {
                             const option = document.createElement("option");
-                            option.value = client._id;  // Use o campo correto para o ID
+                            option.value = client._id;
                             option.textContent = client.name;
                             clientSelect.appendChild(option);
                         });
@@ -107,7 +99,26 @@
                     .catch((error) => console.error("Erro ao carregar clientes:", error));
             }
 
-            // Função para ativar o botão somente se todos os campos estiverem válidos
+            function loadProceduresIntoSelect() {
+                const token = localStorage.getItem('authToken');
+                fetch("/api/procedures", {
+                    headers: {
+                        "Authorization": token ? `Bearer ${token}` : ''
+                    }
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        procedureSelect.innerHTML = '<option value="" selected>Selecione um procedimento</option>';
+                        data.procedures.forEach((procedure) => {
+                            const option = document.createElement("option");
+                            option.value = procedure._id;
+                            option.textContent = procedure.name;
+                            procedureSelect.appendChild(option);
+                        });
+                    })
+                    .catch((error) => console.error("Erro ao carregar procedimentos:", error));
+            }
+
             function checkFormValidity() {
                 validateClient();
                 validateProcedure();
@@ -116,9 +127,9 @@
 
                 if (clientError.textContent === "" && procedureError.textContent === "" &&
                     dateError.textContent === "" && timeError.textContent === "") {
-                    addAppointmentBtn.disabled = false; // Habilita o botão se todos os campos estiverem válidos
+                    addAppointmentBtn.disabled = false;
                 } else {
-                    addAppointmentBtn.disabled = true; // Desabilita o botão se algum campo for inválido
+                    addAppointmentBtn.disabled = true;
                 }
             }
 
@@ -142,7 +153,6 @@
                 checkFormValidity();
             });
 
-            // Função de validação para o campo de cliente
             function validateClient() {
                 if (clientSelect.value === "") {
                     clientError.textContent = "Campo obrigatório.";
@@ -151,7 +161,6 @@
                 }
             }
 
-            // Função de validação para o campo de procedimento
             function validateProcedure() {
                 if (procedureSelect.value === "") {
                     procedureError.textContent = "Campo obrigatório.";
@@ -160,7 +169,6 @@
                 }
             }
 
-            // Função de validação para o campo de data
             function validateDate() {
                 if (dateInput.value.trim() === "") {
                     dateError.textContent = "Campo obrigatório.";
@@ -169,7 +177,6 @@
                 }
             }
 
-            // Função de validação para o campo de hora
             function validateTime() {
                 if (timeInput.value.trim() === "") {
                     timeError.textContent = "Campo obrigatório.";
@@ -178,10 +185,8 @@
                 }
             }
 
-            // Validações ao enviar o formulário
             document.getElementById("appointment-form").addEventListener("submit", function (e) {
-                e.preventDefault(); // Impede o envio padrão do formulário
-
+                e.preventDefault();
                 validateClient();
                 validateProcedure();
                 validateDate();
@@ -194,50 +199,42 @@
             });
 
             function addAppointment() {
-                const clientId = clientSelect.value;
-                const procedure = procedureSelect.value;
+                const clientId = clientSelect.value; // Captura o ID do cliente selecionado
+                const procedureName = procedureSelect.options[procedureSelect.selectedIndex].text; // Captura o nome do procedimento selecionado
                 const date = dateInput.value;
                 const time = timeInput.value;
 
-                const btnText = document.getElementById("btn-text");
-                const btnSpinner = document.getElementById("btn-spinner");
+                // Verifica se todos os campos estão preenchidos
+                if (!clientId || !procedureName || !date || !time) {
+                    alert("Todos os campos são obrigatórios.");
+                    return;
+                }
 
-                // Obter o token de autenticação do localStorage
                 const token = localStorage.getItem('authToken');
-
-                btnText.style.display = "none";
-                btnSpinner.style.display = "inline-block";
-                addAppointmentBtn.disabled = true;
-
                 fetch("/api/appointments", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": token ? `Bearer ${token}` : ''  // Inclui o token no cabeçalho
+                        "Authorization": `Bearer ${token}`
                     },
-                    body: JSON.stringify({ clientId, procedure, date, time })
+                    body: JSON.stringify({ clientId, procedureName, date, time }) // Envia o nome do procedimento
                 })
-                .then((response) => response.json())
-                .then((data) => {
-                    setTimeout(() => {
-                        btnText.style.display = "inline";
-                        btnSpinner.style.display = "none";
-                        addAppointmentBtn.disabled = false;
-
-                        if (data.error) {
-                            console.error(data.error);
-                        } else {
-                            window.location.href = "listagem.html";  // Redireciona após o sucesso
-                        }
-                    }, 3000);
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        alert(data.error);
+                    } else {
+                        clientSelect.value = '';
+                        procedureSelect.value = '';
+                        dateInput.value = '';
+                        timeInput.value = '';
+                        addAppointmentBtn.disabled = true;
+                        window.location.href = 'listagem.html';
+                    }
                 })
-                .catch((error) => {
-                    setTimeout(() => {
-                        btnText.style.display = "inline";
-                        btnSpinner.style.display = "none";
-                        addAppointmentBtn.disabled = false;
-                        console.error("Erro ao adicionar agendamento:", error);
-                    }, 3000);
+                .catch(error => {
+                    console.error("Erro ao adicionar agendamento:", error);
                 });
             }
         });

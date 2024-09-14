@@ -52,7 +52,6 @@
             <table id="appointment-table" class="table table-striped">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Cliente</th>
                         <th>Procedimento</th>
                         <th>Data</th>
@@ -108,198 +107,191 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", init);
+
+function init() {
+    loadAppointments(); // Carrega a lista de agendamentos ao iniciar
+
+    document.getElementById("filter-status").addEventListener("change", loadAppointments);
+    document.getElementById("filter-name").addEventListener("input", loadAppointments);
+}
+
+// Função para realizar fetch com o token de autenticação
+function fetchWithToken(url, options = {}) {
+    const token = localStorage.getItem('authToken');  // Obter o token do localStorage
+    const headers = {
+        ...options.headers,
+        'Authorization': token ? `Bearer ${token}` : '',  // Inclui o token no cabeçalho de autorização
+        'Content-Type': 'application/json',  // Define o tipo de conteúdo como JSON
+    };
+
+    return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
+}
+
+function loadAppointments() {
+    const filterStatus = document.getElementById("filter-status").value;
+    const filterName = document.getElementById("filter-name").value.toLowerCase();
+    let url = "/api/appointments";
+
+    const params = new URLSearchParams();
+
+    // Adiciona o status ao parâmetro de consulta
+    params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
     
-        function init() {
-            loadAppointments(); // Carrega a lista de agendamentos ao iniciar
-    
-            document.getElementById("filter-status").addEventListener("change", loadAppointments);
-            document.getElementById("filter-name").addEventListener("input", loadAppointments);
-        }
-    
-        // Função para realizar fetch com o token de autenticação
-        function fetchWithToken(url, options = {}) {
-            const token = localStorage.getItem('authToken');  // Obter o token do localStorage
-            const headers = {
-                ...options.headers,
-                'Authorization': token ? `Bearer ${token}` : '',  // Inclui o token no cabeçalho de autorização
-                'Content-Type': 'application/json',  // Define o tipo de conteúdo como JSON
-            };
-    
-            return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
-        }
-    
-        function loadAppointments() {
-            const filterStatus = document.getElementById("filter-status").value;
-            const filterName = document.getElementById("filter-name").value.toLowerCase();
-            let url = "/api/appointments";
+    // Adiciona o termo de pesquisa ao parâmetro de consulta
+    if (filterName) {
+        params.append('search', filterName);
+    }
 
-            const params = new URLSearchParams();
+    // Atualiza a URL com os parâmetros de consulta
+    url += '?' + params.toString();
 
-            // Adiciona o status ao parâmetro de consulta
-            params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
-            
-            // Adiciona o termo de pesquisa ao parâmetro de consulta
-            if (filterName) {
-                params.append('search', filterName);
-            }
+    fetchWithToken(url)
+        .then((response) => response.json())
+        .then((data) => {
+            // Atualiza a tabela para desktop
+            const tbody = document.querySelector("#appointment-table tbody");
+            tbody.innerHTML = "";
 
-            // Atualiza a URL com os parâmetros de consulta
-            url += '?' + params.toString();
+            // Atualiza os cards para mobile
+            const container = document.getElementById("appointments-container");
+            container.innerHTML = "";
 
-            fetchWithToken(url)
-                .then((response) => response.json())
-                .then((data) => {
-                    // Atualiza a tabela para desktop
-                    const tbody = document.querySelector("#appointment-table tbody");
-                    tbody.innerHTML = "";
-
-                    // Atualiza os cards para mobile
-                    const container = document.getElementById("appointments-container");
-                    container.innerHTML = "";
-
-                    if (data.appointments && data.appointments.length > 0) {
-                        data.appointments.forEach((appointment) => {
-                            // Cria linha para a tabela (Desktop)
-                            const tr = document.createElement("tr");
-                            tr.innerHTML = `
-                                <td>${appointment.id}</td>
-                                <td>${appointment.client.name}</td>
-                                <td>${appointment.procedure}</td>
-                                <td>${appointment.date}</td>
-                                <td>${appointment.time}</td>
-                                <td>
-                                    <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
-                                        filterStatus === "concluidos" ? "disabled" : ""
-                                    } onclick="concludeAppointment('${appointment.id}')">
-                                        <i class="fa-regular fa-circle-check"></i>
-                                    </button>
-                                    <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
-                                        filterStatus === "concluidos" ? "disabled" : ""
-                                    } onclick="cancelAppointment('${appointment.id}')">
-                                        <i class="fa-solid fa-ban"></i>
-                                    </button>
-                                </td>
-                            `;
-                            tbody.appendChild(tr);
-
-                            // Cria card para mobile
-                            const card = document.createElement("div");
-                            card.classList.add("col-md-6", "col-lg-4");
-                            card.innerHTML = `
-                                <br>
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <h5 class="card-title">${appointment.client.name}</h5>
-                                        <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
-                                        <p class="card-text"><strong>Data:</strong> ${appointment.date}</p>
-                                        <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
-                                    </div>
-                                    <div class="card-footer d-flex justify-content-end">
-                                        <button title="Concluir Agendamento" class="btn btn-sm btn-success me-2" ${
-                                            filterStatus === "concluidos" ? "disabled" : ""
-                                        } onclick="concludeAppointment('${appointment.id}')">
-                                            <i class="fa-regular fa-circle-check"></i>
-                                        </button>
-                                        <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
-                                            filterStatus === "concluidos" ? "disabled" : ""
-                                        } onclick="cancelAppointment('${appointment.id}')">
-                                            <i class="fa-solid fa-ban"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                            container.appendChild(card);
-                        });
-                    } else {
-                        // Mensagem de nenhum agendamento
-                        const noAppointmentsMessageTable = document.createElement("tr");
-                        noAppointmentsMessageTable.innerHTML = `
-                            <td colspan="6" class="text-center text-muted">Nenhum agendamento encontrado.</td>
-                        `;
-                        tbody.appendChild(noAppointmentsMessageTable);
-
-                        const noAppointmentsMessageCard = document.createElement("div");
-                        noAppointmentsMessageCard.classList.add("col-12");
-                        noAppointmentsMessageCard.innerHTML = `
-                            <p class="text-center text-muted">Nenhum agendamento encontrado.</p>
-                        `;
-                        container.appendChild(noAppointmentsMessageCard);
-                    }
-                })
-                .catch((error) => {
-                    console.error("Erro ao carregar agendamentos:", error);
-                    const tbody = document.querySelector("#appointment-table tbody");
-                    const container = document.getElementById("appointments-container");
-                    
-                    const noAppointmentsMessageTable = document.createElement("tr");
-                    noAppointmentsMessageTable.innerHTML = `
-                        <td colspan="6" class="text-center text-muted">Erro ao carregar agendamentos. Tente novamente mais tarde.</td>
+            if (data.appointments && data.appointments.length > 0) {
+                data.appointments.forEach((appointment) => {
+                    // Cria linha para a tabela (Desktop)
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${appointment.client.name}</td>
+                        <td>${appointment.procedure}</td> <!-- Ajuste para exibir o nome do procedimento -->
+                        <td>${appointment.date}</td>
+                        <td>${appointment.time}</td>
+                        <td>
+                            <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
+                                filterStatus === "concluidos" ? "disabled" : ""
+                            } onclick="concludeAppointment('${appointment.id}')">
+                                <i class="fa-regular fa-circle-check"></i>
+                            </button>
+                            <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
+                                filterStatus === "concluidos" ? "disabled" : ""
+                            } onclick="cancelAppointment('${appointment.id}')">
+                                <i class="fa-solid fa-ban"></i>
+                            </button>
+                        </td>
                     `;
-                    tbody.appendChild(noAppointmentsMessageTable);
+                    tbody.appendChild(tr);
 
-                    const noAppointmentsMessageCard = document.createElement("div");
-                    noAppointmentsMessageCard.classList.add("col-12");
-                    noAppointmentsMessageCard.innerHTML = `
-                        <p class="text-center text-muted">Erro ao carregar agendamentos. Tente novamente mais tarde.</p>
+                    // Cria card para mobile
+                    const card = document.createElement("div");
+                    card.classList.add("col-md-6", "col-lg-4");
+                    card.innerHTML = `
+                        <br>
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">${appointment.client.name}</h5>
+                                <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p> <!-- Ajuste para exibir o nome do procedimento -->
+                                <p class="card-text"><strong>Data:</strong> ${appointment.date}</p>
+                                <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
+                            </div>
+                            <div class="card-footer d-flex justify-content-end">
+                                <button title="Concluir Agendamento" class="btn btn-sm btn-success me-2" ${
+                                    filterStatus === "concluidos" ? "disabled" : ""
+                                } onclick="concludeAppointment('${appointment.id}')">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
+                                    filterStatus === "concluidos" ? "disabled" : ""
+                                } onclick="cancelAppointment('${appointment.id}')">
+                                    <i class="fa-solid fa-ban"></i>
+                                </button>
+                            </div>
+                        </div>
                     `;
-                    container.appendChild(noAppointmentsMessageCard);
+                    container.appendChild(card);
                 });
-        }
-    
-        let appointmentToConclude = null;
-    
-        function concludeAppointment(id) {
-            appointmentToConclude = id;
-            const modal = new bootstrap.Modal(document.getElementById("confirmConcludeModal"));
-            modal.show();
-        }
-    
-        document.getElementById("confirmConcludeButton").addEventListener("click", () => {
-            if (appointmentToConclude !== null) {
-                fetchWithToken(`/api/appointments/${appointmentToConclude}/conclude`, {
-                    method: "PUT",
-                })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        if (data.success) {
-                            const modal = bootstrap.Modal.getInstance(document.getElementById("confirmConcludeModal"));
-                            modal.hide();
-                            loadAppointments();
-                        } else {
-                            console.error("Erro ao concluir agendamento.");
-                        }
-                    })
-                    .catch((error) => console.error("Erro ao concluir agendamento:", error));
+            } else {
+                // Mensagem de nenhum agendamento
+                displayNoAppointmentsMessage(tbody, container);
             }
+        })
+        .catch((error) => {
+            console.error("Erro ao carregar agendamentos:", error);
+            const tbody = document.querySelector("#appointment-table tbody");
+            const container = document.getElementById("appointments-container");
+            displayNoAppointmentsMessage(tbody, container, true);
         });
+}
+
+function displayNoAppointmentsMessage(tbody, container, error = false) {
+    const message = error ? "Erro ao carregar agendamentos. Tente novamente mais tarde." : "Nenhum agendamento encontrado.";
     
-        let appointmentToCancel = null;
-    
-        function cancelAppointment(id) {
-            appointmentToCancel = id;
-            const modal = new bootstrap.Modal(document.getElementById("confirmCancelModal"));
-            modal.show();
-        }
-    
-        document.getElementById("confirmCancelButton").addEventListener("click", () => {
-            if (appointmentToCancel !== null) {
-                fetchWithToken(`/api/appointments/${appointmentToCancel}`, {
-                    method: "DELETE",
-                })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        if (data.success) {
-                            const modal = bootstrap.Modal.getInstance(document.getElementById("confirmCancelModal"));
-                            modal.hide();
-                            loadAppointments();
-                        } else {
-                            console.error("Erro ao cancelar e remover agendamento.");
-                        }
-                    })
-                    .catch((error) => console.error("Erro ao cancelar e remover agendamento:", error));
-            }
-        });
-    </script>    
+    const noAppointmentsMessageTable = document.createElement("tr");
+    noAppointmentsMessageTable.innerHTML = `
+        <td colspan="5" class="text-center text-muted">${message}</td>
+    `;
+    tbody.appendChild(noAppointmentsMessageTable);
+
+    const noAppointmentsMessageCard = document.createElement("div");
+    noAppointmentsMessageCard.classList.add("col-12");
+    noAppointmentsMessageCard.innerHTML = `
+        <p class="text-center text-muted">${message}</p>
+    `;
+    container.appendChild(noAppointmentsMessageCard);
+}
+
+let appointmentToConclude = null;
+
+function concludeAppointment(id) {
+    appointmentToConclude = id;
+    const modal = new bootstrap.Modal(document.getElementById("confirmConcludeModal"));
+    modal.show();
+}
+
+document.getElementById("confirmConcludeButton").addEventListener("click", () => {
+    if (appointmentToConclude !== null) {
+        fetchWithToken(`/api/appointments/${appointmentToConclude}/conclude`, {
+            method: "PUT",
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById("confirmConcludeModal"));
+                    modal.hide();
+                    loadAppointments();
+                } else {
+                    console.error("Erro ao concluir agendamento.");
+                }
+            })
+            .catch((error) => console.error("Erro ao concluir agendamento:", error));
+    }
+});
+
+let appointmentToCancel = null;
+
+function cancelAppointment(id) {
+    appointmentToCancel = id;
+    const modal = new bootstrap.Modal(document.getElementById("confirmCancelModal"));
+    modal.show();
+}
+
+document.getElementById("confirmCancelButton").addEventListener("click", () => {
+    if (appointmentToCancel !== null) {
+        fetchWithToken(`/api/appointments/${appointmentToCancel}`, {
+            method: "DELETE",
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById("confirmCancelModal"));
+                    modal.hide();
+                    loadAppointments();
+                } else {
+                    console.error("Erro ao cancelar e remover agendamento.");
+                }
+            })
+            .catch((error) => console.error("Erro ao cancelar e remover agendamento:", error));
+    }
+});
+    </script>     
 </body>
 </html>
