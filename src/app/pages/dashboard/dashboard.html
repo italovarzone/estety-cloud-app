@@ -9,9 +9,58 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <style>
+      .conteudo {
+        margin: 36px;
+      }
+
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 500px; /* Limita o tamanho máximo do gráfico */
+        height: 400px; /* Aumenta a altura para gráficos de pizza */
+        margin: auto;
+        padding: 20px; /* Adiciona padding ao redor do gráfico */
+      }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* Apenas um gráfico por linha no mobile */
+        gap: 20px;
+        justify-items: center;
+      }
+
+      #barChartContainer {
+        display: none; /* Oculta o gráfico de barras por padrão */
+      }
+
+      @media (max-width: 999px) { /* Ajustes para mobile */
+        .conteudo {
+          margin: 16px;
+        }
+
+        .chart-container {
+          max-width: 90%; /* Aumenta a largura no mobile */
+          height: auto; /* Permite que a altura seja dinâmica */
+        }
+      }
+
+      @media (min-width: 1000px) { /* Mostra o gráfico de barras e ajusta o layout para desktop */
+        .charts-grid {
+          grid-template-columns: repeat(2, 1fr); /* Dois gráficos lado a lado */
+        }
+        .chart-container {
+          max-width: 400px; /* Ajusta o tamanho máximo dos gráficos no desktop */
+          height: 350px; /* Ajusta a altura dos gráficos */
+        }
+        #barChartContainer {
+          display: block; /* Mostra o gráfico de barras no desktop */
+        }
+      }
+    </style>
   </head>
   <body>
-    <div style="margin: 36px;">
+    <div class="conteudo">
       <h1 class="mb-4 text-center">Dashboard</h1>
       <div class="row">
         <div class="col-md-6">
@@ -33,7 +82,16 @@
       </div>
       <div style="margin: 36px;">
         <h1 class="mb-4 text-center">Agendamentos por Cliente</h1>
-        <canvas id="appointmentsChart"></canvas>
+        <div class="charts-grid">
+          <!-- Container do gráfico de barras (exibido apenas no desktop) -->
+          <div id="barChartContainer" class="chart-container">
+            <canvas id="barChart"></canvas>
+          </div>
+          <!-- Container do gráfico de pizza -->
+          <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -50,75 +108,124 @@
     
           return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
         }
-    
+
+        // Função para criar gráficos dinamicamente
+        function createCharts(clientNames, appointmentCounts) {
+          const barCtx = document.getElementById("barChart").getContext("2d");
+          const pieCtx = document.getElementById("pieChart").getContext("2d");
+
+          // Gráfico de Barras (apenas no desktop)
+          new Chart(barCtx, {
+            type: "bar",
+            data: {
+              labels: clientNames,
+              datasets: [
+                {
+                  label: "Quantidade de Agendamentos",
+                  data: appointmentCounts,
+                  backgroundColor: "rgba(75, 192, 192, 0.2)",
+                  borderColor: "rgba(75, 192, 192, 1)",
+                  borderWidth: 1,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: "Clientes",
+                    font: {
+                      size: "16px",
+                      weight: "bold",
+                    },
+                  },
+                  grid: {
+                    display: false,
+                  },
+                },
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: "Quantidade de Agendamentos",
+                    font: {
+                      weight: "bold",
+                      size: "16px",
+                    },
+                  },
+                  ticks: {
+                    stepSize: 1,
+                  },
+                  grid: {
+                    color: "rgba(200, 200, 200, 0.3)",
+                  },
+                },
+              },
+              plugins: {
+                legend: {
+                  display: false,
+                },
+              },
+            },
+          });
+
+          // Gráfico de Pizza
+          new Chart(pieCtx, {
+            type: "pie",
+            data: {
+              labels: clientNames,
+              datasets: [
+                {
+                  label: "Quantidade de Agendamentos",
+                  data: appointmentCounts,
+                  backgroundColor: ["#ff6384", "#36a2eb", "#cc65fe", "#ffce56"],
+                  borderColor: "#fff",
+                  borderWidth: 1,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'bottom',  // Posiciona a legenda abaixo no mobile
+                  labels: {
+                    font: {
+                      size: 12
+                    },
+                    padding: 10
+                  }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      let label = context.label || '';
+                      if (label) {
+                        label += ': ';
+                      }
+                      label += context.raw; // Mostra a quantidade de agendamentos
+                      return label;
+                    }
+                  }
+                }
+              },
+            },
+          });
+        }
+
         fetchWithToken("/api/appointments-by-client")
           .then((response) => response.json())
           .then((data) => {
             const clientNames = data.map((item) => item.client_name);
-            const appointmentCounts = data.map(
-              (item) => item.appointment_count
-            );
-    
-            const ctx = document
-              .getElementById("appointmentsChart")
-              .getContext("2d");
-            const chart = new Chart(ctx, {
-              type: "bar", // Gráfico de barras
-              data: {
-                labels: clientNames,
-                datasets: [
-                  {
-                    label: "Quantidade de Agendamentos",
-                    data: appointmentCounts,
-                    backgroundColor: "rgba(75, 192, 192, 0.2)",
-                    borderColor: "rgba(75, 192, 192, 1)",
-                    borderWidth: 1,
-                    barThickness: 40, // Aumenta a espessura das barras para preenchimento
-                    maxBarThickness: 50, // Limita a espessura máxima das barras
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                scales: {
-                  x: {
-                    title: {
-                      display: true,
-                      text: "Clientes",
-                      font: {
-                        size: "16px",
-                        weight: "bold", // Deixa o texto em negrito
-                      },
-                    },
-                    grid: {
-                      display: false, // Remove as linhas de grade verticais
-                    },
-                  },
-                  y: {
-                    beginAtZero: true,
-                    title: {
-                      display: true,
-                      text: "Quantidade de Agendamentos",
-                      font: {
-                        weight: "bold",
-                        size: "16px",
-                      },
-                    },
-                    ticks: {
-                      stepSize: 1, // Define o intervalo de 1 em 1 no eixo Y
-                    },
-                    grid: {
-                      color: "rgba(200, 200, 200, 0.3)", // Linhas de grade mais suaves
-                    },
-                  },
-                },
-                plugins: {
-                  legend: {
-                    display: false, // Remove a legenda se preferir mais espaço para o gráfico
-                  },
-                },
-              },
-            });
+            const appointmentCounts = data.map((item) => item.appointment_count);
+
+            // Cria os gráficos de barra e pizza
+            createCharts(clientNames, appointmentCounts);
           })
           .catch((error) =>
             console.error("Erro ao carregar os dados do gráfico:", error)

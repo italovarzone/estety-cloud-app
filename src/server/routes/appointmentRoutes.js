@@ -132,10 +132,10 @@ router.get(
 
       const filteredAppointments = search
         ? appointments.filter((appointment) => {
-            const normalizedClientName = normalizeText(appointment.client.name);
-            const normalizedSearch = normalizeText(search);
-            return normalizedClientName.startsWith(normalizedSearch);
-          })
+          const normalizedClientName = normalizeText(appointment.client.name);
+          const normalizedSearch = normalizeText(search);
+          return normalizedClientName.startsWith(normalizedSearch);
+        })
         : appointments;
 
       res.json({ appointments: filteredAppointments });
@@ -169,6 +169,43 @@ router.put(
     }
   }
 );
+
+// Rota para listar agendamentos por cliente
+router.get(
+  '/api/appointments-by-client',
+  authenticateToken,
+  ensureDbConnection,
+  async (req, res) => {
+    try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
+      
+      const appointmentsByClient = await db.collection('appointments').aggregate([
+        {
+          $lookup: {
+            from: 'clients',
+            localField: 'clientId',
+            foreignField: '_id',
+            as: 'client'
+          }
+        },
+        { $unwind: '$client' },
+        {
+          $group: {
+            _id: '$client._id',
+            client_name: { $first: '$client.name' },
+            appointment_count: { $sum: 1 }
+          }
+        }
+      ]).toArray();
+
+      res.json(appointmentsByClient); // Retorna a resposta em formato JSON
+    } catch (err) {
+      console.error('Erro ao carregar dados dos agendamentos por cliente:', err.message);
+      res.status(500).json({ error: 'Erro ao carregar dados dos agendamentos.' }); // Resposta de erro padronizada
+    }
+  }
+);
+
 
 // Rota para deletar um agendamento
 router.delete(
