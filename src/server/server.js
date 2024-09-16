@@ -36,8 +36,11 @@ app.use(miscRoutes);
 app.use(proceduresRoutes);
 app.use(consentRoutes);
 
+app.use('/login', authRoutes);
+app.use(authenticateToken);
+
 // Rota principal protegida (home)
-app.get('/', authenticateToken, ensureDbConnection, (req, res) => {
+app.get('/', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'index.html'));
 });
 
@@ -46,32 +49,32 @@ app.get('/pages/clientes/listagem.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'listagem.html'));
 });
 
-app.get('/pages/clientes/ficha_tecnica/ficha_tecnica.html', (req, res) => {
+app.get('/pages/clientes/ficha_tecnica/ficha_tecnica.html', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'ficha_tecnica', 'ficha_tecnica.html'));
 });
 
-app.get('/pages/clientes/cadastro.html', (req, res) => {
+app.get('/pages/clientes/cadastro.html', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'cadastro.html'));
 });
 
-app.get('/pages/agendamentos/listagem.html', (req, res) => {
+app.get('/pages/agendamentos/listagem.html', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'agendamentos', 'listagem.html'));
 });
 
-app.get('/pages/dashboard/dashboard.html', (req, res) => {
+app.get('/pages/dashboard/dashboard.html', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'dashboard', 'dashboard.html'));
 });
 
-app.get('/pages/calendario/calendario.html', (req, res) => {
+app.get('/pages/calendario/calendario.html', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'calendario', 'calendario.html'));
 });
 
 // Rota para a página de cadastro de procedimentos
-app.get('/pages/procedimentos/cadastro.html', (req, res) => {
+app.get('/pages/procedimentos/cadastro.html', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'procedimentos', 'cadastro.html'));
 });
 
-app.get('/pages/mensagens/cadastro.html', (req, res) => {
+app.get('/pages/mensagens/cadastro.html', ensureDbConnection, (req, res) => {
   res.sendFile(path.join(__dirname, '../app', 'pages', 'mensagens', 'cadastro.html'));
 });
 
