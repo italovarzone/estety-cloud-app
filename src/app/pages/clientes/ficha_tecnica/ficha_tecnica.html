@@ -304,6 +304,24 @@
             </div>
         </div>
     </div>
+    <div class="toast-container position-fixed p-3 top-0 end-0">
+        <div id="toast-success" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Operação realizada com sucesso!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="toast-error" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Erro ao realizar a operação.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
     <!-- Scripts -->
 <script>
     // Navegação entre as Tabs
@@ -328,11 +346,24 @@
         const urlParams = new URLSearchParams(window.location.search);
         const clientId = window.location.pathname.split('/').pop();
         const token = localStorage.getItem('authToken');
-
         const clientData = JSON.parse(localStorage.getItem("clientForTechnicalSheet"));
         const clientNameElement = document.getElementById("client-name");
         const datetimeElement = document.getElementById("datetime");
         const editButton = document.getElementById("edit-button");
+
+        // Toast elements
+        const toastSuccess = new bootstrap.Toast(document.getElementById('toast-success'));
+        const toastError = new bootstrap.Toast(document.getElementById('toast-error'));
+
+        function showToast(type, message) {
+            if (type === 'success') {
+                document.querySelector('#toast-success .toast-body').textContent = message;
+                toastSuccess.show();
+            } else {
+                document.querySelector('#toast-error .toast-body').textContent = message;
+                toastError.show();
+            }
+        }
 
         if (clientData && clientNameElement && datetimeElement) {
             fetch(`/api/technical-sheets/${clientData.clientId}`, {
@@ -414,7 +445,7 @@
             e.preventDefault();
 
             if (!consentCheckbox.checked) {
-                alert("Você deve aceitar o Termo de Consentimento antes de salvar a ficha técnica.");
+                showToast('error', "Você deve aceitar o Termo de Consentimento antes de salvar a ficha técnica.");
                 return;
             }
 
