@@ -25,7 +25,7 @@ router.get(
       if (technicalSheet.length === 0) {
         return res.status(404).json({ error: "Ficha técnica não encontrada" });
       }
-      res.json(technicalSheet[0]);
+      res.json(technicalSheet[0]); // Retorna toda a ficha técnica, incluindo o campo 'consentAccepted'
     } catch (err) {
       console.error("Erro ao recuperar ficha técnica:", err.message);
       res.status(500).json({ error: err.message });
@@ -62,11 +62,12 @@ router.post(
       curvatura,
       adesivo,
       observacao,
+      consentAccepted,  // Novo campo adicionado
     } = req.body;
 
     // Verificação dos campos obrigatórios
-    if (!clientId || !datetime || !rimel || !gestante) {
-      return res.status(400).json({ error: "Campos obrigatórios faltando." });
+    if (!clientId || !datetime || consentAccepted === undefined) {
+      return res.status(400).json({ error: "Preencha todos os campos necessários." });
     }
 
     try {
@@ -94,6 +95,7 @@ router.post(
         curvatura,
         adesivo,
         observacao,
+        consentAccepted,  // Salva o consentimento
       });
       res.status(201).json({
         id: result.insertedId,
@@ -119,6 +121,7 @@ router.post(
         curvatura,
         adesivo,
         observacao,
+        consentAccepted,  // Inclui no retorno da resposta
       });
     } catch (err) {
       console.error("Erro ao adicionar ficha técnica:", err.message);
@@ -156,10 +159,11 @@ router.put(
       curvatura,
       adesivo,
       observacao,
+      consentAccepted,  // Novo campo adicionado
     } = req.body;
 
     // Verificação dos campos obrigatórios
-    if (!datetime || !rimel || !gestante) {
+    if (!datetime || !rimel || !gestante || consentAccepted === undefined) {
       return res.status(400).json({ error: "Campos obrigatórios faltando." });
     }
 
@@ -190,6 +194,7 @@ router.put(
             curvatura,
             adesivo,
             observacao,
+            consentAccepted,  // Atualiza o consentimento
           },
         }
       );

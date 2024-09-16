@@ -11,6 +11,11 @@
             margin-top: 42px;
         }
 
+        .modal-body {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
         .btn-success {
             color:  rgb(66, 167, 90) !important;
             background-color: white !important;
@@ -267,194 +272,279 @@
                         <label for="observacao" class="form-label">Observação:</label>
                         <textarea id="observacao" name="observacao" class="form-control"></textarea>
                     </div>
-                    <div class="buttons-navegations">
-                        <button class="btn btn-secondary prev-tab" data-prev="condicoes-medicas-tab">Anterior</button>
-                        <button id="save-technical-sheet" class="btn btn-success">Salvar Ficha Técnica</button>
+
+                            <!-- Checkbox de confirmação de leitura do termo de consentimento -->
+                    <div class="mb-3">
+                        <input type="checkbox" id="consent-checkbox">
+                        <label for="consent-checkbox">Eu li e concordo com o Termo de Consentimento</label>
                     </div>
+                </div>
+                <div class="buttons-navegations">
+                    <button class="btn btn-secondary prev-tab" data-prev="condicoes-medicas-tab">Anterior</button>
+                    <button id="save-technical-sheet" class="btn btn-success">Salvar Ficha Técnica</button>
+                </div>
                 </div>
             </div>
         </div>
     </div>
-
+    <!-- Modal do Termo de Consentimento -->
+    <div class="modal fade" id="consentModal" tabindex="-1" aria-labelledby="consentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="consentModalLabel">Termo de Consentimento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="consent-content"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-consent" class="btn btn-primary" disabled>Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Scripts -->
-    <script>
-        // Navegação entre as Tabs
-        document.querySelectorAll('.next-tab').forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-                const nextTab = document.querySelector(`#${this.getAttribute('data-next')}`);
-                new bootstrap.Tab(nextTab).show();
-            });
+<script>
+    // Navegação entre as Tabs
+    document.querySelectorAll('.next-tab').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const nextTab = document.querySelector(`#${this.getAttribute('data-next')}`);
+            new bootstrap.Tab(nextTab).show();
         });
+    });
 
-        document.querySelectorAll('.prev-tab').forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-                const prevTab = document.querySelector(`#${this.getAttribute('data-prev')}`);
-                new bootstrap.Tab(prevTab).show();
-            });
+    document.querySelectorAll('.prev-tab').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const prevTab = document.querySelector(`#${this.getAttribute('data-prev')}`);
+            new bootstrap.Tab(prevTab).show();
         });
+    });
 
-        // Lógica original de carregar e manipular a ficha técnica
-        document.addEventListener("DOMContentLoaded", function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            const clientId = window.location.pathname.split('/').pop();
-            const token = localStorage.getItem('authToken');
+    // Lógica original de carregar e manipular a ficha técnica
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = window.location.pathname.split('/').pop();
+        const token = localStorage.getItem('authToken');
 
-            const clientData = JSON.parse(localStorage.getItem("clientForTechnicalSheet"));
-            const clientNameElement = document.getElementById("client-name");
-            const datetimeElement = document.getElementById("datetime");
-            const editButton = document.getElementById("edit-button");
+        const clientData = JSON.parse(localStorage.getItem("clientForTechnicalSheet"));
+        const clientNameElement = document.getElementById("client-name");
+        const datetimeElement = document.getElementById("datetime");
+        const editButton = document.getElementById("edit-button");
 
-            if (clientData && clientNameElement && datetimeElement) {
-                fetch(`/api/technical-sheets/${clientData.clientId}`, {
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": token ? `Bearer ${token}` : ''
-                    }
-                })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.error) {
-                        console.log("Nenhuma ficha técnica encontrada para este cliente.");
-                        clientNameElement.value = clientData.clientName;
-                        clientNameElement.dataset.clientId = clientData.clientId;
-                        datetimeElement.value = new Date().toLocaleString();
-                        editButton.style.display = "none";
-                    } else {
-                        preencherFormulario(data);
-                    }
-                })
-                .catch((error) => console.error("Erro ao carregar ficha técnica:", error));
-            }
-
-            if (editButton) {
-                editButton.addEventListener("click", () => {
-                    toggleFormFields(true);
+        if (clientData && clientNameElement && datetimeElement) {
+            fetch(`/api/technical-sheets/${clientData.clientId}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : ''
+                }
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.error) {
+                    console.log("Nenhuma ficha técnica encontrada para este cliente.");
+                    clientNameElement.value = clientData.clientName;
+                    clientNameElement.dataset.clientId = clientData.clientId;
                     datetimeElement.value = new Date().toLocaleString();
-                });
-            }
-
-            document.getElementById('save-technical-sheet').addEventListener('click', addTechnicalSheet);
-
-            function preencherFormulario(data) {
-                clientNameElement.value = clientData.clientName;
-                clientNameElement.dataset.clientId = clientData.clientId;
-                datetimeElement.value = data.datetime;
-
-                setRadioValue("rimel", data.rimel);
-                setRadioValue("gestante", data.gestante);
-                setRadioValue("procedimento-olhos", data.procedimento_olhos);
-                setRadioValue("alergia", data.alergia);
-                document.getElementById("especificar-alergia").value = data.especificar_alergia || "";
-                setRadioValue("tireoide", data.tireoide);
-                setRadioValue("problema-ocular", data.problema_ocular);
-                document.getElementById("especificar-ocular").value = data.especificar_ocular || "";
-                setRadioValue("oncologico", data.oncologico);
-                setRadioValue("dorme-lado", data.dorme_lado);
-                
-                if (data.dorme_lado === "SIM") {
-                    handleDormeLadoChange(data.dorme_lado);
-                    setRadioValue("dorme-lado-posicao", data.dorme_lado_posicao);
-                }
-
-                document.getElementById("problema-informar").value = data.problema_informar || "";
-                setRadioValue("procedimento", data.procedimento);
-                document.getElementById("mapping").value = data.mapping || "";
-                document.getElementById("estilo").value = data.estilo || "";
-                document.getElementById("modelo-fios").value = data.modelo_fios || "";
-                document.getElementById("espessura").value = data.espessura || "";
-                document.getElementById("curvatura").value = data.curvatura || "";
-                document.getElementById("adesivo").value = data.adesivo || "";
-                document.getElementById("observacao").value = data.observacao || "";
-
-                toggleFormFields(false); // Desabilitar todos os campos para visualização inicial
-            }
-
-            function setRadioValue(name, value) {
-                if (document.querySelector(`input[name="${name}"][value="${value}"]`)) {
-                    document.querySelector(`input[name="${name}"][value="${value}"]`).checked = true;
-                }
-            }
-
-            function addTechnicalSheet(e) {
-                e.preventDefault();
-
-                const data = {
-                    clientId: document.getElementById("client-name").dataset.clientId,
-                    datetime: document.getElementById("datetime").value || "",
-                    rimel: getRadioValue("rimel"),
-                    gestante: getRadioValue("gestante"),
-                    procedimento_olhos: getRadioValue("procedimento-olhos"),
-                    alergia: getRadioValue("alergia"),
-                    especificar_alergia: document.getElementById("especificar-alergia").value || "",
-                    tireoide: getRadioValue("tireoide"),
-                    problema_ocular: getRadioValue("problema-ocular"),
-                    especificar_ocular: document.getElementById("especificar-ocular").value || "",
-                    oncologico: getRadioValue("oncologico"),
-                    dorme_lado: getRadioValue("dorme-lado"),
-                    dorme_lado_posicao: getRadioValue("dorme-lado") === 'SIM' ? getRadioValue("dorme-lado-posicao") : "",
-                    problema_informar: document.getElementById("problema-informar").value || "",
-                    procedimento: getRadioValue("procedimento"),
-                    mapping: document.getElementById("mapping").value || "",
-                    estilo: document.getElementById("estilo").value || "",
-                    modelo_fios: document.getElementById("modelo-fios").value || "",
-                    espessura: document.getElementById("espessura").value || "",
-                    curvatura: document.getElementById("curvatura").value || "",
-                    adesivo: document.getElementById("adesivo").value || "",
-                    observacao: document.getElementById("observacao").value || ""
-                };
-
-                fetch("/api/technical-sheets", {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Authorization": token ? `Bearer ${token}` : '' 
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.error) {
-                        console.error("Erro ao salvar ficha técnica:", data.error);
-                    } else {
-                        window.location.href = "../listagem.html";
-                    }
-                })
-                .catch((error) => console.error("Erro ao salvar ficha técnica:", error));
-            }
-
-            function getRadioValue(name) {
-                const checkedRadio = document.querySelector(`input[name="${name}"]:checked`);
-                return checkedRadio ? checkedRadio.value : "";
-            }
-
-            function toggleFormFields(enable) {
-                const fields = document.querySelectorAll("input, textarea");
-                fields.forEach((field) => (field.disabled = !enable));
-            }
-
-            function handleDormeLadoChange(value) {
-                const ladoPosicaoDiv = document.getElementById("lado-posicao");
-                if (value === "SIM") {
-                    ladoPosicaoDiv.style.display = "block";
+                    editButton.style.display = "none";
                 } else {
-                    ladoPosicaoDiv.style.display = "none";
-                    const radioButtons = document.querySelectorAll('input[name="dorme-lado-posicao"]');
-                    radioButtons.forEach((radio) => (radio.checked = false));
+                    preencherFormulario(data);
                 }
+            })
+            .catch((error) => console.error("Erro ao carregar ficha técnica:", error));
+        }
+
+        if (editButton) {
+            editButton.addEventListener("click", () => {
+                toggleFormFields(true);
+                consentCheckbox.disabled = false; // Habilita o checkbox para edição ao clicar em "Editar ficha"
+                datetimeElement.value = new Date().toLocaleString();
+            });
+        }
+
+        document.getElementById('save-technical-sheet').addEventListener('click', addTechnicalSheet);
+
+        function preencherFormulario(data) {
+            clientNameElement.value = clientData.clientName;
+            clientNameElement.dataset.clientId = clientData.clientId;
+            datetimeElement.value = data.datetime;
+
+            setRadioValue("rimel", data.rimel);
+            setRadioValue("gestante", data.gestante);
+            setRadioValue("procedimento-olhos", data.procedimento_olhos);
+            setRadioValue("alergia", data.alergia);
+            document.getElementById("especificar-alergia").value = data.especificar_alergia || "";
+            setRadioValue("tireoide", data.tireoide);
+            setRadioValue("problema-ocular", data.problema_ocular);
+            document.getElementById("especificar-ocular").value = data.especificar_ocular || "";
+            setRadioValue("oncologico", data.oncologico);
+            setRadioValue("dorme-lado", data.dorme_lado);
+
+            if (data.dorme_lado === "SIM") {
+                handleDormeLadoChange(data.dorme_lado);
+                setRadioValue("dorme-lado-posicao", data.dorme_lado_posicao);
             }
 
-            document.getElementById("dorme-lado-sim").addEventListener("change", () => {
-                handleDormeLadoChange("SIM");
-            });
+            document.getElementById("problema-informar").value = data.problema_informar || "";
+            setRadioValue("procedimento", data.procedimento);
+            document.getElementById("mapping").value = data.mapping || "";
+            document.getElementById("estilo").value = data.estilo || "";
+            document.getElementById("modelo-fios").value = data.modelo_fios || "";
+            document.getElementById("espessura").value = data.espessura || "";
+            document.getElementById("curvatura").value = data.curvatura || "";
+            document.getElementById("adesivo").value = data.adesivo || "";
+            document.getElementById("observacao").value = data.observacao || "";
 
-            document.getElementById("dorme-lado-nao").addEventListener("change", () => {
-                handleDormeLadoChange("NÃO");
-            });
-        });        
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            // Atualiza o estado do checkbox de consentimento
+            consentCheckbox.disabled = true; // Desabilita o checkbox para evitar edição
+            consentCheckbox.checked = data.consentAccepted; // Marca o checkbox se o consentimento foi aceito
+
+            toggleFormFields(false); // Desabilita todos os campos para visualização inicial
+        }
+        function setRadioValue(name, value) {
+            if (document.querySelector(`input[name="${name}"][value="${value}"]`)) {
+                document.querySelector(`input[name="${name}"][value="${value}"]`).checked = true;
+            }
+        }
+
+        function addTechnicalSheet(e) {
+            e.preventDefault();
+
+            if (!consentCheckbox.checked) {
+                alert("Você deve aceitar o Termo de Consentimento antes de salvar a ficha técnica.");
+                return;
+            }
+
+            // Prepara os dados para enviar ao backend
+            const data = {
+                clientId: document.getElementById("client-name").dataset.clientId,
+                datetime: document.getElementById("datetime").value || "",
+                rimel: getRadioValue("rimel"),
+                gestante: getRadioValue("gestante"),
+                procedimento_olhos: getRadioValue("procedimento-olhos"),
+                alergia: getRadioValue("alergia"),
+                especificar_alergia: document.getElementById("especificar-alergia").value || "",
+                tireoide: getRadioValue("tireoide"),
+                problema_ocular: getRadioValue("problema-ocular"),
+                especificar_ocular: document.getElementById("especificar-ocular").value || "",
+                oncologico: getRadioValue("oncologico"),
+                dorme_lado: getRadioValue("dorme-lado"),
+                dorme_lado_posicao: getRadioValue("dorme-lado") === 'SIM' ? getRadioValue("dorme-lado-posicao") : "",
+                problema_informar: document.getElementById("problema-informar").value || "",
+                procedimento: getRadioValue("procedimento"),
+                mapping: document.getElementById("mapping").value || "",
+                estilo: document.getElementById("estilo").value || "",
+                modelo_fios: document.getElementById("modelo-fios").value || "",
+                espessura: document.getElementById("espessura").value || "",
+                curvatura: document.getElementById("curvatura").value || "",
+                adesivo: document.getElementById("adesivo").value || "",
+                observacao: document.getElementById("observacao").value || "",
+                consentAccepted: consentCheckbox.checked ? 'Sim' : 'Não'  // Corrigido o nome do campo para corresponder ao backend
+            };
+
+            // Envia os dados para o backend
+            fetch("/api/technical-sheets", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : '' 
+                },
+                body: JSON.stringify(data)
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.error) {
+                    console.error("Erro ao salvar ficha técnica:", data.error);
+                    alert("Erro ao salvar a ficha técnica: " + data.error);
+                } else {
+                    window.location.href = "../listagem.html";
+                }
+            })
+            .catch((error) => console.error("Erro ao salvar ficha técnica:", error));
+        }
+        function getRadioValue(name) {
+            const checkedRadio = document.querySelector(`input[name="${name}"]:checked`);
+            return checkedRadio ? checkedRadio.value : "";
+        }
+
+        function toggleFormFields(enable) {
+            const fields = document.querySelectorAll("input, textarea");
+            fields.forEach((field) => (field.disabled = !enable));
+        }
+
+        function handleDormeLadoChange(value) {
+            const ladoPosicaoDiv = document.getElementById("lado-posicao");
+            if (value === "SIM") {
+                ladoPosicaoDiv.style.display = "block";
+            } else {
+                ladoPosicaoDiv.style.display = "none";
+                const radioButtons = document.querySelectorAll('input[name="dorme-lado-posicao"]');
+                radioButtons.forEach((radio) => (radio.checked = false));
+            }
+        }
+
+        document.getElementById("dorme-lado-sim").addEventListener("change", () => {
+            handleDormeLadoChange("SIM");
+        });
+
+        document.getElementById("dorme-lado-nao").addEventListener("change", () => {
+            handleDormeLadoChange("NÃO");
+        });
+
+        // Lógica para o checkbox de consentimento e o modal de termo de consentimento
+        const consentCheckbox = document.getElementById('consent-checkbox');
+        const saveButton = document.getElementById('save-technical-sheet');
+        const confirmConsentButton = document.getElementById('confirm-consent');
+        const modalBody = document.querySelector('.modal-body');
+        const consentContent = document.getElementById('consent-content');
+
+        // Carrega o termo de consentimento ao carregar a página
+        fetch('/api/consent', {
+            method: 'GET',
+            headers: {
+                "Authorization": token ? `Bearer ${token}` : '',
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.consentMessage) {
+                consentContent.innerHTML = data.consentMessage;  // Use innerHTML para exibir o conteúdo formatado
+            } else {
+                consentContent.textContent = "Termo de consentimento não encontrado.";
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao carregar o termo de consentimento:", error);
+            consentContent.textContent = "Erro ao carregar o termo de consentimento.";
+        });
+
+        // Evento ao clicar no checkbox para abrir o modal
+        consentCheckbox.addEventListener('click', (e) => {
+            e.preventDefault(); // Evita marcar o checkbox diretamente
+            const consentModal = new bootstrap.Modal(document.getElementById('consentModal'));
+            consentModal.show();
+        });
+
+        // Habilita o botão de confirmação somente após o scroll completo
+        modalBody.addEventListener('scroll', () => {
+            if (modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight) {
+                confirmConsentButton.disabled = false;
+            }
+        });
+
+        // Evento ao confirmar o termo no modal
+        confirmConsentButton.addEventListener('click', () => {
+            consentCheckbox.checked = true; // Marca o checkbox
+            saveButton.disabled = false; // Habilita o botão de salvar
+            const consentModal = bootstrap.Modal.getInstance(document.getElementById('consentModal'));
+            consentModal.hide(); // Fecha o modal
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

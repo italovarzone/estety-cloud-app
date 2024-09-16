@@ -328,16 +328,18 @@ function showFloatingMenu(module, buttonElement) {
                 { text: 'Meus Agendamentos', href: 'pages/agendamentos/listagem.html', icon: 'fas fa-calendar' }
             ];
             break;
+        // Atualizando o caso 'procedimentos' para incluir 'Cadastrar Mensagens'
         case 'procedimentos':
             menuItems = [
-                { text: 'Cadastrar Procedimento', href: 'pages/procedimentos/cadastro.html', icon: 'fas fa-tools' }
+                { text: 'Cadastrar Procedimento', href: 'pages/procedimentos/cadastro.html', icon: 'fas fa-tools' },
             ];
             break;
         case 'utilitarios':
             menuItems = [
                 { text: 'Dashboard', href: 'pages/dashboard/dashboard.html', icon: 'fas fa-chart-line' },
                 { text: 'Calendário', href: 'pages/calendario/calendario.html', icon: 'fas fa-calendar-alt' },
-                { text: 'Cadastrar Tarefa', href: 'pages/tarefas/cadastro.html', icon: 'fas fa-tasks' }
+                { text: 'Cadastrar Tarefa', href: 'pages/tarefas/cadastro.html', icon: 'fas fa-tasks' },
+                { text: 'Cadastrar Mensagens', href: 'pages/mensagens/cadastro.html', icon: 'fas fa-comment-dots' } // Novo item adicionado
             ];
             break;
     }
