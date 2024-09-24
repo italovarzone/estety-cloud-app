@@ -18,7 +18,7 @@ const proceduresRoutes = require('./routes/proceduresRoutes');
 const consentRoutes = require('./routes/consentRoutes');
 
 const app = express();
-const PORT = 3000;
+const PORT = 10000;
 
 app.use(session({ secret: 'secretkey', resave: false, saveUninitialized: true, cookie: { secure: false } }));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -84,7 +84,7 @@ app.listen(PORT, () => {
 
 // Rota fake de GET para manter a conexão
 setInterval(() => {
-  axios.get(`https://lash-app.onrender.com/api/get`)
+  axios.get(`https://lash-app-7a9m.onrender.com/api/get`)
     .then(response => {
       console.log('GET realizado com sucesso');
     })
