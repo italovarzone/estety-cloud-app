@@ -320,14 +320,7 @@ function showFloatingMenu(module, buttonElement) {
     switch (module) {
         case 'opcoes':
             menuItems = [
-                { text: 'Sair', href: '#', icon: 'fas fa-sign-out-alt', action: handleLogout },
-                {
-                    text: 'Envio de Email',
-                    icon: 'fas fa-circle',
-                    href: '#',
-                    action: () => checkMicroserviceStatus(),
-                    isMicroserviceStatus: true
-                }
+                { text: 'Sair', href: '#', icon: 'fas fa-sign-out-alt', action: handleLogout }
             ];
             break;
         case 'clientes':
@@ -363,10 +356,8 @@ function showFloatingMenu(module, buttonElement) {
         const link = document.createElement('a');
         link.innerHTML = `<i class="${item.icon}"></i> ${item.text}`;
         link.href = item.href;
-        if (item.isMicroserviceStatus) {
-            link.style.pointerEvents = 'none'; // Desabilita cliques no item de microserviço
-            link.classList.add('microservice-status'); // Adiciona uma classe para facilitar a seleção
-            checkMicroserviceStatus(); // Chama a função para verificar o status do microserviço
+        if (item.action) {
+            link.addEventListener('click', item.action);
         } else {
             link.onclick = function (event) {
                 event.preventDefault();
@@ -383,26 +374,6 @@ function showFloatingMenu(module, buttonElement) {
         document.addEventListener('click', handleClickOutsideMenu);
     }, 0);
 }
-
-// Função para verificar o status do microserviço
-async function checkMicroserviceStatus() {
-    try {
-        const response = await fetch('/api/check-endpoint');
-        const data = await response.json();
-        
-        const microserviceLink = document.querySelector('.microservice-status i'); // Seleciona o ícone do microserviço
-        if (data.status === 'online') {
-            microserviceLink.style.color = 'green'; // Define a cor como verde se estiver online
-        } else {
-            microserviceLink.style.color = 'red'; // Define a cor como vermelha se estiver offline
-        }
-    } catch (error) {
-        console.error('Erro ao verificar o status do microserviço:', error);
-        const microserviceLink = document.querySelector('.microservice-status i');
-        microserviceLink.style.color = 'red'; // Define a cor como vermelha em caso de erro
-    }
-}
-
 
 // Função para logout
 function handleLogout(event) {
@@ -424,6 +395,6 @@ function closeFloatingMenu() {
     currentOpenModule = null; // Redefine o módulo aberto
     document.removeEventListener('click', handleClickOutsideMenu); // Remove o manipulador após ser executado
 }
-</script>   
+</script>
 </body>
 </html>
