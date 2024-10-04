@@ -1,4 +1,5 @@
 const express = require("express");
+const moment = require('moment');
 const { ObjectId } = require("mongodb");
 const {
   ensureDbConnection,
@@ -74,28 +75,45 @@ function convertToDatabaseDate(date) {
 }
 
 
-// Rota para listar agendamentos
 router.get(
   "/api/appointments",
   authenticateToken,
   ensureDbConnection,
   async (req, res) => {
-    const { status, date, search } = req.query;
+    const { status, search, startDate, endDate } = req.query;
     try {
-      const db = req.db; // Use 'req.db' para acessar o banco de dados
+      const db = req.db;
 
       const query = {};
 
-      if (date) {
-        query.date = date;
-      }
-
+      // Filtra pelo status dos agendamentos
       if (status === "concluidos") {
         query.concluida = true;
       } else {
         query.concluida = { $ne: true };
       }
 
+      // Se startDate e endDate são iguais, defina o range para o dia todo
+      if (startDate && endDate) {
+        const formattedStartDate = moment(startDate, "DD/MM/YYYY").startOf('day').format("YYYY-MM-DD");
+        const formattedEndDate = moment(endDate, "DD/MM/YYYY").endOf('day').format("YYYY-MM-DD");
+
+        // Se a mesma data for usada em startDate e endDate
+        if (formattedStartDate === formattedEndDate) {
+          query.date = {
+            $gte: moment(startDate, "DD/MM/YYYY").startOf('day').format("YYYY-MM-DD"), // 00:00 do dia
+            $lte: moment(endDate, "DD/MM/YYYY").endOf('day').format("YYYY-MM-DD"),   // 23:59 do mesmo dia
+          };
+        } else {
+          // Intervalo de datas normais
+          query.date = {
+            $gte: formattedStartDate,
+            $lte: formattedEndDate,
+          };
+        }
+      }
+
+      // Execute a consulta no MongoDB
       const appointments = await db
         .collection("appointments")
         .aggregate([
@@ -111,17 +129,17 @@ router.get(
           { $unwind: "$client" },
           {
             $lookup: {
-              from: "procedures", // Faz o lookup na coleção 'procedures'
-              localField: "procedure", // Campo de referência no agendamento (o nome, não o ID)
-              foreignField: "name", // Campo de referência na coleção de procedimentos (pelo nome)
-              as: "procedureDetails", // Nome alternativo para os detalhes do procedimento
+              from: "procedures",
+              localField: "procedure",
+              foreignField: "name",
+              as: "procedureDetails",
             },
           },
-          { $unwind: { path: "$procedureDetails", preserveNullAndEmptyArrays: true } }, // Mantém o documento se não houver correspondência
+          { $unwind: { path: "$procedureDetails", preserveNullAndEmptyArrays: true } },
           {
             $project: {
               id: "$_id",
-              procedure: { $ifNull: ["$procedureDetails.name", "$procedure"] }, // Se não encontrar, usa o nome armazenado no agendamento
+              procedure: { $ifNull: ["$procedureDetails.name", "$procedure"] },
               date: 1,
               time: 1,
               "client.name": 1,
@@ -130,41 +148,18 @@ router.get(
         ])
         .toArray();
 
+      // Filtro por nome do cliente, se necessário
       const filteredAppointments = search
         ? appointments.filter((appointment) => {
-          const normalizedClientName = normalizeText(appointment.client.name);
-          const normalizedSearch = normalizeText(search);
-          return normalizedClientName.startsWith(normalizedSearch);
+            const normalizedClientName = normalizeText(appointment.client.name);
+            const normalizedSearch = normalizeText(search);
+            return normalizedClientName.startsWith(normalizedSearch);
         })
         : appointments;
 
       res.json({ appointments: filteredAppointments });
     } catch (err) {
       console.error("Erro ao listar agendamentos:", err.message);
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
-
-
-// Rota para concluir agendamento
-router.put(
-  "/api/appointments/:id/conclude",
-  authenticateToken,
-  ensureDbConnection,
-  async (req, res) => {
-    const { id } = req.params;
-    try {
-      const db = req.db; // Use 'req.db' para acessar o banco de dados
-      const result = await db
-        .collection("appointments")
-        .updateOne({ _id: new ObjectId(id) }, { $set: { concluida: true } });
-      if (result.modifiedCount === 0) {
-        return res.status(404).json({ error: "Agendamento não encontrado." });
-      }
-      res.json({ success: true });
-    } catch (err) {
-      console.error("Erro ao concluir agendamento:", err.message);
       res.status(500).json({ error: err.message });
     }
   }

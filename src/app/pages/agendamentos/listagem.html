@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         /* Esconde a tabela em telas menores que 768px */
         @media (max-width: 767px) {
@@ -33,20 +35,38 @@
 <body>
     <div style="margin: 32px">
         <h1 class="mb-4">Meus Agendamentos</h1>
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="filter-status" class="form-label">Filtrar por Status:</label>
-                <select id="filter-status" class="form-select">
-                    <option value="nao-concluidos">Não Concluídos</option>
-                    <option value="concluidos">Concluídos</option>
-                </select>
+        <div class="row mb-3" style="display: flex;">
+            <div style="display: flex;" class="row mb-3">
+                <div style="margin-bottom: 16px;" class="col-md-4">
+                    <label for="filter-status" class="form-label">Filtrar por Status:</label>
+                    <select id="filter-status" class="form-select">
+                        <option value="nao-concluidos">Não Concluídos</option>
+                        <option value="concluidos">Concluídos</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filter-name" class="form-label">Filtrar por Nome:</label>
+                    <input type="text" id="filter-name" class="form-control" placeholder="Digite o nome do cliente..." />
+                </div>           
             </div>
-            <div class="col-md-6">
-                <label for="filter-name" class="form-label">Filtrar por Nome:</label>
-                <input type="text" id="filter-name" class="form-control" placeholder="Digite o nome do cliente..." />
+            <div style="display: flex;" class="row mb-3">
+                <div style="margin-bottom: 16px;" class="col-md-4">
+                    <label for="filter-date-range" class="form-label">Filtrar por Intervalo de Datas:</label>
+                    <input type="text" id="filter-date-range" class="form-control" placeholder="Selecione o intervalo de datas" />
+                </div>
+            
+                <!-- Input para filtrar por uma única data -->
+                <div class="col-md-4">
+                    <label for="filter-single-date" class="form-label">Filtrar por Uma Única Data:</label>
+                    <input type="text" id="filter-single-date" class="form-control" placeholder="Selecione uma data" />
+                </div>
             </div>
         </div>
-
+        <div class="row mb-3">
+            <div style="display: flex; justify-content: left;" class="col-md-12 text-end">
+                <button id="reset-filters-btn" class="btn btn-outline-secondary">Limpar Filtros</button>
+            </div>
+        </div>
         <!-- Versão Desktop (Tabela) -->
         <div class="desktop-view" style="max-height: 550px; overflow-y: auto;">
             <table id="appointment-table" class="table table-striped">
@@ -107,7 +127,41 @@
     </div>
 
     <script>
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", () => {
+    // Flatpickr para intervalo de datas
+    const dateRangePicker = flatpickr("#filter-date-range", {
+        mode: "range",
+        dateFormat: "d/m/Y",
+        onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+                // Desabilita o campo de data única quando o intervalo de datas é selecionado
+                document.getElementById("filter-single-date").disabled = true;
+            } else {
+                document.getElementById("filter-single-date").disabled = false;
+            }
+            loadAppointments();
+        }
+    });
+
+    // Flatpickr para selecionar uma única data
+    const singleDatePicker = flatpickr("#filter-single-date", {
+        dateFormat: "d/m/Y",
+        onChange: function(selectedDates) {
+            if (selectedDates.length === 1) {
+                // Desabilita o campo de intervalo de datas quando a única data é selecionada
+                document.getElementById("filter-date-range").disabled = true;
+            } else {
+                document.getElementById("filter-date-range").disabled = false;
+            }
+            loadAppointments();
+        }
+    });
+
+    document.getElementById("reset-filters-btn").addEventListener("click", resetFilters);
+
+
+    init();  // Função que inicializa o resto do sistema
+});
 
 function init() {
     loadAppointments(); // Carrega a lista de agendamentos ao iniciar
@@ -128,22 +182,51 @@ function fetchWithToken(url, options = {}) {
     return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
 }
 
+function resetFilters() {
+    // Resetar todos os filtros aos valores padrão
+    document.getElementById("filter-status").value = "nao-concluidos"; // Resetar para 'Não Concluídos'
+    document.getElementById("filter-name").value = ""; // Limpar campo de nome
+    document.getElementById("filter-date-range").value = ""; // Limpar intervalo de datas
+    document.getElementById("filter-single-date").value = ""; // Limpar data única
+
+    // Habilitar os campos de intervalo e data única novamente
+    document.getElementById("filter-date-range").disabled = false;
+    document.getElementById("filter-single-date").disabled = false;
+
+    // Recarregar a lista de agendamentos sem filtros
+    loadAppointments();
+}
+
 function loadAppointments() {
     const filterStatus = document.getElementById("filter-status").value;
     const filterName = document.getElementById("filter-name").value.toLowerCase();
-    let url = "/api/appointments";
+    const dateRangeInput = document.getElementById("filter-date-range").value;
+    const singleDateInput = document.getElementById("filter-single-date").value;
 
+    let url = "/api/appointments";
     const params = new URLSearchParams();
 
-    // Adiciona o status ao parâmetro de consulta
     params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
-    
-    // Adiciona o termo de pesquisa ao parâmetro de consulta
+
     if (filterName) {
         params.append('search', filterName);
     }
 
-    // Atualiza a URL com os parâmetros de consulta
+    // Verifica se está sendo filtrado por uma única data
+    if (singleDateInput) {
+        params.append('startDate', singleDateInput);
+        params.append('endDate', singleDateInput); // A mesma data para início e fim
+    } 
+    // Verifica se está sendo filtrado por um intervalo de datas
+    else if (dateRangeInput) {
+        const dateRange = dateRangeInput.split(" to ");
+        const startDate = dateRange[0];
+        const endDate = dateRange[1];
+
+        params.append('startDate', startDate);
+        params.append('endDate', endDate);
+    }
+
     url += '?' + params.toString();
 
     fetchWithToken(url)
