@@ -98,6 +98,22 @@ document.addEventListener("DOMContentLoaded", () => {
     loadClientsIntoSelect();
     loadProceduresIntoSelect();
 
+    // Evento de input para aplicar a máscara de data no campo de data
+    dateInput.addEventListener("input", applyDateMask);
+
+    // Função para aplicar a máscara de data no formato DD/MM/YYYY
+    function applyDateMask(event) {
+        let input = event.target.value.replace(/\D/g, ''); // Remove tudo que não for dígito
+        if (input.length <= 2) {
+            input = input.replace(/^(\d{0,2})/, '$1');
+        } else if (input.length <= 4) {
+            input = input.replace(/^(\d{0,2})(\d{0,2})/, '$1/$2');
+        } else {
+            input = input.replace(/^(\d{0,2})(\d{0,2})(\d{0,4})/, '$1/$2/$3');
+        }
+        event.target.value = input;
+    }
+
     // Mostra a lista ao clicar no input de busca
     clientSearchInput.addEventListener("focus", function () {
         clientList.style.display = 'block';
@@ -266,7 +282,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-
     </script>
 </body>
 
