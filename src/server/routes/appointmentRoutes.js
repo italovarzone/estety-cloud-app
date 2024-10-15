@@ -152,18 +152,23 @@ router.get(
   authenticateToken,
   ensureDbConnection,
   async (req, res) => {
-    const { status, search } = req.query;
+    const { status, search, olderThan20Days } = req.query;
 
-    const currentDate = new Date().toISOString().split('T')[0]; // Captura a data atual
-    const currentTime = new Date().toISOString().split('T')[1].slice(0, 5); // Captura a hora atual no formato HH:MM
+    const currentDate = new Date();
+    const twentyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 20)).toISOString().split('T')[0]; // Data de 20 dias atrás
 
     try {
       const db = req.db;
       const query = {};
 
-      // Filtra por status, mas não filtra pela data para "não concluídos"
+      // Filtra por status "concluído" ou "não concluído"
       if (status === "concluidos") {
         query.concluida = true; // Agendamentos concluídos
+
+        // Adiciona o filtro "há mais de 20 dias" se o parâmetro for verdadeiro
+        if (olderThan20Days === 'true') {
+          query.date = { $lt: twentyDaysAgo }; // Filtra datas menores que a data de 20 dias atrás
+        }
       } else {
         query.concluida = { $ne: true }; // Agendamentos não concluídos
       }
@@ -197,11 +202,15 @@ router.get(
               date: 1,
               time: 1,  // Inclui o campo time (hora) na consulta
               "client.name": 1,
-              expired: { $lt: ["$date", currentDate] }, // Verifica se o agendamento está vencido
+              expired: { $lt: ["$date", currentDate.toISOString().split('T')[0]] }, // Verifica se o agendamento está vencido
             },
           },
-          // Ordena primeiro por data e depois por hora
-          { $sort: { date: 1, time: 1 } } // Ordena pela data (ascendente) e pela hora (ascendente)
+          // Ordena dependendo do status
+          {
+            $sort: status === "concluidos"
+              ? { date: -1, time: 1 }  // Para "concluídos", ordena pela data decrescente e hora crescente
+              : { date: 1, time: 1 }   // Para "não concluídos", ordena pela data e hora crescente
+          }
         ])
         .toArray();
 
@@ -220,8 +229,6 @@ router.get(
     }
   }
 );
-
-
 
 // Rota para concluir agendamento
 router.put(
