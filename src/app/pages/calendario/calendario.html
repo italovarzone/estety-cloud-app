@@ -246,7 +246,7 @@
 
         // Carrega os agendamentos do dia
         function loadAppointmentsForDay(appointmentsDiv, dateStr) {
-          fetchWithToken(`/api/appointments?date=${dateStr}`)
+          fetchWithToken(`/api/appointments/calendario?date=${dateStr}`)
             .then(response => response.json())
             .then(data => {
               if (data.appointments.length > 0) {
