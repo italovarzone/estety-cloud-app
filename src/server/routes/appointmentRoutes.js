@@ -76,7 +76,7 @@ function convertToDatabaseDate(date) {
 
 // Rota para listar agendamentos
 router.get(
-  "/api/appointments",
+  "/api/appointments/calendario",
   authenticateToken,
   ensureDbConnection,
   async (req, res) => {
@@ -145,6 +145,82 @@ router.get(
     }
   }
 );
+
+// Rota para listar agendamentos
+router.get(
+  "/api/appointments",
+  authenticateToken,
+  ensureDbConnection,
+  async (req, res) => {
+    const { status, search } = req.query;
+
+    const currentDate = new Date().toISOString().split('T')[0]; // Captura a data atual
+    const currentTime = new Date().toISOString().split('T')[1].slice(0, 5); // Captura a hora atual no formato HH:MM
+
+    try {
+      const db = req.db;
+      const query = {};
+
+      // Filtra por status, mas não filtra pela data para "não concluídos"
+      if (status === "concluidos") {
+        query.concluida = true; // Agendamentos concluídos
+      } else {
+        query.concluida = { $ne: true }; // Agendamentos não concluídos
+      }
+
+      const appointments = await db
+        .collection("appointments")
+        .aggregate([
+          { $match: query },
+          {
+            $lookup: {
+              from: "clients",
+              localField: "clientId",
+              foreignField: "_id",
+              as: "client",
+            },
+          },
+          { $unwind: "$client" },
+          {
+            $lookup: {
+              from: "procedures",
+              localField: "procedure",
+              foreignField: "name",
+              as: "procedureDetails",
+            },
+          },
+          { $unwind: { path: "$procedureDetails", preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              id: "$_id",
+              procedure: { $ifNull: ["$procedureDetails.name", "$procedure"] },
+              date: 1,
+              time: 1,  // Inclui o campo time (hora) na consulta
+              "client.name": 1,
+              expired: { $lt: ["$date", currentDate] }, // Verifica se o agendamento está vencido
+            },
+          },
+          // Ordena primeiro por data e depois por hora
+          { $sort: { date: 1, time: 1 } } // Ordena pela data (ascendente) e pela hora (ascendente)
+        ])
+        .toArray();
+
+      const filteredAppointments = search
+        ? appointments.filter((appointment) => {
+            const normalizedClientName = normalizeText(appointment.client.name);
+            const normalizedSearch = normalizeText(search);
+            return normalizedClientName.startsWith(normalizedSearch);
+        })
+        : appointments;
+
+      res.json({ appointments: filteredAppointments });
+    } catch (err) {
+      console.error("Erro ao listar agendamentos:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 
 
 // Rota para concluir agendamento

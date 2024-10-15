@@ -106,6 +106,25 @@
         </div>
     </div>
 
+        <!-- Modal para Agendamento Vencido -->
+    <div class="modal fade" id="expiredAppointmentModal" tabindex="-1" aria-labelledby="expiredAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expiredAppointmentModalLabel">Agendamento Vencido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="expiredAppointmentMessage">O agendamento já passou. Deseja concluí-lo ou deletá-lo?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="deleteExpiredAppointment" class="btn btn-danger">Deletar</button>
+                    <button type="button" id="concludeExpiredAppointment" class="btn btn-success">Concluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
 document.addEventListener("DOMContentLoaded", init);
 
@@ -128,6 +147,10 @@ function fetchWithToken(url, options = {}) {
     return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
 }
 
+let expiredAppointmentsQueue = []; // Fila para armazenar os agendamentos vencidos
+let appointmentToHandle = null; // Armazena o agendamento atual que está sendo manipulado
+
+// Função para carregar agendamentos
 function loadAppointments() {
     const filterStatus = document.getElementById("filter-status").value;
     const filterName = document.getElementById("filter-name").value.toLowerCase();
@@ -149,21 +172,26 @@ function loadAppointments() {
     fetchWithToken(url)
         .then((response) => response.json())
         .then((data) => {
-            // Atualiza a tabela para desktop
             const tbody = document.querySelector("#appointment-table tbody");
             tbody.innerHTML = "";
 
-            // Atualiza os cards para mobile
             const container = document.getElementById("appointments-container");
             container.innerHTML = "";
 
+            expiredAppointmentsQueue = []; // Limpa a fila de agendamentos vencidos
+
             if (data.appointments && data.appointments.length > 0) {
                 data.appointments.forEach((appointment) => {
-                    // Cria linha para a tabela (Desktop)
+                    // Adiciona os agendamentos vencidos à fila
+                    if (filterStatus === 'nao-concluidos' && appointment.expired) {
+                        expiredAppointmentsQueue.push(appointment);
+                    }
+
+                    // Renderiza a tabela para desktop
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td>${appointment.client.name}</td>
-                        <td>${appointment.procedure}</td> <!-- Ajuste para exibir o nome do procedimento -->
+                        <td>${appointment.procedure}</td>
                         <td>${appointment.date}</td>
                         <td>${appointment.time}</td>
                         <td>
@@ -181,7 +209,7 @@ function loadAppointments() {
                     `;
                     tbody.appendChild(tr);
 
-                    // Cria card para mobile
+                    // Renderiza o card para mobile
                     const card = document.createElement("div");
                     card.classList.add("col-md-6", "col-lg-4");
                     card.innerHTML = `
@@ -189,7 +217,7 @@ function loadAppointments() {
                         <div class="card h-100">
                             <div class="card-body">
                                 <h5 class="card-title">${appointment.client.name}</h5>
-                                <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p> <!-- Ajuste para exibir o nome do procedimento -->
+                                <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
                                 <p class="card-text"><strong>Data:</strong> ${appointment.date}</p>
                                 <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
                             </div>
@@ -209,8 +237,10 @@ function loadAppointments() {
                     `;
                     container.appendChild(card);
                 });
+
+                // Inicia o processamento dos agendamentos vencidos
+                processExpiredAppointments();
             } else {
-                // Mensagem de nenhum agendamento
                 displayNoAppointmentsMessage(tbody, container);
             }
         })
@@ -221,6 +251,76 @@ function loadAppointments() {
             displayNoAppointmentsMessage(tbody, container, true);
         });
 }
+
+// Função para formatar a data no formato "08 de outubro de 2024"
+function formatDate(dateString) {
+    const date = new Date(dateString); // Converte a string de data em um objeto Date
+    return date.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: 'long', 
+        year: 'numeric' 
+    });
+}
+
+// Função para processar agendamentos vencidos
+function processExpiredAppointments() {
+    if (expiredAppointmentsQueue.length > 0) {
+        // Pega o próximo agendamento na fila
+        const nextAppointment = expiredAppointmentsQueue.shift();
+        appointmentToHandle = nextAppointment.id; // Armazena o agendamento atual para uso posterior
+
+        // Formata a data no formato "08 de outubro de 2024"
+        const formattedDate = formatDate(nextAppointment.date);
+
+        // Atualiza a mensagem do modal com os dados do agendamento vencido
+        document.getElementById('expiredAppointmentMessage').textContent = 
+            `O agendamento de ${nextAppointment.client.name} no dia ${formattedDate} está vencido! Deseja concluí-lo ou deletá-lo?`;
+
+        // Exibe o modal
+        const modal = new bootstrap.Modal(document.getElementById("expiredAppointmentModal"));
+        modal.show();
+    } else {
+        // Se não houver mais agendamentos na fila, recarrega a lista
+        loadAppointments(); // Recarrega os agendamentos após processar todos os vencidos
+    }
+}
+
+// Função para concluir o agendamento vencido diretamente no modal
+document.getElementById('concludeExpiredAppointment').addEventListener('click', () => {
+    if (appointmentToHandle) {
+        // Concluir o agendamento diretamente
+        fetchWithToken(`/api/appointments/${appointmentToHandle}/conclude`, {
+            method: "PUT"
+        })
+        .then((response) => response.json())
+        .then(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
+            modal.hide();
+            appointmentToHandle = null; // Limpa a variável após a ação
+            processExpiredAppointments(); // Processa o próximo agendamento vencido na fila
+        })
+        .catch((error) => console.error("Erro ao concluir agendamento:", error));
+    }
+});
+
+// Função para deletar o agendamento vencido diretamente no modal
+document.getElementById('deleteExpiredAppointment').addEventListener('click', () => {
+    if (appointmentToHandle) {
+        // Deletar o agendamento diretamente
+        fetchWithToken(`/api/appointments/${appointmentToHandle}`, {
+            method: "DELETE"
+        })
+        .then((response) => response.json())
+        .then(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
+            modal.hide();
+            appointmentToHandle = null; // Limpa a variável após a ação
+            processExpiredAppointments(); // Processa o próximo agendamento vencido na fila
+        })
+        .catch((error) => console.error("Erro ao deletar agendamento:", error));
+    }
+});
+
 
 function displayNoAppointmentsMessage(tbody, container, error = false) {
     const message = error ? "Erro ao carregar agendamentos. Tente novamente mais tarde." : "Nenhum agendamento encontrado.";
