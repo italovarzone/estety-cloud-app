@@ -27,6 +27,10 @@
             .desktop-view {
                 display: block;
             }
+
+            .form-check {
+                padding-bottom: 16px;
+            }
         }
     </style>
 </head>
@@ -34,21 +38,30 @@
     <div style="margin: 32px">
         <h1 class="mb-4">Meus Agendamentos</h1>
         <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="filter-status" class="form-label">Filtrar por Status:</label>
-                <select id="filter-status" class="form-select">
-                    <option value="nao-concluidos">Não Concluídos</option>
-                    <option value="concluidos">Concluídos</option>
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="filter-name" class="form-label">Filtrar por Nome:</label>
-                <input type="text" id="filter-name" class="form-control" placeholder="Digite o nome do cliente..." />
-            </div>
+            <div style="display: flex; gap: 8px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 16px;" class="row">
+                    <div class="col-md-6">
+                        <select id="filter-status" class="form-select">
+                            <option value="nao-concluidos">Não Concluídos</option>
+                            <option value="concluidos">Concluídos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" id="filter-name" class="form-control" placeholder="Digite o nome do cliente..." />
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="filter-older-than-20-days" />
+                            <label class="form-check-label" for="filter-older-than-20-days">
+                                a mais de 15 dias 
+                            </label>
+                        </div>
+                    </div>
+                </div>
         </div>
 
         <!-- Versão Desktop (Tabela) -->
-        <div class="desktop-view" style="max-height: 550px; overflow-y: auto;">
+        <div class="desktop-view" style="max-height: 330px; overflow-y: auto;">
             <table id="appointment-table" class="table table-striped">
                 <thead>
                     <tr>
@@ -133,6 +146,7 @@ function init() {
 
     document.getElementById("filter-status").addEventListener("change", loadAppointments);
     document.getElementById("filter-name").addEventListener("input", loadAppointments);
+    document.getElementById("filter-older-than-20-days").addEventListener("change", loadAppointments);
 }
 
 // Função para realizar fetch com o token de autenticação
@@ -154,19 +168,24 @@ let appointmentToHandle = null; // Armazena o agendamento atual que está sendo 
 function loadAppointments() {
     const filterStatus = document.getElementById("filter-status").value;
     const filterName = document.getElementById("filter-name").value.toLowerCase();
+    const filterOlderThan20Days = document.getElementById("filter-older-than-20-days").checked;
+    
     let url = "/api/appointments";
-
     const params = new URLSearchParams();
 
     // Adiciona o status ao parâmetro de consulta
     params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
-    
+
     // Adiciona o termo de pesquisa ao parâmetro de consulta
     if (filterName) {
         params.append('search', filterName);
     }
 
-    // Atualiza a URL com os parâmetros de consulta
+    // Adiciona o filtro de "há mais de 20 dias" se for aplicável
+    if (filterStatus === 'concluidos' && filterOlderThan20Days) {
+        params.append('olderThan20Days', 'true');
+    }
+
     url += '?' + params.toString();
 
     fetchWithToken(url)
