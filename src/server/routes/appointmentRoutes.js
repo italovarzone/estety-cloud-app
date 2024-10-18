@@ -155,7 +155,7 @@ router.get(
     const { status, search, olderThan20Days } = req.query;
 
     const currentDate = new Date();
-    const twentyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 20)).toISOString().split('T')[0]; // Data de 20 dias atrás
+    const twentyDaysAgo = new Date(currentDate.setDate(currentDate.getDate() - 15)).toISOString().split('T')[0]; // Data de 15 dias atrás
 
     try {
       const db = req.db;
