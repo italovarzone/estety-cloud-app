@@ -164,8 +164,17 @@ function fetchWithToken(url, options = {}) {
 let expiredAppointmentsQueue = []; // Fila para armazenar os agendamentos vencidos
 let appointmentToHandle = null; // Armazena o agendamento atual que está sendo manipulado
 
+function formatDateForDisplay(dateString) {
+    const dateParts = dateString.split('-');
+    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+}
+
+let isLoading = false;
 // Função para carregar agendamentos
 function loadAppointments() {
+    if (isLoading) return; // Impede chamadas concorrentes
+    isLoading = true;
+
     const filterStatus = document.getElementById("filter-status").value;
     const filterName = document.getElementById("filter-name").value.toLowerCase();
     const filterOlderThan20Days = document.getElementById("filter-older-than-20-days").checked;
@@ -211,7 +220,7 @@ function loadAppointments() {
                     tr.innerHTML = `
                         <td>${appointment.client.name}</td>
                         <td>${appointment.procedure}</td>
-                        <td>${appointment.date}</td>
+                        <td>${formatDateForDisplay(appointment.date)}</td>
                         <td>${appointment.time}</td>
                         <td>
                             <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
@@ -237,7 +246,7 @@ function loadAppointments() {
                             <div class="card-body">
                                 <h5 class="card-title">${appointment.client.name}</h5>
                                 <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
-                                <p class="card-text"><strong>Data:</strong> ${appointment.date}</p>
+                                <p class="card-text"><strong>Data:</strong> ${formatDateForDisplay(appointment.date)}</p>
                                 <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
                             </div>
                             <div class="card-footer d-flex justify-content-end">
@@ -259,7 +268,9 @@ function loadAppointments() {
 
                 // Inicia o processamento dos agendamentos vencidos
                 processExpiredAppointments();
+                isLoading = false;
             } else {
+                isLoading = false;
                 displayNoAppointmentsMessage(tbody, container);
             }
         })
@@ -268,6 +279,7 @@ function loadAppointments() {
             const tbody = document.querySelector("#appointment-table tbody");
             const container = document.getElementById("appointments-container");
             displayNoAppointmentsMessage(tbody, container, true);
+            isLoading = false;
         });
 }
 
