@@ -18,15 +18,18 @@ router.get("/api/procedures", authenticateToken, ensureDbConnection, async (req,
 
 // Adicionar um novo procedimento
 router.post("/api/procedures", authenticateToken, ensureDbConnection, async (req, res) => {
-    const { name, description } = req.body;
+    const { name, description, price } = req.body;
     if (!name) {
         return res.status(400).json({ error: "O nome do procedimento é obrigatório." });
+    }
+    if (price === undefined || typeof price !== "number" || price <= 0) {
+        return res.status(400).json({ error: "O preço deve ser um valor numérico positivo." });
     }
 
     try {
         const db = req.db; // Use 'req.db' para acessar o banco de dados
-        const result = await db.collection("procedures").insertOne({ name, description });
-        res.status(201).json({ id: result.insertedId, name, description });
+        const result = await db.collection("procedures").insertOne({ name, description, price });
+        res.status(201).json({ id: result.insertedId, name, description, price });
     } catch (err) {
         console.error("Erro ao adicionar procedimento:", err.message);
         res.status(500).json({ error: err.message });
@@ -36,17 +39,20 @@ router.post("/api/procedures", authenticateToken, ensureDbConnection, async (req
 // Atualizar um procedimento existente
 router.put("/api/procedures/:id", authenticateToken, ensureDbConnection, async (req, res) => {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, price } = req.body;
 
     if (!name) {
         return res.status(400).json({ error: "O nome do procedimento é obrigatório." });
+    }
+    if (price === undefined || typeof price !== "number" || price <= 0) {
+        return res.status(400).json({ error: "O preço deve ser um valor numérico positivo." });
     }
 
     try {
         const db = req.db; // Use 'req.db' para acessar o banco de dados
         const result = await db.collection("procedures").updateOne(
             { _id: new ObjectId(id) },
-            { $set: { name, description } }
+            { $set: { name, description, price } }
         );
 
         if (result.modifiedCount === 0) {
