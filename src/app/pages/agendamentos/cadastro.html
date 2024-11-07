@@ -61,7 +61,7 @@
             </div>
             <div class="col-md-3">
                 <label for="date" class="form-label">Dia do agendamento:</label>
-                <input type="text" id="date" class="form-control" placeholder="Data do Agendamento" maxlength="10" />
+                <input type="date" id="date" class="form-control" />
                 <div id="date-error" class="error-message"></div>
             </div>
             <div class="col-md-3">
@@ -98,20 +98,10 @@ document.addEventListener("DOMContentLoaded", () => {
     loadClientsIntoSelect();
     loadProceduresIntoSelect();
 
-    // Evento de input para aplicar a máscara de data no campo de data
-    dateInput.addEventListener("input", applyDateMask);
-
-    // Função para aplicar a máscara de data no formato DD/MM/YYYY
-    function applyDateMask(event) {
-        let input = event.target.value.replace(/\D/g, ''); // Remove tudo que não for dígito
-        if (input.length <= 2) {
-            input = input.replace(/^(\d{0,2})/, '$1');
-        } else if (input.length <= 4) {
-            input = input.replace(/^(\d{0,2})(\d{0,2})/, '$1/$2');
-        } else {
-            input = input.replace(/^(\d{0,2})(\d{0,2})(\d{0,4})/, '$1/$2/$3');
-        }
-        event.target.value = input;
+    // Função para formatar a data no formato DD/MM/YYYY
+    function formatDate(date) {
+        const [year, month, day] = date.split("-");
+        return `${day}/${month}/${year}`;
     }
 
     // Mostra a lista ao clicar no input de busca
@@ -215,9 +205,8 @@ document.addEventListener("DOMContentLoaded", () => {
             procedureError.textContent = "";
         }
 
-        const dateValue = dateInput.value.replace(/\D/g, ''); // Remove a máscara para validar apenas os números
-        if (dateValue.length !== 8) { // Verifica se o valor tem exatamente 8 dígitos numéricos
-            dateError.textContent = "Data no formato inválido. Use DD/MM/YYYY.";
+        if (dateInput.value.trim() === "") {
+            dateError.textContent = "Campo obrigatório.";
             formIsValid = false;
         } else {
             dateError.textContent = "";
@@ -251,9 +240,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function addAppointment() {
         const clientId = clientSearchInput.dataset.clientId; // Captura o ID do cliente selecionado
         const procedureName = procedureSelect.options[procedureSelect.selectedIndex].text; // Captura o nome do procedimento selecionado
-        const date = dateInput.value;
+        const date = formatDate(dateInput.value); // Formata a data no formato DD/MM/YYYY
         const time = timeInput.value;
-
         const token = localStorage.getItem('authToken');
         fetch("/api/appointments", {
             method: "POST",

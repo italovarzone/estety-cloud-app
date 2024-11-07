@@ -14,24 +14,17 @@
         margin: 36px;
       }
 
+      .box-graph {
+        margin: 36px;
+      }
+
       .chart-container {
         position: relative;
         width: 100%;
-        max-width: 500px; /* Limita o tamanho máximo do gráfico */
-        height: 400px; /* Aumenta a altura para gráficos de pizza */
+        max-width: 500px;
+        height: 400px;
         margin: auto;
-        padding: 20px; /* Adiciona padding ao redor do gráfico */
-      }
-
-      .charts-grid {
-        display: grid;
-        grid-template-columns: 1fr; /* Apenas um gráfico por linha no mobile */
-        gap: 20px;
-        justify-items: center;
-      }
-
-      #barChartContainer {
-        display: none; /* Oculta o gráfico de barras por padrão */
+        padding: 20px;
       }
 
       @media (max-width: 999px) { /* Ajustes para mobile */
@@ -44,21 +37,21 @@
         }
 
         .chart-container {
-          max-width: 90%; /* Aumenta a largura no mobile */
-          height: auto; /* Permite que a altura seja dinâmica */
+          width: 1000px;
+          padding: 0;
+          margin-right: 16px;
+        }
+
+        .box-graph {
+          margin: 0;
+          margin-top: 16px;
         }
       }
 
-      @media (min-width: 1000px) { /* Mostra o gráfico de barras e ajusta o layout para desktop */
-        .charts-grid {
-          grid-template-columns: repeat(2, 1fr); /* Dois gráficos lado a lado */
-        }
+      @media (min-width: 1000px) { /* Ajustes para desktop */
         .chart-container {
-          max-width: 400px; /* Ajusta o tamanho máximo dos gráficos no desktop */
-          height: 350px; /* Ajusta a altura dos gráficos */
-        }
-        #barChartContainer {
-          display: block; /* Mostra o gráfico de barras no desktop */
+          max-width: 700px;
+          height: 500px;
         }
       }
     </style>
@@ -84,18 +77,25 @@
           </div>
         </div>
       </div>
-      <div style="margin: 36px;">
+      <div class="box-graph">
         <h1 class="mb-4 text-center">Agendamentos por Cliente</h1>
-        <div class="charts-grid">
-          <!-- Container do gráfico de barras (exibido apenas no desktop) -->
-          <div id="barChartContainer" class="chart-container">
-            <canvas id="barChart"></canvas>
-          </div>
-          <!-- Container do gráfico de pizza -->
-          <div class="chart-container">
-            <canvas id="pieChart"></canvas>
-          </div>
+        <div class="chart-container">
+          <canvas id="horizontalBarChart"></canvas>
         </div>
+      </div>
+      <div id="top3procedimentos">
+        <h2 class="mb-4 mt-4">Top 3 Procedimentos Mais Usados</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Procedimento</th>
+              <th>Quantidade de Agendamentos</th>
+            </tr>
+          </thead>
+          <tbody id="top-procedures-table">
+            <!-- Conteúdo preenchido dinamicamente -->
+          </tbody>
+        </table>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -103,23 +103,21 @@
       document.addEventListener("DOMContentLoaded", function () {
         // Função para realizar fetch com o token de autenticação
         function fetchWithToken(url, options = {}) {
-          const token = localStorage.getItem('authToken');  // Obter o token do localStorage
+          const token = localStorage.getItem('authToken');
           const headers = {
             ...options.headers,
-            'Authorization': token ? `Bearer ${token}` : '',  // Inclui o token no cabeçalho de autorização
-            'Content-Type': 'application/json',  // Define o tipo de conteúdo como JSON
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json',
           };
-    
-          return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
+
+          return fetch(url, { ...options, headers });
         }
 
-        // Função para criar gráficos dinamicamente
-        function createCharts(clientNames, appointmentCounts) {
-          const barCtx = document.getElementById("barChart").getContext("2d");
-          const pieCtx = document.getElementById("pieChart").getContext("2d");
+        // Função para criar um gráfico de barras horizontais
+        function createHorizontalBarChart(clientNames, appointmentCounts) {
+          const ctx = document.getElementById("horizontalBarChart").getContext("2d");
 
-          // Gráfico de Barras (apenas no desktop)
-          new Chart(barCtx, {
+          new Chart(ctx, {
             type: "bar",
             data: {
               labels: clientNames,
@@ -127,44 +125,42 @@
                 {
                   label: "Quantidade de Agendamentos",
                   data: appointmentCounts,
-                  backgroundColor: "rgba(75, 192, 192, 0.2)",
+                  backgroundColor: "rgba(75, 192, 192, 0.5)",
                   borderColor: "rgba(75, 192, 192, 1)",
                   borderWidth: 1,
                 },
               ],
             },
             options: {
+              indexAxis: 'y', // Configura para barras horizontais
               responsive: true,
               maintainAspectRatio: false,
               scales: {
                 x: {
                   title: {
                     display: true,
+                    text: "Quantidade de Agendamentos",
+                    font: {
+                      size: 16,
+                      weight: "bold",
+                    },
+                  },
+                  beginAtZero: true,
+                  grid: {
+                    color: "rgba(200, 200, 200, 0.3)",
+                  },
+                },
+                y: {
+                  title: {
+                    display: true,
                     text: "Clientes",
                     font: {
-                      size: "16px",
+                      size: 16,
                       weight: "bold",
                     },
                   },
                   grid: {
                     display: false,
-                  },
-                },
-                y: {
-                  beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: "Quantidade de Agendamentos",
-                    font: {
-                      weight: "bold",
-                      size: "16px",
-                    },
-                  },
-                  ticks: {
-                    stepSize: 1,
-                  },
-                  grid: {
-                    color: "rgba(200, 200, 200, 0.3)",
                   },
                 },
               },
@@ -175,77 +171,49 @@
               },
             },
           });
-
-          // Gráfico de Pizza
-          new Chart(pieCtx, {
-            type: "pie",
-            data: {
-              labels: clientNames,
-              datasets: [
-                {
-                  label: "Quantidade de Agendamentos",
-                  data: appointmentCounts,
-                  backgroundColor: ["#ff6384", "#36a2eb", "#cc65fe", "#ffce56"],
-                  borderColor: "#fff",
-                  borderWidth: 1,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  display: true,
-                  position: 'bottom',  // Posiciona a legenda abaixo no mobile
-                  labels: {
-                    font: {
-                      size: 12
-                    },
-                    padding: 10
-                  }
-                },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      let label = context.label || '';
-                      if (label) {
-                        label += ': ';
-                      }
-                      label += context.raw; // Mostra a quantidade de agendamentos
-                      return label;
-                    }
-                  }
-                }
-              },
-            },
-          });
         }
 
+        // Função para carregar os top 3 procedimentos mais usados
+        function loadTopProcedures() {
+          fetchWithToken("/api/dashboard")
+            .then((response) => response.json())
+            .then((data) => {
+              document.getElementById("total-appointments").textContent =
+                data.totalAppointments;
+              document.getElementById("total-clients").textContent =
+                data.totalClients;
+
+              const topProceduresTable = document.getElementById("top-procedures-table");
+              data.topProcedures.forEach(proc => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${proc.procedureName}</td>
+                  <td>${proc.count}</td>
+                `;
+                topProceduresTable.appendChild(row);
+              });
+            })
+            .catch((error) =>
+              console.error("Erro ao carregar o dashboard:", error)
+            );
+        }
+
+        // Carregar dados do gráfico de agendamentos por cliente
         fetchWithToken("/api/appointments-by-client")
           .then((response) => response.json())
           .then((data) => {
             const clientNames = data.map((item) => item.client_name);
             const appointmentCounts = data.map((item) => item.appointment_count);
 
-            // Cria os gráficos de barra e pizza
-            createCharts(clientNames, appointmentCounts);
+            // Cria o gráfico de barras horizontais
+            createHorizontalBarChart(clientNames, appointmentCounts);
           })
           .catch((error) =>
             console.error("Erro ao carregar os dados do gráfico:", error)
           );
-    
-        fetchWithToken("/api/dashboard")
-          .then((response) => response.json())
-          .then((data) => {
-            document.getElementById("total-appointments").textContent =
-              data.totalAppointments;
-            document.getElementById("total-clients").textContent =
-              data.totalClients;
-          })
-          .catch((error) =>
-            console.error("Erro ao carregar o dashboard:", error)
-          );
+
+        // Carregar os dados do dashboard, incluindo top 3 procedimentos
+        loadTopProcedures();
       });
     </script>    
   </body>
