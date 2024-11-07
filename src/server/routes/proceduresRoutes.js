@@ -85,35 +85,47 @@ router.delete("/api/procedures/:id", authenticateToken, ensureDbConnection, asyn
     }
 });
 
-// Endpoint para obter a lucratividade mensal e anual
+// Endpoint para calcular a lucratividade mensal e anual
 router.get("/api/procedures/revenue", authenticateToken, ensureDbConnection, async (req, res) => {
     try {
         const db = req.db;
+
+        // Obtenha todos os procedimentos para referência
+        const procedures = await db.collection("procedures").find({}).toArray();
+        const procedureMap = procedures.reduce((map, procedure) => {
+            map[procedure.name] = procedure.price; // Mapeia o nome do procedimento para o preço
+            return map;
+        }, {});
+
+        // Busca todos os agendamentos e calcula a receita mensal e anual
+        const appointments = await db.collection("appointments").find({}).toArray();
+        
+        let monthlyRevenue = {};
+        let annualRevenue = 0;
         const currentYear = new Date().getFullYear();
 
-        // Agregação para calcular a receita mensal e anual
-        const revenueData = await db.collection("procedures").aggregate([
-            {
-                $match: {
-                    date: { $exists: true }, // Certifique-se de que existe uma data de agendamento
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: "$date" },
-                        month: { $month: "$date" }
-                    },
-                    totalRevenue: { $sum: "$price" },
-                    yearTotal: { $sum: { $cond: [{ $eq: [{ $year: "$date" }, currentYear] }, "$price", 0] } }
-                }
-            },
-            {
-                $sort: { "_id.year": 1, "_id.month": 1 }
-            }
-        ]).toArray();
+        appointments.forEach(appointment => {
+            const appointmentDate = new Date(appointment.date);
+            const month = appointmentDate.getMonth() + 1; // Mês (1 a 12)
+            const year = appointmentDate.getFullYear();
 
-        res.json({ revenueData });
+            // Obtenha o preço do procedimento pelo nome
+            const procedurePrice = procedureMap[appointment.procedure] || 0;
+
+            // Soma para a receita mensal
+            const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+            if (!monthlyRevenue[monthKey]) {
+                monthlyRevenue[monthKey] = 0;
+            }
+            monthlyRevenue[monthKey] += procedurePrice;
+
+            // Soma para a receita anual apenas se for do ano corrente
+            if (year === currentYear) {
+                annualRevenue += procedurePrice;
+            }
+        });
+
+        res.json({ monthlyRevenue, annualRevenue });
     } catch (err) {
         console.error("Erro ao calcular lucratividade:", err.message);
         res.status(500).json({ error: "Erro ao calcular lucratividade." });

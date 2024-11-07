@@ -27,7 +27,7 @@
         padding: 20px;
       }
 
-      @media (max-width: 999px) { /* Ajustes para mobile */
+      @media (max-width: 999px) {
         body {
           margin-bottom: 256px;
         }
@@ -48,7 +48,7 @@
         }
       }
 
-      @media (min-width: 1000px) { /* Ajustes para desktop */
+      @media (min-width: 1000px) {
         .chart-container {
           max-width: 700px;
           height: 500px;
@@ -83,6 +83,18 @@
           <canvas id="horizontalBarChart"></canvas>
         </div>
       </div>
+      <div class="box-graph">
+        <h1 class="mb-4 text-center">Lucratividade Mensal</h1>
+        <div class="chart-container">
+          <canvas id="monthlyRevenueChart"></canvas>
+        </div>
+      </div>
+      <div class="box-graph">
+        <h1 class="mb-4 text-center">Lucratividade Anual</h1>
+        <div class="chart-container">
+          <canvas id="annualRevenueChart"></canvas>
+        </div>
+      </div>
       <div id="top3procedimentos">
         <h2 class="mb-4 mt-4">Top 3 Procedimentos Mais Usados</h2>
         <table class="table">
@@ -101,7 +113,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // Função para realizar fetch com o token de autenticação
         function fetchWithToken(url, options = {}) {
           const token = localStorage.getItem('authToken');
           const headers = {
@@ -109,13 +120,17 @@
             'Authorization': token ? `Bearer ${token}` : '',
             'Content-Type': 'application/json',
           };
-
           return fetch(url, { ...options, headers });
         }
 
-        // Função para criar um gráfico de barras horizontais
         function createHorizontalBarChart(clientNames, appointmentCounts) {
           const ctx = document.getElementById("horizontalBarChart").getContext("2d");
+
+          if (clientNames.length === 0 || appointmentCounts.length === 0) {
+            ctx.font = "16px Arial";
+            ctx.fillText("Nenhum dado disponível", 10, 50);
+            return;
+          }
 
           new Chart(ctx, {
             type: "bar",
@@ -132,7 +147,7 @@
               ],
             },
             options: {
-              indexAxis: 'y', // Configura para barras horizontais
+              indexAxis: 'y',
               responsive: true,
               maintainAspectRatio: false,
               scales: {
@@ -173,48 +188,114 @@
           });
         }
 
-        // Função para carregar os top 3 procedimentos mais usados
-        function loadTopProcedures() {
-          fetchWithToken("/api/dashboard")
-            .then((response) => response.json())
-            .then((data) => {
-              document.getElementById("total-appointments").textContent =
-                data.totalAppointments;
-              document.getElementById("total-clients").textContent =
-                data.totalClients;
+        function createRevenueCharts(monthlyLabels, monthlyRevenue, annualRevenue) {
+          // Ordena os meses de janeiro a dezembro
+          const monthOrder = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+          const sortedData = monthlyLabels
+            .map((label, index) => ({ label, revenue: monthlyRevenue[index] }))
+            .sort((a, b) => {
+              const [yearA, monthA] = a.label.split("-");
+              const [yearB, monthB] = b.label.split("-");
+              // Comparar primeiro por ano, depois pelo índice do mês na ordem
+              return yearA - yearB || monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
+            });
 
-              const topProceduresTable = document.getElementById("top-procedures-table");
-              data.topProcedures.forEach(proc => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                  <td>${proc.procedureName}</td>
-                  <td>${proc.count}</td>
-                `;
-                topProceduresTable.appendChild(row);
-              });
-            })
-            .catch((error) =>
-              console.error("Erro ao carregar o dashboard:", error)
-            );
+          // Extrai os dados ordenados
+          const sortedLabels = sortedData.map(item => item.label);
+          const sortedRevenue = sortedData.map(item => item.revenue);
+
+          const ctxMonthly = document.getElementById('monthlyRevenueChart').getContext('2d');
+          new Chart(ctxMonthly, {
+            type: 'line',
+            data: {
+              labels: sortedLabels,
+              datasets: [{
+                label: 'Receita Mensal (R$)',
+                data: sortedRevenue,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: 'Lucratividade Mensal'
+                }
+              }
+            }
+          });
+          const ctxAnnual = document.getElementById('annualRevenueChart').getContext('2d');
+          new Chart(ctxAnnual, {
+            type: 'bar',
+            data: {
+              labels: ['Receita Anual'],
+              datasets: [{
+                label: 'Receita Anual (R$)',
+                data: [annualRevenue],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: true,
+                  text: 'Lucratividade Anual'
+                }
+              }
+            }
+          });
         }
 
-        // Carregar dados do gráfico de agendamentos por cliente
         fetchWithToken("/api/appointments-by-client")
           .then((response) => response.json())
           .then((data) => {
             const clientNames = data.map((item) => item.client_name);
             const appointmentCounts = data.map((item) => item.appointment_count);
-
-            // Cria o gráfico de barras horizontais
             createHorizontalBarChart(clientNames, appointmentCounts);
           })
-          .catch((error) =>
-            console.error("Erro ao carregar os dados do gráfico:", error)
-          );
+          .catch((error) => console.error("Erro ao carregar os dados do gráfico de agendamentos por cliente:", error));
 
-        // Carregar os dados do dashboard, incluindo top 3 procedimentos
-        loadTopProcedures();
+        fetchWithToken("/api/dashboard")
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("total-appointments").textContent = data.totalAppointments;
+            document.getElementById("total-clients").textContent = data.totalClients;
+
+            const topProceduresTable = document.getElementById("top-procedures-table");
+            data.topProcedures.forEach(proc => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${proc.procedureName}</td>
+                <td>${proc.count}</td>
+              `;
+              topProceduresTable.appendChild(row);
+            });
+          })
+          .catch((error) => console.error("Erro ao carregar o dashboard:", error));
+
+        fetchWithToken("/api/procedures/revenue")
+          .then(response => response.json())
+          .then(data => {
+            const monthlyLabels = Object.keys(data.monthlyRevenue);
+            const monthlyRevenue = Object.values(data.monthlyRevenue);
+            const annualRevenue = data.annualRevenue;
+
+            createRevenueCharts(monthlyLabels, monthlyRevenue, annualRevenue);
+          })
+          .catch(error => console.error("Erro ao carregar dados de receita:", error));
       });
-    </script>    
+    </script>
   </body>
 </html>
