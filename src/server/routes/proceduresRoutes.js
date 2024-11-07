@@ -85,4 +85,40 @@ router.delete("/api/procedures/:id", authenticateToken, ensureDbConnection, asyn
     }
 });
 
+// Endpoint para obter a lucratividade mensal e anual
+router.get("/api/procedures/revenue", authenticateToken, ensureDbConnection, async (req, res) => {
+    try {
+        const db = req.db;
+        const currentYear = new Date().getFullYear();
+
+        // Agregação para calcular a receita mensal e anual
+        const revenueData = await db.collection("procedures").aggregate([
+            {
+                $match: {
+                    date: { $exists: true }, // Certifique-se de que existe uma data de agendamento
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$date" },
+                        month: { $month: "$date" }
+                    },
+                    totalRevenue: { $sum: "$price" },
+                    yearTotal: { $sum: { $cond: [{ $eq: [{ $year: "$date" }, currentYear] }, "$price", 0] } }
+                }
+            },
+            {
+                $sort: { "_id.year": 1, "_id.month": 1 }
+            }
+        ]).toArray();
+
+        res.json({ revenueData });
+    } catch (err) {
+        console.error("Erro ao calcular lucratividade:", err.message);
+        res.status(500).json({ error: "Erro ao calcular lucratividade." });
+    }
+});
+
+
 module.exports = router;

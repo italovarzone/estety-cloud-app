@@ -403,50 +403,55 @@
               container.innerHTML = "";
 
               data.procedures.forEach((procedure) => {
-                const li = document.createElement("li");
-                li.className =
-                  "list-group-item d-flex justify-content-between align-items-center";
-                li.textContent = `${procedure.name} - R$ ${procedure.price.toFixed(2)}`;
+              // Certifique-se de que o preço é um número válido antes de usar toFixed
+              const price = typeof procedure.price === "number" ? procedure.price.toFixed(2) : "0.00";
 
-                const buttonGroup = document.createElement("div");
+              // Versão Desktop (Lista)
+              const li = document.createElement("li");
+              li.className = "list-group-item d-flex justify-content-between align-items-center";
+              li.textContent = `${procedure.name} - R$ ${price}`;
 
-                const editButton = document.createElement("button");
-                editButton.className = "btn btn-sm btn-warning me-2";
-                editButton.innerHTML = `<i class="fa fa-edit"></i>`;
-                editButton.onclick = () =>
-                  showEditModal(procedure._id, procedure.name, procedure.price);
-                buttonGroup.appendChild(editButton);
+              const buttonGroup = document.createElement("div");
 
-                const deleteButton = document.createElement("button");
-                deleteButton.className = "btn btn-sm btn-danger";
-                deleteButton.innerHTML = `<i class="fa fa-trash"></i>`;
-                deleteButton.onclick = () => showDeleteModal(procedure._id);
-                buttonGroup.appendChild(deleteButton);
+              const editButton = document.createElement("button");
+              editButton.className = "btn btn-sm btn-warning me-2";
+              editButton.innerHTML = `<i class="fa fa-edit"></i>`;
+              editButton.onclick = () =>
+                showEditModal(procedure._id, procedure.name, procedure.price);
+              buttonGroup.appendChild(editButton);
 
-                li.appendChild(buttonGroup);
-                procedureList.appendChild(li);
+              const deleteButton = document.createElement("button");
+              deleteButton.className = "btn btn-sm btn-danger";
+              deleteButton.innerHTML = `<i class="fa fa-trash"></i>`;
+              deleteButton.onclick = () => showDeleteModal(procedure._id);
+              buttonGroup.appendChild(deleteButton);
 
-                const card = document.createElement("div");
-                card.classList.add("col-md-6", "col-lg-4");
-                card.innerHTML = `
-                  <br>
-                  <div class="card h-100">
-                    <div class="card-body">
-                      <h5 class="card-title">${procedure.name}</h5>
-                      <p>Preço: R$ ${procedure.price.toFixed(2)}</p>
-                    </div>
-                    <div class="card-footer d-flex justify-content-end">
-                      <button title="Editar Procedimento" class="btn btn-sm btn-warning me-2" onclick="showEditModal('${procedure._id}', '${procedure.name}', ${procedure.price})">
-                        <i class="fa fa-edit"></i>
-                      </button>
-                      <button title="Excluir Procedimento" class="btn btn-sm btn-danger" onclick="showDeleteModal('${procedure._id}')">
-                        <i class="fa fa-trash"></i>
-                      </button>
-                    </div>
+              li.appendChild(buttonGroup);
+              procedureList.appendChild(li);
+
+              // Versão Mobile (Cards)
+              const card = document.createElement("div");
+              card.classList.add("col-md-6", "col-lg-4");
+              card.innerHTML = `
+                <br>
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title">${procedure.name}</h5>
+                    <p>Preço: R$ ${price}</p>
                   </div>
-                `;
-                container.appendChild(card);
-              });
+                  <div class="card-footer d-flex justify-content-end">
+                    <button title="Editar Procedimento" class="btn btn-sm btn-warning me-2" onclick="showEditModal('${procedure._id}', '${procedure.name}', ${procedure.price || 0})">
+                      <i class="fa fa-edit"></i>
+                    </button>
+                    <button title="Excluir Procedimento" class="btn btn-sm btn-danger" onclick="showDeleteModal('${procedure._id}')">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              `;
+              container.appendChild(card);
+            });
+
             })
             .catch((error) =>
               console.error("Erro ao carregar procedimentos:", error)
