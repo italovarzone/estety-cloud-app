@@ -371,6 +371,29 @@ router.put(
   }
 );
 
+// Rota para concluir agendamento
+router.put(
+  "/api/appointments/:id/conclude",
+  authenticateToken,
+  ensureDbConnection,
+  async (req, res) => {
+    const { id } = req.params;
+    try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
+      const result = await db
+        .collection("appointments")
+        .updateOne({ _id: new ObjectId(id) }, { $set: { concluida: true } });
+      if (result.modifiedCount === 0) {
+        return res.status(404).json({ error: "Agendamento não encontrado." });
+      }
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Erro ao concluir agendamento:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 // Rota para deletar um agendamento
 router.delete(
   "/api/appointments/:id",
