@@ -164,6 +164,24 @@
     </div>
 
     <script>
+    const holidays = [
+      { date: '01-01', name: 'Ano novo' },
+      { date: '04-21', name: 'Tiradentes' },
+      { date: '05-01', name: 'Dia do Trabalho' },
+      { date: '09-07', name: 'Independência do Brasil' },
+      { date: '10-12', name: 'Nossa Senhora Aparecida' },
+      { date: '11-02', name: 'Finados' },
+      { date: '11-15', name: 'Proclamação da República' },
+      { date: '12-25', name: 'Natal' },
+    ];
+
+    // Função para verificar se o dia atual é um feriado e exibir a bolinha vermelha
+    function checkHoliday(day, month) {
+      const formattedDate = `${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const holiday = holidays.find(h => h.date === formattedDate);
+      return holiday ? holiday.name : null;
+    }
+
       document.addEventListener("DOMContentLoaded", function () {
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth();
@@ -231,6 +249,28 @@
                       }
 
                       loadItemsForDay(appointmentsDiv, year, month + 1, day);
+
+                      const holidayName = checkHoliday(day, month);
+        
+                      if (holidayName) {
+                        // Adiciona a bolinha vermelha
+                        const holidayMarker = document.createElement('span');
+                        holidayMarker.style.display = 'inline-block';
+                        holidayMarker.style.width = '8px';
+                        holidayMarker.style.height = '8px';
+                        holidayMarker.style.backgroundColor = 'red';
+                        holidayMarker.style.borderRadius = '50%';
+                        holidayMarker.style.marginRight = '5px';
+                        
+                        const holidayText = document.createElement('span');
+                        holidayText.textContent = holidayName;
+                        holidayText.style.color = '#d9534f'; // Vermelho para destacar o feriado
+                        holidayText.style.fontSize = '12px';
+                        
+                        cell.appendChild(holidayMarker);
+                        cell.appendChild(holidayText);
+                      }
+                      
                       day++;
                   }
                   calendar.appendChild(cell);
