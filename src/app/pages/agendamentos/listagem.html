@@ -138,6 +138,37 @@
         </div>
     </div>
 
+    <!-- Modal de Reagendamento -->
+    <div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rescheduleModalLabel">Reagendar Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Exibição de informações do cliente e procedimento -->
+                    <p style="margin: 0;" id="rescheduleClientInfo">Cliente:</p>
+                    <p id="rescheduleProcedureInfo">Procedimento:</p>
+                    <form id="rescheduleForm">
+                        <div class="mb-3">
+                            <label for="newDate" class="form-label">Data</label>
+                            <input type="date" id="newDate" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="newTime" class="form-label">Hora</label>
+                            <input type="time" id="newTime" class="form-control" required />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="confirmRescheduleButton" class="btn btn-primary">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
 document.addEventListener("DOMContentLoaded", init);
 
@@ -228,6 +259,9 @@ function loadAppointments() {
                             } onclick="concludeAppointment('${appointment.id}')">
                                 <i class="fa-regular fa-circle-check"></i>
                             </button>
+                            <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
+                                <i class="fa-solid fa-calendar-alt"></i>
+                            </button>
                             <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
                                 filterStatus === "concluidos" ? "disabled" : ""
                             } onclick="cancelAppointment('${appointment.id}')">
@@ -249,11 +283,14 @@ function loadAppointments() {
                                 <p class="card-text"><strong>Data:</strong> ${formatDateForDisplay(appointment.date)}</p>
                                 <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
                             </div>
-                            <div class="card-footer d-flex justify-content-end">
-                                <button title="Concluir Agendamento" class="btn btn-sm btn-success me-2" ${
+                            <div class="card-footer d-flex justify-content-end gap-2">
+                                <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
                                     filterStatus === "concluidos" ? "disabled" : ""
                                 } onclick="concludeAppointment('${appointment.id}')">
                                     <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
+                                    <i class="fa-solid fa-calendar-alt"></i>
                                 </button>
                                 <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
                                     filterStatus === "concluidos" ? "disabled" : ""
@@ -282,6 +319,57 @@ function loadAppointments() {
             isLoading = false;
         });
 }
+
+let appointmentToReschedule = null;
+
+function showRescheduleModal(id, currentDate, currentTime, clientName, procedureName) {
+    appointmentToReschedule = id;
+    // Preenche os inputs com a data e hora atuais
+    document.getElementById('newDate').value = currentDate;
+    document.getElementById('newTime').value = currentTime;
+    // Preenche as informações do cliente e procedimento no modal
+    document.getElementById('rescheduleClientInfo').textContent = `Cliente: ${clientName}`;
+    document.getElementById('rescheduleProcedureInfo').textContent = `Procedimento: ${procedureName}`;
+    const modal = new bootstrap.Modal(document.getElementById("rescheduleModal"));
+    modal.show();
+}
+
+async function checkAvailability(date, time) {
+    const response = await fetchWithToken(`/api/appointments/check-availability?date=${date}&time=${time}`);
+    const data = await response.json();
+    return data.available;
+}
+
+document.getElementById('confirmRescheduleButton').addEventListener('click', async () => {
+    const newDate = document.getElementById('newDate').value;
+    const newTime = document.getElementById('newTime').value;
+
+    const isAvailable = await checkAvailability(newDate, newTime);
+    if (!isAvailable) {
+        alert("Já existe um agendamento não concluído neste horário. Por favor, escolha outro horário.");
+        return;
+    }
+
+    // Proceder com a requisição para reagendar se estiver disponível
+    fetchWithToken(`/api/appointments/${appointmentToReschedule}/reschedule`, {
+        method: "PUT",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ date: newDate, time: newTime })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById("rescheduleModal"));
+            modal.hide();
+            loadAppointments();
+        } else {
+            console.error("Erro ao reagendar agendamento.");
+        }
+    })
+    .catch(error => console.error("Erro ao reagendar agendamento:", error));
+});
 
 // Função para formatar a data no formato "08 de outubro de 2024"
 function formatDate(dateString) {
