@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cadastrar Agendamento</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .error-message {
             color: red;
@@ -35,6 +36,71 @@
         #client-list {
             max-height: 150px;
             overflow-y: auto;
+        }
+
+        #openCalendarButton {
+            position: fixed;
+            right: -0.1%;
+            bottom: 50%;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background-color: #bc61da;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #openCalendarButton:hover {
+            background-color: #b341d9;
+        }
+
+        /* Estilo para a sidebar do calendário */
+        .calendar-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 400px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            transition: right 0.3s ease-in-out;
+            overflow-y: hidden;
+        }
+
+        .calendar-sidebar.open {
+            right: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .sidebar-content {
+            height: calc(100% - 50px);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 767px) {
+            #openCalendarButton {
+                right: -1%;
+            }
         }
     </style>
 </head>
@@ -78,198 +144,223 @@
         </form>
     </div>
 
+    <!-- Botão de Calendário -->
+    <button id="openCalendarButton">
+        <i class="fa-solid fa-calendar-alt"></i>
+    </button>
+
+    <!-- Sidebar para o Calendário -->
+    <div id="calendarSidebar" class="calendar-sidebar">
+        <div class="sidebar-header">
+            <h5>Meu Calendário</h5>
+            <button type="button" class="btn-close" aria-label="Close" id="closeCalendarSidebar"></button>
+        </div>
+        <div class="sidebar-content">
+            <iframe src="../calendario/calendario.html" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const clientSearchInput = document.getElementById("client-search");
-    const clientList = document.getElementById("client-list");
-    const procedureSelect = document.getElementById("procedure");
-    const dateInput = document.getElementById("date");
-    const timeInput = document.getElementById("time");
-    const addAppointmentBtn = document.getElementById("add-appointment-btn");
+        document.addEventListener("DOMContentLoaded", () => {
+            const clientSearchInput = document.getElementById("client-search");
+            const clientList = document.getElementById("client-list");
+            const procedureSelect = document.getElementById("procedure");
+            const dateInput = document.getElementById("date");
+            const timeInput = document.getElementById("time");
+            const addAppointmentBtn = document.getElementById("add-appointment-btn");
 
-    const clientError = document.getElementById("client-error");
-    const procedureError = document.getElementById("procedure-error");
-    const dateError = document.getElementById("date-error");
-    const timeError = document.getElementById("time-error");
+            const clientError = document.getElementById("client-error");
+            const procedureError = document.getElementById("procedure-error");
+            const dateError = document.getElementById("date-error");
+            const timeError = document.getElementById("time-error");
 
-    let allClients = [];
+            let allClients = [];
 
-    loadClientsIntoSelect();
-    loadProceduresIntoSelect();
+            loadClientsIntoSelect();
+            loadProceduresIntoSelect();
 
-    // Função para formatar a data no formato DD/MM/YYYY
-    function formatDate(date) {
-        const [year, month, day] = date.split("-");
-        return `${day}/${month}/${year}`;
-    }
-
-    // Mostra a lista ao clicar no input de busca
-    clientSearchInput.addEventListener("focus", function () {
-        clientList.style.display = 'block';
-    });
-
-    // Filtra os clientes conforme o texto digitado no input
-    clientSearchInput.addEventListener("input", function () {
-        const searchTerm = normalizeString(clientSearchInput.value);
-        filterClients(searchTerm);
-    });
-
-    // Carrega clientes no início
-    function loadClientsIntoSelect() {
-        const token = localStorage.getItem('authToken');
-        fetch("/api/clients", {
-            headers: {
-                "Authorization": token ? `Bearer ${token}` : ''
+            // Função para formatar a data no formato DD/MM/YYYY
+            function formatDate(date) {
+                const [year, month, day] = date.split("-");
+                return `${day}/${month}/${year}`;
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            allClients = data.clients; // Armazena todos os clientes
-            renderClientOptions(allClients); // Renderiza as opções de clientes
-        })
-        .catch(error => console.error("Erro ao carregar clientes:", error));
-    }
 
-    // Carrega procedimentos no início
-    function loadProceduresIntoSelect() {
-        const token = localStorage.getItem('authToken');
-        fetch("/api/procedures", {
-            headers: {
-                "Authorization": token ? `Bearer ${token}` : ''
-            }
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            procedureSelect.innerHTML = '<option value="" selected>Selecione um procedimento</option>';
-            data.procedures.forEach((procedure) => {
-                const option = document.createElement("option");
-                option.value = procedure._id;
-                option.textContent = procedure.name;
-                procedureSelect.appendChild(option);
+            // Mostra a lista ao clicar no input de busca
+            clientSearchInput.addEventListener("focus", function () {
+                clientList.style.display = 'block';
             });
-        })
-        .catch((error) => console.error("Erro ao carregar procedimentos:", error));
-    }
 
-    // Renderiza as opções de clientes no div
-    function renderClientOptions(clients) {
-        clientList.innerHTML = ''; // Limpa as opções anteriores
-        clients.forEach(client => {
-            const clientDiv = document.createElement("div");
-            clientDiv.textContent = client.name;
-            clientDiv.dataset.clientId = client._id;
-            clientDiv.addEventListener("click", function () {
-                selectClient(client.name, client._id);
+            // Filtra os clientes conforme o texto digitado no input
+            clientSearchInput.addEventListener("input", function () {
+                const searchTerm = normalizeString(clientSearchInput.value);
+                filterClients(searchTerm);
             });
-            clientList.appendChild(clientDiv);
-        });
-    }
 
-    // Função para normalizar a string removendo acentuação e convertendo para minúsculas
-    function normalizeString(str) {
-        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    }
-
-    // Filtra os clientes com base no texto digitado
-    function filterClients(searchTerm) {
-        const filteredClients = allClients.filter(client =>
-            normalizeString(client.name).includes(searchTerm)
-        );
-        renderClientOptions(filteredClients); // Renderiza os clientes filtrados
-    }
-
-    // Seleciona o cliente e preenche o campo de input
-    function selectClient(clientName, clientId) {
-        clientSearchInput.value = clientName; // Preenche o nome do cliente no input
-        clientSearchInput.dataset.clientId = clientId; // Armazena o ID do cliente no input
-        clientList.style.display = 'none'; // Esconde a lista de clientes
-        validateForm(); // Valida o formulário
-    }
-
-    // Função que verifica se o formulário é válido
-    function validateForm() {
-        let formIsValid = true;
-
-        if (!clientSearchInput.dataset.clientId) {
-            clientError.textContent = "Campo obrigatório.";
-            formIsValid = false;
-        } else {
-            clientError.textContent = "";
-        }
-
-        if (procedureSelect.value === "") {
-            procedureError.textContent = "Campo obrigatório.";
-            formIsValid = false;
-        } else {
-            procedureError.textContent = "";
-        }
-
-        if (dateInput.value.trim() === "") {
-            dateError.textContent = "Campo obrigatório.";
-            formIsValid = false;
-        } else {
-            dateError.textContent = "";
-        }
-
-        if (timeInput.value.trim() === "") {
-            timeError.textContent = "Campo obrigatório.";
-            formIsValid = false;
-        } else {
-            timeError.textContent = "";
-        }
-
-        addAppointmentBtn.disabled = !formIsValid; // Habilita o botão se o formulário for válido
-    }
-
-    // Adiciona eventos de validação ao alterar qualquer campo
-    clientSearchInput.addEventListener("blur", validateForm);
-    procedureSelect.addEventListener("change", validateForm);
-    dateInput.addEventListener("input", validateForm);
-    timeInput.addEventListener("input", validateForm);
-
-    document.getElementById("appointment-form").addEventListener("submit", function (e) {
-        e.preventDefault();
-        validateForm();
-
-        if (!addAppointmentBtn.disabled) { // Só envia se o formulário for válido
-            addAppointment();
-        }
-    });
-
-    function addAppointment() {
-        const clientId = clientSearchInput.dataset.clientId; // Captura o ID do cliente selecionado
-        const procedureName = procedureSelect.options[procedureSelect.selectedIndex].text; // Captura o nome do procedimento selecionado
-        const date = formatDate(dateInput.value); // Formata a data no formato DD/MM/YYYY
-        const time = timeInput.value;
-        const token = localStorage.getItem('authToken');
-        fetch("/api/appointments", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ clientId, procedureName, date, time }) // Envia o nome do procedimento
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error(data.error);
-                alert(data.error);
-            } else {
-                clientSearchInput.value = '';
-                procedureSelect.value = '';
-                dateInput.value = '';
-                timeInput.value = '';
-                addAppointmentBtn.disabled = true;
-                window.location.href = 'listagem.html';
+            // Carrega clientes no início
+            function loadClientsIntoSelect() {
+                const token = localStorage.getItem('authToken');
+                fetch("/api/clients", {
+                    headers: {
+                        "Authorization": token ? `Bearer ${token}` : ''
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    allClients = data.clients; // Armazena todos os clientes
+                    renderClientOptions(allClients); // Renderiza as opções de clientes
+                })
+                .catch(error => console.error("Erro ao carregar clientes:", error));
             }
-        })
-        .catch(error => {
-            console.error("Erro ao adicionar agendamento:", error);
+
+            // Carrega procedimentos no início
+            function loadProceduresIntoSelect() {
+                const token = localStorage.getItem('authToken');
+                fetch("/api/procedures", {
+                    headers: {
+                        "Authorization": token ? `Bearer ${token}` : ''
+                    }
+                })
+                .then((response) => response.json())
+                .then((data) => {
+                    procedureSelect.innerHTML = '<option value="" selected>Selecione um procedimento</option>';
+                    data.procedures.forEach((procedure) => {
+                        const option = document.createElement("option");
+                        option.value = procedure._id;
+                        option.textContent = procedure.name;
+                        procedureSelect.appendChild(option);
+                    });
+                })
+                .catch((error) => console.error("Erro ao carregar procedimentos:", error));
+            }
+
+            // Renderiza as opções de clientes no div
+            function renderClientOptions(clients) {
+                clientList.innerHTML = ''; // Limpa as opções anteriores
+                clients.forEach(client => {
+                    const clientDiv = document.createElement("div");
+                    clientDiv.textContent = client.name;
+                    clientDiv.dataset.clientId = client._id;
+                    clientDiv.addEventListener("click", function () {
+                        selectClient(client.name, client._id);
+                    });
+                    clientList.appendChild(clientDiv);
+                });
+            }
+
+            // Função para normalizar a string removendo acentuação e convertendo para minúsculas
+            function normalizeString(str) {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            }
+
+            // Filtra os clientes com base no texto digitado
+            function filterClients(searchTerm) {
+                const filteredClients = allClients.filter(client =>
+                    normalizeString(client.name).includes(searchTerm)
+                );
+                renderClientOptions(filteredClients); // Renderiza os clientes filtrados
+            }
+
+            // Seleciona o cliente e preenche o campo de input
+            function selectClient(clientName, clientId) {
+                clientSearchInput.value = clientName; // Preenche o nome do cliente no input
+                clientSearchInput.dataset.clientId = clientId; // Armazena o ID do cliente no input
+                clientList.style.display = 'none'; // Esconde a lista de clientes
+                validateForm(); // Valida o formulário
+            }
+
+            // Função que verifica se o formulário é válido
+            function validateForm() {
+                let formIsValid = true;
+
+                if (!clientSearchInput.dataset.clientId) {
+                    clientError.textContent = "Campo obrigatório.";
+                    formIsValid = false;
+                } else {
+                    clientError.textContent = "";
+                }
+
+                if (procedureSelect.value === "") {
+                    procedureError.textContent = "Campo obrigatório.";
+                    formIsValid = false;
+                } else {
+                    procedureError.textContent = "";
+                }
+
+                if (dateInput.value.trim() === "") {
+                    dateError.textContent = "Campo obrigatório.";
+                    formIsValid = false;
+                } else {
+                    dateError.textContent = "";
+                }
+
+                if (timeInput.value.trim() === "") {
+                    timeError.textContent = "Campo obrigatório.";
+                    formIsValid = false;
+                } else {
+                    timeError.textContent = "";
+                }
+
+                addAppointmentBtn.disabled = !formIsValid; // Habilita o botão se o formulário for válido
+            }
+
+            // Adiciona eventos de validação ao alterar qualquer campo
+            clientSearchInput.addEventListener("blur", validateForm);
+            procedureSelect.addEventListener("change", validateForm);
+            dateInput.addEventListener("input", validateForm);
+            timeInput.addEventListener("input", validateForm);
+
+            document.getElementById("appointment-form").addEventListener("submit", function (e) {
+                e.preventDefault();
+                validateForm();
+
+                if (!addAppointmentBtn.disabled) { // Só envia se o formulário for válido
+                    addAppointment();
+                }
+            });
+
+            function addAppointment() {
+                const clientId = clientSearchInput.dataset.clientId; // Captura o ID do cliente selecionado
+                const procedureName = procedureSelect.options[procedureSelect.selectedIndex].text; // Captura o nome do procedimento selecionado
+                const date = formatDate(dateInput.value); // Formata a data no formato DD/MM/YYYY
+                const time = timeInput.value;
+                const token = localStorage.getItem('authToken');
+                fetch("/api/appointments", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ clientId, procedureName, date, time }) // Envia o nome do procedimento
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        alert(data.error);
+                    } else {
+                        clientSearchInput.value = '';
+                        procedureSelect.value = '';
+                        dateInput.value = '';
+                        timeInput.value = '';
+                        addAppointmentBtn.disabled = true;
+                        window.location.href = 'listagem.html';
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao adicionar agendamento:", error);
+                });
+            }
+
+            // Botões para abrir e fechar a sidebar
+            document.getElementById("openCalendarButton").addEventListener("click", function() {
+                document.getElementById("calendarSidebar").classList.add("open");
+            });
+
+            document.getElementById("closeCalendarSidebar").addEventListener("click", function() {
+                document.getElementById("calendarSidebar").classList.remove("open");
+            });
         });
-    }
-});
     </script>
 </body>
 
