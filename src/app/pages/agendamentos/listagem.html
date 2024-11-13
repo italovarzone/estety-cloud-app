@@ -131,11 +131,12 @@
                     <tr>
                         <th>Cliente</th>
                         <th>Procedimento</th>
+                        <th>Preço</th> <!-- Nova coluna para o preço -->
                         <th>Data</th>
                         <th>Hora</th>
                         <th>Ações</th>
                     </tr>
-                </thead>
+                </thead>                
                 <tbody>
                     <!-- A mensagem será inserida aqui -->
                 </tbody>
@@ -340,6 +341,7 @@ function loadAppointments() {
                     tr.innerHTML = `
                         <td>${appointment.client.name}</td>
                         <td>${appointment.procedure}</td>
+                        <td>${appointment.price ? `R$ ${appointment.price.toFixed(2)}` : 'Preço não disponível'}</td>
                         <td>${formatDateForDisplay(appointment.date)}</td>
                         <td>${appointment.time}</td>
                         <td>
@@ -369,6 +371,7 @@ function loadAppointments() {
                             <div class="card-body">
                                 <h5 class="card-title">${appointment.client.name}</h5>
                                 <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
+                                <p class="card-text"><strong>Preço:</strong> ${appointment.price ? `R$ ${appointment.price.toFixed(2)}` : 'Preço não disponível'}</p>
                                 <p class="card-text"><strong>Data:</strong> ${formatDateForDisplay(appointment.date)}</p>
                                 <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
                             </div>

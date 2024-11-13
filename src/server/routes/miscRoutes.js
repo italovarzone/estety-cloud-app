@@ -6,7 +6,7 @@ const router = express.Router();
 // Endpoint para verificar o status de um outro endpoint
 router.get('/api/check-endpoint', async (req, res) => {
     try {
-        const response = await axios.get('https://lash-app-microservice.onrender.com/api/status');
+        const response = await axios.get('https://mailmicroservice.onrender.com/api/status');
         
         if (response.status === 200) {
           res.status(200).json({ status: 'online' });
