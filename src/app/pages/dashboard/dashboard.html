@@ -59,44 +59,61 @@
   <body>
     <div class="conteudo">
       <h1 class="mb-4 text-center">Dashboard</h1>
-      <div class="row">
+      <div style="gap: 12px;" class="row">
         <div class="col-md-6">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Total de Agendamentos</h5>
-              <p id="total-appointments" class="card-text">0</p>
+              <p class="card-title">Total de Agendamentos</p>
+              <h5 id="total-appointments" class="card-text">0</h5>
             </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Total de Clientes</h5>
-              <p id="total-clients" class="card-text">0</p>
+              <p class="card-title">Total de Clientes</p>
+              <h5 id="total-clients" class="card-text">0</h5>
             </div>
           </div>
         </div>
-      </div>
+        <!-- Adicionando os novos cards -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-title" data-revenue="monthly">Receita Mensal</p>
+              <h5 id="monthly-revenue" class="card-text">R$ 0,00</h5>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-title" data-revenue="annual">Receita Anual</p>
+              <h5 id="annual-revenue" class="card-text">R$ 0,00</h5>
+            </div>
+          </div>
+        </div>  
+      </div>      
       <div class="box-graph">
-        <h1 class="mb-4 text-center">Agendamentos por Cliente</h1>
+        <h1 class="m-4 text-center">Agendamentos por Cliente</h1>
         <div class="chart-container">
           <canvas id="horizontalBarChart"></canvas>
         </div>
       </div>
       <div class="box-graph">
-        <h1 class="mb-4 text-center">Lucratividade Mensal</h1>
+        <h1 class="m-4 text-center">Receita mês a mês</h1>
         <div class="chart-container">
           <canvas id="monthlyRevenueChart"></canvas>
         </div>
       </div>
       <div class="box-graph">
-        <h1 class="mb-4 text-center">Lucratividade Anual</h1>
+        <h1 class="m-4 text-center">Receita Total</h1>
         <div class="chart-container">
           <canvas id="annualRevenueChart"></canvas>
         </div>
       </div>
       <div id="top3procedimentos">
-        <h2 class="mb-4 mt-4">Top 3 Procedimentos Mais Usados</h2>
+        <h2 class="m-4 mt-4">Top 3 Procedimentos Realizados</h2>
         <table class="table">
           <thead>
             <tr>
@@ -124,69 +141,73 @@
         }
 
         function createHorizontalBarChart(clientNames, appointmentCounts) {
-          const ctx = document.getElementById("horizontalBarChart").getContext("2d");
+        const ctx = document.getElementById("horizontalBarChart").getContext("2d");
 
-          if (clientNames.length === 0 || appointmentCounts.length === 0) {
-            ctx.font = "16px Arial";
-            ctx.fillText("Nenhum dado disponível", 10, 50);
-            return;
-          }
+        if (clientNames.length === 0 || appointmentCounts.length === 0) {
+          ctx.font = "16px Arial";
+          ctx.fillText("Nenhum dado disponível", 10, 50);
+          return;
+        }
 
-          new Chart(ctx, {
-            type: "bar",
-            data: {
-              labels: clientNames,
-              datasets: [
-                {
-                  label: "Quantidade de Agendamentos",
-                  data: appointmentCounts,
-                  backgroundColor: "rgba(75, 192, 192, 0.5)",
-                  borderColor: "rgba(75, 192, 192, 1)",
-                  borderWidth: 1,
+        // Ajuste dinâmico da altura com base no número de clientes
+        const chartHeight = clientNames.length * 30; // Ajuste o valor para controlar a altura dos elementos
+        ctx.canvas.parentNode.style.height = `${chartHeight}px`;
+
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: clientNames,
+            datasets: [
+              {
+                label: "Quantidade de Agendamentos",
+                data: appointmentCounts,
+                backgroundColor: "rgba(75, 192, 192, 0.5)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Quantidade de Agendamentos",
+                  font: {
+                    size: 16,
+                    weight: "bold",
+                  },
                 },
-              ],
-            },
-            options: {
-              indexAxis: 'y',
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  title: {
-                    display: true,
-                    text: "Quantidade de Agendamentos",
-                    font: {
-                      size: 16,
-                      weight: "bold",
-                    },
-                  },
-                  beginAtZero: true,
-                  grid: {
-                    color: "rgba(200, 200, 200, 0.3)",
-                  },
-                },
-                y: {
-                  title: {
-                    display: true,
-                    text: "Clientes",
-                    font: {
-                      size: 16,
-                      weight: "bold",
-                    },
-                  },
-                  grid: {
-                    display: false,
-                  },
+                beginAtZero: true,
+                grid: {
+                  color: "rgba(200, 200, 200, 0.3)",
                 },
               },
-              plugins: {
-                legend: {
+              y: {
+                title: {
+                  display: true,
+                  text: "Clientes",
+                  font: {
+                    size: 16,
+                    weight: "bold",
+                  },
+                },
+                grid: {
                   display: false,
                 },
               },
             },
-          });
-        }
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+          },
+        });
+      }
 
         function createRevenueCharts(monthlyLabels, monthlyRevenue, annualRevenue) {
           // Ordena os meses de janeiro a dezembro
@@ -210,7 +231,7 @@
             data: {
               labels: sortedLabels,
               datasets: [{
-                label: 'Receita Mensal (R$)',
+                label: 'Receita mês a mês (R$)',
                 data: sortedRevenue,
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2,
@@ -225,7 +246,7 @@
                 },
                 title: {
                   display: true,
-                  text: 'Lucratividade Mensal'
+                  text: 'Receita mês a mês'
                 }
               }
             }
@@ -234,9 +255,9 @@
           new Chart(ctxAnnual, {
             type: 'bar',
             data: {
-              labels: ['Receita Anual'],
+              labels: ['Receita Total'],
               datasets: [{
-                label: 'Receita Anual (R$)',
+                label: 'Receita Total (R$)',
                 data: [annualRevenue],
                 backgroundColor: 'rgba(54, 162, 235, 0.5)',
                 borderColor: 'rgba(54, 162, 235, 1)',
@@ -251,7 +272,7 @@
                 },
                 title: {
                   display: true,
-                  text: 'Lucratividade Anual'
+                  text: 'Receita Total'
                 }
               }
             }
@@ -295,6 +316,34 @@
             createRevenueCharts(monthlyLabels, monthlyRevenue, annualRevenue);
           })
           .catch(error => console.error("Erro ao carregar dados de receita:", error));
+
+          fetchWithToken("/api/procedures/revenue")
+          .then(response => response.json())
+          .then(data => {
+            // Obter mês e ano atual
+            const currentDate = new Date();
+            const currentMonthName = currentDate.toLocaleString('pt-BR', { month: 'long' }).charAt(0).toUpperCase() + currentDate.toLocaleString('pt-BR', { month: 'long' }).slice(1);
+            const currentYear = currentDate.getFullYear();
+
+            // Atualizar títulos com mês e ano atual
+            document.querySelector('.card-title[data-revenue="monthly"]').textContent = `Receita Mensal (${currentMonthName})`;
+            document.querySelector('.card-title[data-revenue="annual"]').textContent = `Receita Anual (${currentYear})`;
+
+            // Encontrar receita mensal para o mês atual
+            let currentMonthRevenue = 0;
+            const currentMonth = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            const monthlyLabels = Object.keys(data.monthlyRevenue);
+            const monthlyRevenue = Object.values(data.monthlyRevenue);
+            const index = monthlyLabels.indexOf(currentMonth);
+            if (index !== -1) {
+              currentMonthRevenue = monthlyRevenue[index];
+            }
+
+            // Atualizar os elementos no DOM
+            document.getElementById("monthly-revenue").textContent = `R$ ${currentMonthRevenue.toFixed(2)}`;
+            document.getElementById("annual-revenue").textContent = `R$ ${data.annualRevenue.toFixed(2)}`;
+          })
+          .catch(error => console.error("Erro ao carregar dados de receita mensal e anual:", error));
       });
     </script>
   </body>
