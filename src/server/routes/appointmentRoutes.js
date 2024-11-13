@@ -174,45 +174,45 @@ router.get(
       }
 
       const appointments = await db
-        .collection("appointments")
-        .aggregate([
-          { $match: query },
-          {
-            $lookup: {
-              from: "clients",
-              localField: "clientId",
-              foreignField: "_id",
-              as: "client",
-            },
+      .collection("appointments")
+      .aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: "clients",
+            localField: "clientId",
+            foreignField: "_id",
+            as: "client",
           },
-          { $unwind: "$client" },
-          {
-            $lookup: {
-              from: "procedures",
-              localField: "procedure",
-              foreignField: "name",
-              as: "procedureDetails",
-            },
+        },
+        { $unwind: "$client" },
+        {
+          $lookup: {
+            from: "procedures",
+            localField: "procedure",
+            foreignField: "name",
+            as: "procedureDetails",
           },
-          { $unwind: { path: "$procedureDetails", preserveNullAndEmptyArrays: true } },
-          {
-            $project: {
-              id: "$_id",
-              procedure: { $ifNull: ["$procedureDetails.name", "$procedure"] },
-              date: 1,
-              time: 1,  // Inclui o campo time (hora) na consulta
-              "client.name": 1,
-              expired: { $lt: ["$date", currentDate.toISOString().split('T')[0]] }, // Verifica se o agendamento está vencido
-            },
+        },
+        { $unwind: { path: "$procedureDetails", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            id: "$_id",
+            procedure: { $ifNull: ["$procedureDetails.name", "$procedure"] },
+            price: "$procedureDetails.price", // Inclui o preço do procedimento
+            date: 1,
+            time: 1,
+            "client.name": 1,
+            expired: { $lt: ["$date", currentDate.toISOString().split('T')[0]] },
           },
-          // Ordena dependendo do status
-          {
-            $sort: status === "concluidos"
-              ? { date: -1, time: 1 }  // Para "concluídos", ordena pela data decrescente e hora crescente
-              : { date: 1, time: 1 }   // Para "não concluídos", ordena pela data e hora crescente
-          }
-        ])
-        .toArray();
+        },
+        {
+          $sort: status === "concluidos"
+            ? { date: -1, time: 1 }
+            : { date: 1, time: 1 }
+        }
+      ])
+      .toArray();    
 
       const filteredAppointments = search
         ? appointments.filter((appointment) => {
