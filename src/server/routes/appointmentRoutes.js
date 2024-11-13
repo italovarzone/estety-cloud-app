@@ -73,78 +73,51 @@ function convertToDatabaseDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+router.get("/api/appointments/calendario", authenticateToken, ensureDbConnection, async (req, res) => {
+  const { status, date } = req.query;
+  try {
+    const db = req.db;
+    const query = {};
 
-// Rota para listar agendamentos
-router.get(
-  "/api/appointments/calendario",
-  authenticateToken,
-  ensureDbConnection,
-  async (req, res) => {
-    const { status, date, search } = req.query;
-    try {
-      const db = req.db; // Use 'req.db' para acessar o banco de dados
-
-      const query = {};
-
-      if (date) {
-        query.date = date;
-      }
-
-      if (status === "concluidos") {
-        query.concluida = true;
-      } else {
-        query.concluida = { $ne: true };
-      }
-
-      const appointments = await db
-        .collection("appointments")
-        .aggregate([
-          { $match: query },
-          {
-            $lookup: {
-              from: "clients",
-              localField: "clientId",
-              foreignField: "_id",
-              as: "client",
-            },
-          },
-          { $unwind: "$client" },
-          {
-            $lookup: {
-              from: "procedures", // Faz o lookup na coleção 'procedures'
-              localField: "procedure", // Campo de referência no agendamento (o nome, não o ID)
-              foreignField: "name", // Campo de referência na coleção de procedimentos (pelo nome)
-              as: "procedureDetails", // Nome alternativo para os detalhes do procedimento
-            },
-          },
-          { $unwind: { path: "$procedureDetails", preserveNullAndEmptyArrays: true } }, // Mantém o documento se não houver correspondência
-          {
-            $project: {
-              id: "$_id",
-              procedure: { $ifNull: ["$procedureDetails.name", "$procedure"] }, // Se não encontrar, usa o nome armazenado no agendamento
-              date: 1,
-              time: 1,
-              "client.name": 1,
-            },
-          },
-        ])
-        .toArray();
-
-      const filteredAppointments = search
-        ? appointments.filter((appointment) => {
-          const normalizedClientName = normalizeText(appointment.client.name);
-          const normalizedSearch = normalizeText(search);
-          return normalizedClientName.startsWith(normalizedSearch);
-        })
-        : appointments;
-
-      res.json({ appointments: filteredAppointments });
-    } catch (err) {
-      console.error("Erro ao listar agendamentos:", err.message);
-      res.status(500).json({ error: err.message });
+    // Filtro opcional de data
+    if (date) {
+      query.date = date;
     }
+
+    // Filtro opcional de status
+    if (status === "concluidos") {
+      query.concluida = true;
+    }
+
+    const appointments = await db.collection("appointments").aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: "clients",            // Nome da coleção de clientes
+          localField: "clientId",      // Campo em "appointments" que referencia o cliente
+          foreignField: "_id",         // Campo em "clients" que corresponde ao "clientId"
+          as: "clientData"             // Nome do campo resultante com os dados do cliente
+        }
+      },
+      { $unwind: "$clientData" },      // Descompacta o array clientData para um objeto único
+      {
+        $project: {
+          _id: 1,
+          date: 1,
+          time: 1,
+          procedure: 1,
+          concluida: 1,
+          "client.name": "$clientData.name" // Inclui apenas o nome do cliente
+        }
+      }
+    ]).toArray();
+
+    res.json({ appointments });
+  } catch (err) {
+    console.error("Erro ao listar agendamentos:", err.message);
+    res.status(500).json({ error: err.message });
   }
-);
+});
 
 // Rota para listar agendamentos
 router.get(

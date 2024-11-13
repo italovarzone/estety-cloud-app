@@ -154,7 +154,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p>Esta tarefa já está concluída.</p>
+            <p>Não é possível interagir nesse card.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fechar</button>
@@ -289,29 +289,36 @@
           fetchWithToken(`/api/appointments/calendario?date=${dateStr}`)
             .then(response => response.json())
             .then(data => {
-              if (data.appointments.length > 0) {
+              if (data.appointments && data.appointments.length > 0) {
                 data.appointments.forEach(appointment => {
                   const appointmentCard = document.createElement("div");
                   appointmentCard.classList.add("appointment-card", "d-flex", "justify-content-between", "align-items-center", "p-2", "mb-2", "rounded");
 
+                  // Verificação de agendamentos concluídos
                   if (appointment.concluida) {
                     appointmentCard.classList.add("completed");
+                    appointmentCard.addEventListener("click", () => showAlert("Este agendamento já está concluído."));
+                  } else {
+                    appointmentCard.addEventListener("click", () => showAppointmentDetails(appointment));
                   }
 
                   // Informações do agendamento
+                  const clientName = appointment.client && appointment.client.name ? appointment.client.name : "Cliente não especificado";
                   const clientInfo = document.createElement("div");
                   clientInfo.classList.add("appointment-info");
-                  clientInfo.textContent = `${appointment.client.name} - ${appointment.time}`;
+                  clientInfo.textContent = `${clientName} - ${appointment.time || "Hora não especificada"}`;
                   appointmentCard.appendChild(clientInfo);
 
                   const procedureInfo = document.createElement("div");
                   procedureInfo.classList.add("appointment-time");
-                  procedureInfo.textContent = appointment.procedure;
+                  procedureInfo.textContent = appointment.procedure || "Procedimento não especificado";
                   appointmentCard.appendChild(procedureInfo);
 
-                  appointmentCard.addEventListener("click", () => showAppointmentDetails(appointment));
+                  // Adiciona o agendamento ao container do dia
                   appointmentsDiv.appendChild(appointmentCard);
                 });
+              } else {
+                console.warn(`Nenhum agendamento encontrado para a data: ${dateStr}`);
               }
             })
             .catch(error => console.error("Erro ao carregar agendamentos:", error));

@@ -20,7 +20,6 @@ async function connectDB() {
   if (!isConnected) {
     try {
       await client.connect();
-      console.log('Conectado ao MongoDB Atlas');
       db = client.db(process.env.NAME_DB);
       isConnected = true;
     } catch (err) {
