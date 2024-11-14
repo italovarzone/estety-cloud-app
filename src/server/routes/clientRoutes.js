@@ -12,7 +12,6 @@ const router = express.Router();
 router.post(
   "/api/clients",
   ensureDbConnection,
-  authenticateToken,
   async (req, res) => {
     let { name, birthdate, phone } = req.body;
 
@@ -128,5 +127,29 @@ router.delete(
     }
   }
 );
+
+// Rota para buscar cliente por número de telefone
+router.get(
+  "/api/clients/phone/:phone",
+  ensureDbConnection,
+  async (req, res) => {
+    const { phone } = req.params;
+
+    try {
+      const db = req.db; // Use 'req.db' para acessar o banco de dados
+      const client = await db.collection("clients").findOne({ phone: phone });
+
+      if (!client) {
+        return res.status(404).json({ error: "Cliente não encontrado." });
+      }
+
+      res.json(client);
+    } catch (err) {
+      console.error("Erro ao buscar cliente por telefone:", err.message);
+      res.status(500).json({ error: "Erro ao buscar cliente." });
+    }
+  }
+);
+
 
 module.exports = router;

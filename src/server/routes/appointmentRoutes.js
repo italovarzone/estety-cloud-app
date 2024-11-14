@@ -11,7 +11,6 @@ const router = express.Router();
 // Rota para adicionar agendamento
 router.post(
   "/api/appointments",
-  authenticateToken,
   ensureDbConnection,
   async (req, res) => {
     const { clientId, procedureName, date, time } = req.body;
@@ -370,7 +369,6 @@ router.put(
 // Rota para deletar um agendamento
 router.delete(
   "/api/appointments/:id",
-  authenticateToken,
   ensureDbConnection,
   async (req, res) => {
     const { id } = req.params; // Obtenha o ID do agendamento dos parâmetros da URL
@@ -397,5 +395,29 @@ router.delete(
     }
   }
 );
+
+// Rota para listar agendamentos não concluídos por cliente
+router.get(
+  "/api/appointments/list-by-client",
+  ensureDbConnection,
+  async (req, res) => {
+    const { status, clientId } = req.query;
+
+    try {
+      const db = req.db;
+      const query = {
+        clientId: new ObjectId(clientId),
+        concluida: { $ne: true } // Busca apenas agendamentos não concluídos
+      };
+
+      const appointments = await db.collection("appointments").find(query).toArray();
+      res.json({ appointments });
+    } catch (err) {
+      console.error("Erro ao listar agendamentos:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 
 module.exports = router;

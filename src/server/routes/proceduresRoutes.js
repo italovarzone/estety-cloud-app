@@ -5,7 +5,7 @@ const { ensureDbConnection, authenticateToken } = require("../middlewares/authMi
 const router = express.Router();
 
 // Listar todos os procedimentos
-router.get("/api/procedures", authenticateToken, ensureDbConnection, async (req, res) => {
+router.get("/api/procedures", ensureDbConnection, async (req, res) => {
     try {
         const db = req.db; // Use 'req.db' para acessar o banco de dados
         const procedures = await db.collection("procedures").find({}).toArray();

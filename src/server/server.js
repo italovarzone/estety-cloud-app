@@ -5,6 +5,7 @@ const axios = require('axios');
 const bodyParser = require('body-parser');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { ensureDbConnection, authenticateToken } = require('./middlewares/authMiddleware');
+const cors = require('cors');
 
 // Rotas importadas
 const appointmentRoutes = require('./routes/appointmentRoutes');
@@ -24,6 +25,8 @@ app.use(session({ secret: 'secretkey', resave: false, saveUninitialized: true, c
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../app')));
+// Configurar CORS
+app.use(cors()); // Permite todas as origens
 
 // Rotas
 app.use(authRoutes);
