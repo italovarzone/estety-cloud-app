@@ -18,28 +18,32 @@ router.get("/api/procedures", ensureDbConnection, async (req, res) => {
 
 // Adicionar um novo procedimento
 router.post("/api/procedures", authenticateToken, ensureDbConnection, async (req, res) => {
-    const { name, description, price } = req.body;
+    const { name, description, price, duration } = req.body;
     if (!name) {
         return res.status(400).json({ error: "O nome do procedimento é obrigatório." });
     }
     if (price === undefined || typeof price !== "number" || price <= 0) {
         return res.status(400).json({ error: "O preço deve ser um valor numérico positivo." });
     }
+    if (duration !== undefined && (typeof duration !== "number" || duration <= 0)) {
+        return res.status(400).json({ error: "A duração deve ser um valor numérico positivo." });
+    }
 
     try {
-        const db = req.db; // Use 'req.db' para acessar o banco de dados
-        const result = await db.collection("procedures").insertOne({ name, description, price });
-        res.status(201).json({ id: result.insertedId, name, description, price });
+        const db = req.db;
+        const result = await db.collection("procedures").insertOne({ name, description, price, duration });
+        res.status(201).json({ id: result.insertedId, name, description, price, duration });
     } catch (err) {
         console.error("Erro ao adicionar procedimento:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
+
 // Atualizar um procedimento existente
 router.put("/api/procedures/:id", authenticateToken, ensureDbConnection, async (req, res) => {
     const { id } = req.params;
-    const { name, description, price } = req.body;
+    const { name, description, price, duration } = req.body;
 
     if (!name) {
         return res.status(400).json({ error: "O nome do procedimento é obrigatório." });
@@ -47,12 +51,15 @@ router.put("/api/procedures/:id", authenticateToken, ensureDbConnection, async (
     if (price === undefined || typeof price !== "number" || price <= 0) {
         return res.status(400).json({ error: "O preço deve ser um valor numérico positivo." });
     }
+    if (duration !== undefined && (typeof duration !== "number" || duration <= 0)) {
+        return res.status(400).json({ error: "A duração deve ser um valor numérico positivo." });
+    }
 
     try {
-        const db = req.db; // Use 'req.db' para acessar o banco de dados
+        const db = req.db;
         const result = await db.collection("procedures").updateOne(
             { _id: new ObjectId(id) },
-            { $set: { name, description, price } }
+            { $set: { name, description, price, duration } }
         );
 
         if (result.modifiedCount === 0) {
@@ -65,6 +72,7 @@ router.put("/api/procedures/:id", authenticateToken, ensureDbConnection, async (
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // Excluir um procedimento
 router.delete("/api/procedures/:id", authenticateToken, ensureDbConnection, async (req, res) => {

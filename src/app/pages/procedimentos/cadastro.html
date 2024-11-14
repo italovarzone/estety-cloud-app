@@ -90,6 +90,16 @@
           />
           <div id="procedure-price-error" class="error-message"></div>
         </div>
+        <div class="col-md-6">
+          <label for="procedure-duration" class="form-label">Duração (em minutos):</label>
+          <input
+            type="number"
+            id="procedure-duration"
+            class="form-control"
+            placeholder="Digite a duração em minutos"
+          />
+          <div id="procedure-duration-error" class="error-message"></div>
+        </div>        
         <div class="col-12">
           <button
             style="
@@ -197,6 +207,9 @@
             <label for="edit-procedure-price" class="form-label">Preço do Procedimento:</label>
             <input type="number" id="edit-procedure-price" class="form-control" step="0.01" />
             <div id="edit-procedure-price-error" class="error-message"></div>
+            <label for="edit-procedure-duration" class="form-label">Duração (em minutos):</label>
+            <input type="number" id="edit-procedure-duration" class="form-control" />
+            <div id="edit-procedure-duration-error" class="error-message"></div>
           </div>
           <div class="modal-footer">
             <button
@@ -232,13 +245,12 @@
         modal.show();
       }
 
-      function showEditModal(procedureId, procedureName, procedurePrice) {
+      function showEditModal(procedureId, procedureName, procedurePrice, procedureDuration) {
         procedureToEdit = procedureId;
         document.getElementById("edit-procedure-name").value = procedureName;
         document.getElementById("edit-procedure-price").value = procedurePrice;
-        const modal = new bootstrap.Modal(
-          document.getElementById("editProcedureModal")
-        );
+        document.getElementById("edit-procedure-duration").value = procedureDuration || "";
+        const modal = new bootstrap.Modal(document.getElementById("editProcedureModal"));
         modal.show();
       }
 
@@ -254,6 +266,11 @@
         const editProcedurePriceInput = document.getElementById("edit-procedure-price");
         const editProcedureNameError = document.getElementById("edit-procedure-name-error");
         const editProcedurePriceError = document.getElementById("edit-procedure-price-error");
+
+        const procedureDurationInput = document.getElementById("procedure-duration");
+        const procedureDurationError = document.getElementById("procedure-duration-error");
+        const editProcedureDurationInput = document.getElementById("edit-procedure-duration");
+        const editProcedureDurationError = document.getElementById("edit-procedure-duration-error");
 
         // Carrega os procedimentos
         loadProcedures();
@@ -276,6 +293,33 @@
         editProcedurePriceInput.addEventListener("input", () => {
           validateEditProcedurePrice();
         });
+
+        procedureDurationInput.addEventListener("input", () => {
+          validateProcedureDuration();
+          checkFormValidity();
+        });
+
+        editProcedureDurationInput.addEventListener("input", () => {
+          validateEditProcedureDuration();
+        });
+
+        function validateProcedureDuration() {
+          const value = parseFloat(procedureDurationInput.value);
+          if (isNaN(value) || value <= 0) {
+            procedureDurationError.textContent = "A duração deve ser um valor positivo.";
+          } else {
+            procedureDurationError.textContent = "";
+          }
+        }
+
+        function validateEditProcedureDuration() {
+          const value = parseFloat(editProcedureDurationInput.value);
+          if (isNaN(value) || value <= 0) {
+            editProcedureDurationError.textContent = "A duração deve ser um valor positivo.";
+          } else {
+            editProcedureDurationError.textContent = "";
+          }
+        }
 
         function validateProcedureName() {
           if (procedureNameInput.value.trim() === "") {
@@ -337,53 +381,55 @@
             }
           });
 
-        function addProcedure() {
-          const name = procedureNameInput.value;
-          const price = parseFloat(procedurePriceInput.value);
+          function addProcedure() {
+            const name = procedureNameInput.value;
+            const price = parseFloat(procedurePriceInput.value);
+            const duration = parseFloat(procedureDurationInput.value);
 
-          const btnText = document.getElementById("btn-text");
-          const btnSpinner = document.getElementById("btn-spinner");
+            const btnText = document.getElementById("btn-text");
+            const btnSpinner = document.getElementById("btn-spinner");
 
-          const token = localStorage.getItem("authToken");
+            const token = localStorage.getItem("authToken");
 
-          btnText.style.display = "none";
-          btnSpinner.style.display = "inline-block";
-          addProcedureBtn.disabled = true;
+            btnText.style.display = "none";
+            btnSpinner.style.display = "inline-block";
+            addProcedureBtn.disabled = true;
 
-          fetch("/api/procedures", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-            body: JSON.stringify({ name, price }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              setTimeout(() => {
-                btnText.style.display = "inline";
-                btnSpinner.style.display = "none";
-                addProcedureBtn.disabled = false;
-
-                if (data.error) {
-                  console.error(data.error);
-                } else {
-                  loadProcedures();
-                  procedureNameInput.value = "";
-                  procedurePriceInput.value = "";
-                  checkFormValidity();
-                }
-              }, 3000);
+            fetch("/api/procedures", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: token ? `Bearer ${token}` : "",
+              },
+              body: JSON.stringify({ name, price, duration }),
             })
-            .catch((error) => {
-              setTimeout(() => {
-                btnText.style.display = "inline";
-                btnSpinner.style.display = "none";
-                addProcedureBtn.disabled = false;
-                console.error("Erro ao adicionar procedimento:", error);
-              }, 3000);
-            });
-        }
+              .then((response) => response.json())
+              .then((data) => {
+                setTimeout(() => {
+                  btnText.style.display = "inline";
+                  btnSpinner.style.display = "none";
+                  addProcedureBtn.disabled = false;
+
+                  if (data.error) {
+                    console.error(data.error);
+                  } else {
+                    loadProcedures();
+                    procedureNameInput.value = "";
+                    procedurePriceInput.value = "";
+                    procedureDurationInput.value = "";
+                    checkFormValidity();
+                  }
+                }, 3000);
+              })
+              .catch((error) => {
+                setTimeout(() => {
+                  btnText.style.display = "inline";
+                  btnSpinner.style.display = "none";
+                  addProcedureBtn.disabled = false;
+                  console.error("Erro ao adicionar procedimento:", error);
+                }, 3000);
+              });
+          }
 
         function loadProcedures() {
           const token = localStorage.getItem("authToken");
@@ -409,7 +455,7 @@
               // Versão Desktop (Lista)
               const li = document.createElement("li");
               li.className = "list-group-item d-flex justify-content-between align-items-center";
-              li.textContent = `${procedure.name} - R$ ${price}`;
+              li.textContent = `${procedure.name} - Valor: R$ ${price} - Duração: ${procedure.duration ? procedure.duration + ' minutos' : 'Não informado'}`;
 
               const buttonGroup = document.createElement("div");
 
@@ -417,7 +463,7 @@
               editButton.className = "btn btn-sm btn-warning me-2";
               editButton.innerHTML = `<i class="fa fa-edit"></i>`;
               editButton.onclick = () =>
-                showEditModal(procedure._id, procedure.name, procedure.price);
+                showEditModal(procedure._id, procedure.name, procedure.price, procedure.duration);
               buttonGroup.appendChild(editButton);
 
               const deleteButton = document.createElement("button");
@@ -438,9 +484,10 @@
                   <div class="card-body">
                     <h5 class="card-title">${procedure.name}</h5>
                     <p>Preço: R$ ${price}</p>
+                    <p>Duração: ${procedure.duration ? procedure.duration + ' minutos' : 'Não informado'}</p>
                   </div>
                   <div class="card-footer d-flex justify-content-end">
-                    <button title="Editar Procedimento" class="btn btn-sm btn-warning me-2" onclick="showEditModal('${procedure._id}', '${procedure.name}', ${procedure.price || 0})">
+                    <button title="Editar Procedimento" class="btn btn-sm btn-warning me-2" onclick="showEditModal('${procedure._id}', '${procedure.name}', ${procedure.price || 0}, ${procedure.duration})">
                       <i class="fa fa-edit"></i>
                     </button>
                     <button title="Excluir Procedimento" class="btn btn-sm btn-danger" onclick="showDeleteModal('${procedure._id}')">
@@ -500,45 +547,47 @@
             }
           });
 
-        function saveProcedure(procedureId) {
-          const token = localStorage.getItem("authToken");
-          const name = editProcedureNameInput.value.trim();
-          const price = parseFloat(editProcedurePriceInput.value);
+          function saveProcedure(procedureId) {
+            const token = localStorage.getItem("authToken");
+            const name = editProcedureNameInput.value.trim();
+            const price = parseFloat(editProcedurePriceInput.value);
+            const duration = parseFloat(editProcedureDurationInput.value);
 
-          if (!name) {
-            validateEditProcedureName();
-            return;
-          }
+            if (!name) {
+              validateEditProcedureName();
+              return;
+            }
 
-          if (isNaN(price) || price <= 0) {
-            validateEditProcedurePrice();
-            return;
-          }
+            if (isNaN(price) || price <= 0) {
+              validateEditProcedurePrice();
+              return;
+            }
 
-          fetch(`/api/procedures/${procedureId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-            body: JSON.stringify({ name, price }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                const modal = bootstrap.Modal.getInstance(
-                  document.getElementById("editProcedureModal")
-                );
-                modal.hide();
-                loadProcedures();
-              } else {
-                console.error("Erro ao editar procedimento:", data.error);
-              }
+            if (isNaN(duration) || duration <= 0) {
+              validateEditProcedureDuration();
+              return;
+            }
+
+            fetch(`/api/procedures/${procedureId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: token ? `Bearer ${token}` : "",
+              },
+              body: JSON.stringify({ name, price, duration }),
             })
-            .catch((error) =>
-              console.error("Erro ao editar procedimento:", error)
-            );
-        }
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  const modal = bootstrap.Modal.getInstance(document.getElementById("editProcedureModal"));
+                  modal.hide();
+                  loadProcedures();
+                } else {
+                  console.error("Erro ao editar procedimento:", data.error);
+                }
+              })
+              .catch((error) => console.error("Erro ao editar procedimento:", error));
+          }
       });
     </script>
   </body>
