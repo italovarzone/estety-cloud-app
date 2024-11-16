@@ -46,6 +46,9 @@ router.post(
         concluida: false
       }).toArray();
 
+      // Variável para armazenar o horário disponível antes do conflito
+      let availableTimeBeforeConflict = null;
+
       // Verifique se há conflitos com base na duração dos procedimentos existentes
       for (const appointment of appointmentsOnDate) {
         // Obtenha a duração do procedimento associado ao agendamento
@@ -59,14 +62,23 @@ router.post(
         const existingStartMinutes = existingHours * 60 + existingMinutes;
         const existingEndMinutes = existingStartMinutes + existingDuration;
 
-        // Verifique se há sobreposição de horários
+        // Calcular a janela de segurança antes do início do agendamento existente
+        const safeBufferStart = existingStartMinutes - procedureDuration + 1;
+
+        let horarioDisponivelEmMinutos = convertTimeToMinutes(appointment.time) - procedureDuration;
+
+        // Verificar se há sobreposição de horários ou se o novo agendamento está dentro da janela de segurança
         if (
-          (requestedStartMinutes >= existingStartMinutes && requestedStartMinutes < existingEndMinutes) ||
-          (requestedEndMinutes > existingStartMinutes && requestedEndMinutes <= existingEndMinutes) ||
-          (requestedStartMinutes <= existingStartMinutes && requestedEndMinutes >= existingEndMinutes)
+          (requestedStartMinutes >= existingStartMinutes && requestedStartMinutes < existingEndMinutes) || // Novo início está dentro do intervalo existente
+          (requestedEndMinutes > existingStartMinutes && requestedEndMinutes <= existingEndMinutes) || // Novo fim está dentro do intervalo existente
+          (requestedStartMinutes <= existingStartMinutes && requestedEndMinutes >= existingEndMinutes) || // Novo intervalo engloba o intervalo existente
+          (requestedStartMinutes >= safeBufferStart && requestedStartMinutes < existingStartMinutes) // Novo início está dentro da janela de segurança
         ) {
+          // Calcular o horário disponível antes do conflito
+          availableTimeBeforeConflict = convertMinutesToTime(safeBufferStart);
+
           return res.status(409).json({
-            error: `O horário dessa data solicitado conflita com outro agendamento que será realizado das ${appointment.time} até ${convertMinutesToTime(existingEndMinutes)}, por gentiliza, informe outro horario.`
+            error: `O horário solicitado conflita com outro agendamento das ${appointment.time} até ${convertMinutesToTime(existingEndMinutes)} ou está dentro de uma janela de segurança! Tente as ${convertMinutesToTime(horarioDisponivelEmMinutos)} ou após as ${convertMinutesToTime(existingEndMinutes)}.`
           });
         }
       }
@@ -95,13 +107,17 @@ router.post(
   }
 );
 
+function convertTimeToMinutes(time) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
 // Função para converter minutos em formato de "HH:MM"
 function convertMinutesToTime(totalMinutes) {
   const hours = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
   const minutes = (totalMinutes % 60).toString().padStart(2, "0");
   return `${hours}:${minutes}`;
 }
-
 
 function convertToDatabaseDate(date) {
   const [day, month, year] = date.split('/');
