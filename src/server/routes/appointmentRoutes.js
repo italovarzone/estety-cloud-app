@@ -26,25 +26,52 @@ router.post(
       const db = req.db;
       const formattedDate = convertToDatabaseDate(date);
 
-      const existingAppointment = await db
-        .collection("appointments")
-        .findOne({ date: formattedDate, time });
-      if (existingAppointment) {
-        return res
-          .status(409)
-          .json({ error: "Já existe um agendamento para este horário." });
-      }
-
-      const procedure = await db
-        .collection("procedures")
-        .findOne({ name: procedureName });
+      // Verifique se o procedimento existe e obtenha sua duração
+      const procedure = await db.collection("procedures").findOne({ name: procedureName });
 
       if (!procedure) {
-        return res
-          .status(404)
-          .json({ error: "Procedimento não encontrado." });
+        return res.status(404).json({ error: "Procedimento não encontrado." });
       }
 
+      const procedureDuration = procedure.duration; // Duração do procedimento em minutos
+
+      // Converta o horário inicial para minutos para comparação
+      const [hours, minutes] = time.split(":").map(Number);
+      const requestedStartMinutes = hours * 60 + minutes;
+      const requestedEndMinutes = requestedStartMinutes + procedureDuration;
+
+      // Verifique todos os agendamentos não concluídos na data fornecida
+      const appointmentsOnDate = await db.collection("appointments").find({
+        date: formattedDate,
+        concluida: false
+      }).toArray();
+
+      // Verifique se há conflitos com base na duração dos procedimentos existentes
+      for (const appointment of appointmentsOnDate) {
+        // Obtenha a duração do procedimento associado ao agendamento
+        const existingProcedure = await db.collection("procedures").findOne({ name: appointment.procedure });
+        if (!existingProcedure) {
+          continue; // Ignore se o procedimento não for encontrado
+        }
+
+        const existingDuration = existingProcedure.duration;
+        const [existingHours, existingMinutes] = appointment.time.split(":").map(Number);
+        const existingStartMinutes = existingHours * 60 + existingMinutes;
+        const existingEndMinutes = existingStartMinutes + existingDuration;
+
+        // Verifique se há sobreposição de horários
+        if (
+          (requestedStartMinutes >= existingStartMinutes && requestedStartMinutes < existingEndMinutes) ||
+          (requestedEndMinutes > existingStartMinutes && requestedEndMinutes <= existingEndMinutes) ||
+          (requestedStartMinutes <= existingStartMinutes && requestedEndMinutes >= existingEndMinutes)
+        ) {
+          return res.status(409).json({
+            error: `O horário dessa data solicitado conflita com outro agendamento que será realizado das ${appointment.time} até ${convertMinutesToTime(existingEndMinutes)}, por gentiliza, informe outro horario.`
+          });
+        }
+      }
+
+      // Insira o novo agendamento se não houver conflitos
       const result = await db.collection("appointments").insertOne({
         clientId: new ObjectId(clientId),
         procedure: procedure.name,
@@ -67,6 +94,14 @@ router.post(
     }
   }
 );
+
+// Função para converter minutos em formato de "HH:MM"
+function convertMinutesToTime(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
+  const minutes = (totalMinutes % 60).toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
 
 function convertToDatabaseDate(date) {
   const [day, month, year] = date.split('/');
