@@ -350,9 +350,6 @@ function loadAppointments() {
                             } onclick="concludeAppointment('${appointment.id}')">
                                 <i class="fa-regular fa-circle-check"></i>
                             </button>
-                            <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
-                                <i class="fa-solid fa-calendar-alt"></i>
-                            </button>
                             <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
                                 filterStatus === "concluidos" ? "disabled" : ""
                             } onclick="cancelAppointment('${appointment.id}')">
@@ -361,7 +358,9 @@ function loadAppointments() {
                         </td>
                     `;
                     tbody.appendChild(tr);
-
+                    // <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
+                    //     <i class="fa-solid fa-calendar-alt"></i>
+                    // </button>
                     // Renderiza o card para mobile
                     const card = document.createElement("div");
                     card.classList.add("col-md-6", "col-lg-4");
@@ -381,9 +380,6 @@ function loadAppointments() {
                                 } onclick="concludeAppointment('${appointment.id}')">
                                     <i class="fa-regular fa-circle-check"></i>
                                 </button>
-                                <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
-                                    <i class="fa-solid fa-calendar-alt"></i>
-                                </button>
                                 <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
                                     filterStatus === "concluidos" ? "disabled" : ""
                                 } onclick="cancelAppointment('${appointment.id}')">
@@ -394,7 +390,9 @@ function loadAppointments() {
                     `;
                     container.appendChild(card);
                 });
-
+                // <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
+                //     <i class="fa-solid fa-calendar-alt"></i>
+                // </button>
                 // Inicia o processamento dos agendamentos vencidos
                 processExpiredAppointments();
                 isLoading = false;
