@@ -25,25 +25,64 @@ router.post(
       const db = req.db;
       const formattedDate = convertToDatabaseDate(date);
 
-      const existingAppointment = await db
-        .collection("appointments")
-        .findOne({ date: formattedDate, time });
-      if (existingAppointment) {
-        return res
-          .status(409)
-          .json({ error: "Já existe um agendamento para este horário." });
-      }
-
-      const procedure = await db
-        .collection("procedures")
-        .findOne({ name: procedureName });
+      // Verifique se o procedimento existe e obtenha sua duração
+      const procedure = await db.collection("procedures").findOne({ name: procedureName });
 
       if (!procedure) {
-        return res
-          .status(404)
-          .json({ error: "Procedimento não encontrado." });
+        return res.status(404).json({ error: "Procedimento não encontrado." });
       }
 
+      const procedureDuration = procedure.duration; // Duração do procedimento em minutos
+
+      // Converta o horário inicial para minutos para comparação
+      const [hours, minutes] = time.split(":").map(Number);
+      const requestedStartMinutes = hours * 60 + minutes;
+      const requestedEndMinutes = requestedStartMinutes + procedureDuration;
+
+      // Verifique todos os agendamentos não concluídos na data fornecida
+      const appointmentsOnDate = await db.collection("appointments").find({
+        date: formattedDate,
+        concluida: false
+      }).toArray();
+
+      // Variável para armazenar o horário disponível antes do conflito
+      let availableTimeBeforeConflict = null;
+
+      // Verifique se há conflitos com base na duração dos procedimentos existentes
+      for (const appointment of appointmentsOnDate) {
+        // Obtenha a duração do procedimento associado ao agendamento
+        const existingProcedure = await db.collection("procedures").findOne({ name: appointment.procedure });
+        if (!existingProcedure) {
+          continue; // Ignore se o procedimento não for encontrado
+        }
+
+        const existingDuration = existingProcedure.duration;
+        const [existingHours, existingMinutes] = appointment.time.split(":").map(Number);
+        const existingStartMinutes = existingHours * 60 + existingMinutes;
+        const existingEndMinutes = existingStartMinutes + existingDuration;
+
+        // Calcular a janela de segurança antes do início do agendamento existente
+        const safeBufferStart = existingStartMinutes - procedureDuration + 1;
+
+        let horarioDisponivelEmMinutos = convertTimeToMinutes(appointment.time) - procedureDuration;
+
+        // Verificar se há sobreposição de horários ou se o novo agendamento está dentro da janela de segurança
+        if (
+          (requestedStartMinutes >= existingStartMinutes && requestedStartMinutes < existingEndMinutes) || // Novo início está dentro do intervalo existente
+          (requestedEndMinutes > existingStartMinutes && requestedEndMinutes <= existingEndMinutes) || // Novo fim está dentro do intervalo existente
+          (requestedStartMinutes <= existingStartMinutes && requestedEndMinutes >= existingEndMinutes) || // Novo intervalo engloba o intervalo existente
+          (requestedStartMinutes >= safeBufferStart && requestedStartMinutes < existingStartMinutes) // Novo início está dentro da janela de segurança
+        ) {
+          // Calcular o horário disponível antes do conflito
+          availableTimeBeforeConflict = convertMinutesToTime(safeBufferStart);
+
+          return res.status(409).json({
+            error: `O horário solicitado conflita com outro agendamento das ${appointment.time} até ${convertMinutesToTime(existingEndMinutes)} ou está dentro de uma janela de segurança! Tente as ${convertMinutesToTime(horarioDisponivelEmMinutos)} ou após as ${convertMinutesToTime(existingEndMinutes)}.`
+          });
+        }
+      }
+
+      // Insira o novo agendamento se não houver conflitos
       const result = await db.collection("appointments").insertOne({
         clientId: new ObjectId(clientId),
         procedure: procedure.name,
@@ -66,6 +105,18 @@ router.post(
     }
   }
 );
+
+function convertTimeToMinutes(time) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+// Função para converter minutos em formato de "HH:MM"
+function convertMinutesToTime(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
+  const minutes = (totalMinutes % 60).toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
 
 function convertToDatabaseDate(date) {
   const [day, month, year] = date.split('/');
