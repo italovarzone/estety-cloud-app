@@ -366,34 +366,34 @@ router.get(
 );
 
 // Rota para reagendar um agendamento
-router.put(
-  "/api/appointments/:id/reschedule",
-  authenticateToken,
-  ensureDbConnection,
-  async (req, res) => {
-    const { id } = req.params;
-    const { date, time } = req.body;
+// router.put(
+//   "/api/appointments/:id/reschedule",
+//   authenticateToken,
+//   ensureDbConnection,
+//   async (req, res) => {
+//     const { id } = req.params;
+//     const { date, time } = req.body;
 
-    if (!date || !time) {
-      return res.status(400).json({ error: "Data e hora são obrigatórias." });
-    }
+//     if (!date || !time) {
+//       return res.status(400).json({ error: "Data e hora são obrigatórias." });
+//     }
 
-    try {
-      const db = req.db;
-      const result = await db
-        .collection("appointments")
-        .updateOne({ _id: new ObjectId(id) }, { $set: { date, time } });
+//     try {
+//       const db = req.db;
+//       const result = await db
+//         .collection("appointments")
+//         .updateOne({ _id: new ObjectId(id) }, { $set: { date, time } });
 
-      if (result.modifiedCount === 0) {
-        return res.status(404).json({ error: "Agendamento não encontrado." });
-      }
-      res.json({ success: true });
-    } catch (err) {
-      console.error("Erro ao reagendar agendamento:", err.message);
-      res.status(500).json({ error: "Erro ao reagendar agendamento." });
-    }
-  }
-);
+//       if (result.modifiedCount === 0) {
+//         return res.status(404).json({ error: "Agendamento não encontrado." });
+//       }
+//       res.json({ success: true });
+//     } catch (err) {
+//       console.error("Erro ao reagendar agendamento:", err.message);
+//       res.status(500).json({ error: "Erro ao reagendar agendamento." });
+//     }
+//   }
+// );
 
 // Rota para concluir agendamento
 router.put(
