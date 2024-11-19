@@ -8,6 +8,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="../assets/icons/favicon.ico" rel="favicon"/>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Edu+AU+VIC+WA+NT+Pre:wght@500&family=Pacifico&display=swap');
+
         body {
             margin: 0;
             padding: 0;
@@ -23,8 +25,12 @@
             z-index: 1;
         }
 
+        h3 {
+            font-family: "Pacifico", cursive;
+        }
+
         .sidebar {
-            width: 250px;
+            width: 60px; /* Mantém sempre minimizada */
             background-color: #c378dc;
             color: white;
             padding-top: 20px;
@@ -32,12 +38,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .sidebar.minimized {
-            width: 60px;
-            align-items: center;
+            align-items: center; /* Alinhamento centrado para ícones */
         }
 
         .sidebar a, .module-btn {
@@ -46,7 +47,7 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center; /* Ícones centralizados */
             font-size: 16px;
             transition: all 0.3s ease;
             width: 100%;
@@ -55,21 +56,8 @@
             cursor: pointer;
         }
 
-        .sidebar.minimized a, .sidebar.minimized .module-btn {
-            justify-content: center;
-        }
-
         .sidebar a i, .module-btn i {
-            margin-right: 10px;
             font-size: 20px;
-        }
-
-        .sidebar.minimized a i, .sidebar.minimized .module-btn i {
-            margin: 0;
-        }
-
-        .sidebar.minimized a span, .sidebar.minimized .module-btn span {
-            display: none;
         }
 
         .content {
@@ -117,29 +105,6 @@
             background-color: #9c5fb1;
         }
 
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between; /* Ajustado para exibir conteúdo */
-            align-items: center;
-            padding: 10px;
-        }
-
-        .toggle-btn {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 24px;
-            background-color: transparent;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar.minimized .toggle-btn span {
-            display: none; /* Esconde o texto quando minimizada */
-        }
-
         .sidebar-logout {
             display: flex;
             justify-content: center;
@@ -161,56 +126,24 @@
             margin-right: 10px;
         }
 
-        .sidebar.minimized .sidebar-logout a i {
-            margin: 0;
-        }
-
-        .sidebar.minimized .sidebar-logout a span {
-            display: none;
-        }
-
         .sidebar-logout a:hover {
             background-color: #9a534b !important;
-        }
-
-        @media (max-width: 767px) {
-            .sidebar {
-                width: 60px; /* Sempre minimizada */
-                height: 100%;
-                overflow-y: auto;
-                z-index: 1000;
-            }
-
-            /* .content {
-                width: 100%;
-                padding: 15px;
-            } */
-
-            .floating-menu {
-                left: 70%;
-            }
-
-            .toggle-btn {
-                pointer-events: none; /* Desativa o botão de toggle */
-                opacity: 0.5; /* Visualmente indica que está desativado */
-            }
         }
     </style>
 </head>
 <body>
 <div class="wrapper">
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <button class="toggle-btn" id="toggle-btn">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
         <!-- Módulos -->
-        <button class="module-btn" data-module="clientes"><i class="fas fa-users"></i><span>Clientes</span></button>
-        <button class="module-btn" data-module="agendamentos"><i class="fas fa-briefcase"></i><span>Agendamentos</span></button>
-        <button class="module-btn" data-module="procedimentos"><i class="fas fa-tools"></i><span>Procedimentos</span></button>
-        <button class="module-btn" data-module="utilitarios"><i class="fas fa-ellipsis"></i><span>Utilitarios</span></button>
-        <button class="module-btn" data-module="opcoes"><i class="fas fa-cog"></i><span>Opções</span></button>
+         <h3>
+            La
+         </h3>
+        <p>____</p>
+        <button class="module-btn" data-module="clientes"><i class="fas fa-users"></i></button>
+        <button class="module-btn" data-module="agendamentos"><i class="fas fa-briefcase"></i></button>
+        <button class="module-btn" data-module="procedimentos"><i class="fas fa-tools"></i></button>
+        <button class="module-btn" data-module="utilitarios"><i class="fas fa-ellipsis"></i></button>
+        <button class="module-btn" data-module="opcoes"><i class="fas fa-cog"></i></button>
     </div>
 
     <!-- Menu Flutuante -->
@@ -225,58 +158,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    window.location.href = '/login';
-  }
+document.addEventListener('DOMContentLoaded', function () {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        window.location.href = '/login';
+    }
 });
 
-const toggleBtn = document.getElementById('toggle-btn');
 const sidebar = document.getElementById('sidebar');
 const content = document.querySelector('.content');
 const floatingMenu = document.getElementById('floating-menu');
 const moduleButtons = document.querySelectorAll('.module-btn');
 let currentOpenModule = null; // Track the currently open module
-
-// Verifica a largura da tela ao carregar a página e ajusta a sidebar
-function checkScreenWidth() {
-    if (window.innerWidth <= 768) {
-        sidebar.classList.add('minimized');
-        content.classList.add('expanded');
-        localStorage.setItem('sidebarState', 'minimized');
-        toggleBtn.style.pointerEvents = 'none'; // Desativa o botão de toggle
-        toggleBtn.style.opacity = '0.5'; // Indica visualmente que o botão está desativado
-    } else {
-        sidebar.classList.remove('minimized');
-        content.classList.remove('expanded');
-        localStorage.setItem('sidebarState', 'expanded');
-        toggleBtn.style.pointerEvents = 'auto'; // Ativa o botão de toggle
-        toggleBtn.style.opacity = '1'; // Remove a opacidade reduzida
-    }
-}
-
-// Executa a função ao carregar a página
-checkScreenWidth();
-
-// Ajusta a sidebar quando a janela é redimensionada
-window.addEventListener('resize', checkScreenWidth);
-
-// Alterna a barra lateral entre minimizada e expandida
-toggleBtn.addEventListener('click', function () {
-    if (window.innerWidth > 768) { // Permite apenas se a tela for maior que 768px
-        sidebar.classList.toggle('minimized');
-        content.classList.toggle('expanded');
-        adjustFloatingMenuPosition(); // Ajusta a posição do menu flutuante conforme o estado da sidebar
-
-        // Salva o estado da sidebar no localStorage
-        if (sidebar.classList.contains('minimized')) {
-            localStorage.setItem('sidebarState', 'minimized');
-        } else {
-            localStorage.setItem('sidebarState', 'expanded');
-        }
-    }
-});
 
 // Abre o menu flutuante com as opções do módulo
 moduleButtons.forEach(button => {
@@ -297,11 +190,7 @@ moduleButtons.forEach(button => {
 
 // Função para ajustar a posição do menu flutuante
 function adjustFloatingMenuPosition() {
-    if (sidebar.classList.contains('minimized')) {
-        floatingMenu.style.left = '60px'; // Alinhamento para a sidebar minimizada
-    } else {
-        floatingMenu.style.left = '250px'; // Alinhamento para a sidebar expandida
-    }
+    floatingMenu.style.left = '60px'; // Alinhamento para a sidebar minimizada
 }
 
 // Função para exibir o menu flutuante
@@ -320,7 +209,8 @@ function showFloatingMenu(module, buttonElement) {
     switch (module) {
         case 'opcoes':
             menuItems = [
-                { text: 'Sair', href: '#', icon: 'fas fa-sign-out-alt', action: handleLogout }
+                { text: 'Sair', href: '#', icon: 'fas fa-sign-out-alt', action: handleLogout },
+                { text: '1.0-beta', icon: 'fas fa-code', isTextOnly: true } // Adicione uma flag indicando que é um texto simples
             ];
             break;
         case 'clientes':
@@ -335,10 +225,9 @@ function showFloatingMenu(module, buttonElement) {
                 { text: 'Meus Agendamentos', href: 'pages/agendamentos/listagem.html', icon: 'fas fa-calendar' }
             ];
             break;
-        // Atualizando o caso 'procedimentos' para incluir 'Cadastrar Mensagens'
         case 'procedimentos':
             menuItems = [
-                { text: 'Cadastrar Procedimento', href: 'pages/procedimentos/cadastro.html', icon: 'fas fa-tools' },
+                { text: 'Cadastrar Procedimento', href: 'pages/procedimentos/cadastro.html', icon: 'fas fa-tools' }
             ];
             break;
         case 'utilitarios':
@@ -346,26 +235,38 @@ function showFloatingMenu(module, buttonElement) {
                 { text: 'Dashboard', href: 'pages/dashboard/dashboard.html', icon: 'fas fa-chart-line' },
                 { text: 'Calendário', href: 'pages/calendario/calendario.html', icon: 'fas fa-calendar-alt' },
                 { text: 'Cadastrar Tarefa', href: 'pages/tarefas/cadastro.html', icon: 'fas fa-tasks' },
-                { text: 'Cadastrar Mensagens', href: 'pages/mensagens/cadastro.html', icon: 'fas fa-comment-dots' } // Novo item adicionado
+                { text: 'Cadastrar Mensagens', href: 'pages/mensagens/cadastro.html', icon: 'fas fa-comment-dots' }
             ];
             break;
     }
 
-    // Adiciona os itens ao menu flutuante
-    menuItems.forEach(item => {
-        const link = document.createElement('a');
-        link.innerHTML = `<i class="${item.icon}"></i> ${item.text}`;
-        link.href = item.href;
-        if (item.action) {
-            link.addEventListener('click', item.action);
+    function teste() {
+
+    }
+        // Adiciona os itens ao menu flutuante
+        menuItems.forEach(item => {
+        let element;
+
+        if (item.isTextOnly) {
+            element = document.createElement('div');
+            element.innerHTML = `<i class="${item.icon || ''}"></i> ${item.text}`;
+            element.style.padding = '10px';
+            element.style.color = '#333'; // Ajuste de estilo, se necessário
         } else {
-            link.onclick = function (event) {
-                event.preventDefault();
-                document.getElementById('content-frame').src = item.href;
-                closeFloatingMenu(); // Fecha o menu após clicar
-            };
+            element = document.createElement('a');
+            element.innerHTML = `<i class="${item.icon}"></i> ${item.text}`;
+            element.href = item.href;
+            if (item.action) {
+                element.addEventListener('click', item.action);
+            } else {
+                element.onclick = function (event) {
+                    event.preventDefault();
+                    document.getElementById('content-frame').src = item.href;
+                    closeFloatingMenu(); // Fecha o menu após clicar
+                };
+            }
         }
-        floatingMenu.appendChild(link);
+        floatingMenu.appendChild(element);
     });
 
     // Adiciona o manipulador de evento para fechar o menu ao clicar fora
