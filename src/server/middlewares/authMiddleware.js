@@ -43,6 +43,11 @@ async function ensureDbConnection(req, res, next) {
 }
 
 function authenticateToken(req, res, next) {
+  // Ignora requisições para arquivos estáticos
+  if (req.path.startsWith('/src/app/assets')) {
+    return next();
+  }
+
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -61,6 +66,7 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+
 
 function normalizeText(text) {
   return diacritics.remove(text.toLowerCase());

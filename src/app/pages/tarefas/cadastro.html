@@ -7,6 +7,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+
+      .btn {
+        color: #9d8983 !important;
+        background-color: white !important;
+        border-color: #bca49d !important;
+      }
+
+      .btn:hover {
+        background-color: rgb(231, 231, 231) !important;
+      }
+
         .btn-success {
             color:  rgb(66, 167, 90) !important;
             background-color: white !important;
@@ -77,7 +88,7 @@
                 <div id="task-time-error" class="error-message"></div>
             </div>
             <div class="col-12">
-                <button style="color: #bc61da !important; background-color: white !important; border-color: #c378dc !important;" type="submit" id="add-task-btn" class="btn btn-primary" disabled>
+                <button type="submit" id="add-task-btn" class="btn btn-primary" disabled>
                     <span id="btn-text">Cadastrar Tarefa</span>
                     <span id="btn-spinner" class="spinner-border spinner-border-sm" style="display: none"></span>
                 </button>

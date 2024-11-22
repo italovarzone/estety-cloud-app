@@ -37,6 +37,8 @@ app.use(proceduresRoutes);
 app.use(consentRoutes);
 
 app.use('/login', authRoutes);
+app.use('/assets/logo-app.png', express.static(path.join(__dirname, '../app', 'assets', 'logo-app.png')));
+app.use('/assets/logo-app-sem-texto.png', express.static(path.join(__dirname, '../app', 'assets', 'logo-app-sem-texto.png')));
 app.use(authenticateToken);
 
 // Rota principal protegida (home)
