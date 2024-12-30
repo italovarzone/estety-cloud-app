@@ -1,10 +1,9 @@
 const express = require('express');
 const path = require('path');
-const session = require('express-session');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-const { ensureDbConnection, authenticateToken } = require('./middlewares/authMiddleware');
+const { authenticateToken } = require('./middlewares/authMiddleware');
 
 // Rotas importadas
 const appointmentRoutes = require('./routes/appointmentRoutes');
@@ -16,14 +15,14 @@ const authRoutes = require('./routes/authRoutes');
 const miscRoutes = require('./routes/miscRoutes');
 const proceduresRoutes = require('./routes/proceduresRoutes');
 const consentRoutes = require('./routes/consentRoutes');
+const cors = require('cors');
 
 const app = express();
 const PORT = 10000;
 
-app.use(session({ secret: 'secretkey', resave: false, saveUninitialized: true, cookie: { secure: false } }));
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../app')));
 
 // Rotas
 app.use(authRoutes);
@@ -35,50 +34,7 @@ app.use(dashboardRoutes);
 app.use(miscRoutes);
 app.use(proceduresRoutes);
 app.use(consentRoutes);
-
-app.use('/login', authRoutes);
-app.use('/assets/logo-app.png', express.static(path.join(__dirname, '../app', 'assets', 'logo-app.png')));
-app.use('/assets/logo-app-sem-texto.png', express.static(path.join(__dirname, '../app', 'assets', 'logo-app-sem-texto.png')));
 app.use(authenticateToken);
-
-// Rota principal protegida (home)
-app.get('/', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'index.html'));
-});
-
-// Rotas para arquivos estáticos
-app.get('/pages/clientes/listagem.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'listagem.html'));
-});
-
-app.get('/pages/clientes/ficha_tecnica/ficha_tecnica.html', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'ficha_tecnica', 'ficha_tecnica.html'));
-});
-
-app.get('/pages/clientes/cadastro.html', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'clientes', 'cadastro.html'));
-});
-
-app.get('/pages/agendamentos/listagem.html', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'agendamentos', 'listagem.html'));
-});
-
-app.get('/pages/dashboard/dashboard.html', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'dashboard', 'dashboard.html'));
-});
-
-app.get('/pages/calendario/calendario.html', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'calendario', 'calendario.html'));
-});
-
-// Rota para a página de cadastro de procedimentos
-app.get('/pages/procedimentos/cadastro.html', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'procedimentos', 'cadastro.html'));
-});
-
-app.get('/pages/mensagens/cadastro.html', ensureDbConnection, (req, res) => {
-  res.sendFile(path.join(__dirname, '../app', 'pages', 'mensagens', 'cadastro.html'));
-});
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}...`);

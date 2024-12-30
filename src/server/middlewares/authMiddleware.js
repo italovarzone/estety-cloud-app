@@ -43,26 +43,18 @@ async function ensureDbConnection(req, res, next) {
 }
 
 function authenticateToken(req, res, next) {
-  // Ignora requisições para arquivos estáticos
-  if (req.path.startsWith('/src/app/assets')) {
-    return next();
-  }
-
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    // Se o token não estiver presente, redireciona para o login
-    return res.redirect('/login');
+    return res.status(401).json({ error: 'Token não fornecido' });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      console.error('Erro ao verificar o token:', err);
-      // Se o token for inválido, redireciona para o login
-      return res.redirect('/login');
+      return res.status(403).json({ error: 'Token inválido' });
     }
-    req.user = user; // Define o usuário autenticado no request
+    req.user = user;
     next();
   });
 }

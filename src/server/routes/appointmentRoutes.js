@@ -424,6 +424,7 @@ router.delete(
   authenticateToken,
   ensureDbConnection,
   async (req, res) => {
+    debugger;
     const { id } = req.params; // Obtenha o ID do agendamento dos parâmetros da URL
 
     try {
