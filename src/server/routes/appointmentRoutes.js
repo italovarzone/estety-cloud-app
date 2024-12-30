@@ -145,9 +145,9 @@ router.get("/api/appointments/calendario", authenticateToken, ensureDbConnection
       {
         $lookup: {
           from: "clients",            // Nome da coleção de clientes
-          localField: "clientId",      // Campo em "appointments" que referencia o cliente
-          foreignField: "_id",         // Campo em "clients" que corresponde ao "clientId"
-          as: "clientData"             // Nome do campo resultante com os dados do cliente
+          localField: "clientId",     // Campo em "appointments" que referencia o cliente
+          foreignField: "_id",        // Campo em "clients" que corresponde ao "clientId"
+          as: "clientData"            // Nome do campo resultante com os dados do cliente
         }
       },
       { $unwind: "$clientData" },      // Descompacta o array clientData para um objeto único
@@ -160,8 +160,9 @@ router.get("/api/appointments/calendario", authenticateToken, ensureDbConnection
           concluida: 1,
           "client.name": "$clientData.name" // Inclui apenas o nome do cliente
         }
-      }
-    ]).toArray();
+      },
+      { $sort: { time: 1 } }           // Ordena por horário (campo "time") em ordem crescente
+    ]).toArray();    
 
     res.json({ appointments });
   } catch (err) {
