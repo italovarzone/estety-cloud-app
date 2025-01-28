@@ -416,33 +416,60 @@ function formatDateForDisplay(dateString) {
 let isLoading = false;
 // Função para carregar agendamentos
 function loadAppointments() {
-    const tbody = document.querySelector("#appointment-table tbody");
-    const container = document.getElementById("appointments-container");
-    tbody.innerHTML = "";
-    container.innerHTML = "";
+    if (isLoading) return; // Impede chamadas concorrentes
+    isLoading = true;
 
-    expiredAppointmentsQueue = []; // Limpa a fila de vencidos
+    const filterStatus = document.getElementById("filter-status").value;
+    const filterName = document.getElementById("filter-name").value.toLowerCase();
+    const filterOlderThan20Days = document.getElementById("filter-older-than-20-days").checked;
 
-    fetchWithToken("/api/appointments")
+    let url = "/api/appointments";
+    const params = new URLSearchParams();
+
+    // Filtro de status
+    params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
+
+    // Filtro de nome do cliente
+    if (filterName) {
+        params.append('search', filterName);
+    }
+
+    // Filtro de "há mais de 20 dias"
+    if (filterStatus === 'concluidos' && filterOlderThan20Days) {
+        params.append('olderThan20Days', 'true');
+    }
+
+    url += '?' + params.toString();
+
+    fetchWithToken(url)
         .then((response) => response.json())
         .then((data) => {
+            const tbody = document.querySelector("#appointment-table tbody");
+            tbody.innerHTML = "";
+
+            const container = document.getElementById("appointments-container");
+            container.innerHTML = "";
+
+            expiredAppointmentsQueue = []; // Limpa a fila de vencidos
+
             if (data.appointments && data.appointments.length > 0) {
+                const now = new Date();
+                const todayDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+                const currentHourMinute = now.toTimeString().slice(0, 5); // HH:mm
+
                 data.appointments.forEach((appointment) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    
-                    const appointmentDate = new Date(appointment.date);
-                    appointmentDate.setHours(0, 0, 0, 0);
+                    const appointmentDate = appointment.date;
+                    const appointmentTime = appointment.time;
 
-                    const isToday = appointment.date === today.toISOString().split("T")[0];
-                    const isTimeExpired = isToday && appointment.time < new Date().toTimeString().slice(0, 5);
-                    const isExpired = appointmentDate < today || isTimeExpired;
+                    const isToday = appointmentDate === todayDate;
+                    const isTimeExpired = isToday && appointmentTime < currentHourMinute;
+                    const isExpired = appointmentDate < todayDate || isTimeExpired;
 
-                    if (isExpired) {
+                    // Adiciona os vencidos à fila apenas se o status for "não concluído"
+                    if (filterStatus === 'nao-concluidos' && isExpired) {
                         expiredAppointmentsQueue.push(appointment);
                     }
 
-                    // Renderiza a tabela para desktop
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td>${appointment.client.name}</td>
@@ -451,17 +478,21 @@ function loadAppointments() {
                         <td>${formatDateForDisplay(appointment.date)}</td>
                         <td>${appointment.time}</td>
                         <td>
-                            <button class="btn btn-sm btn-success" onclick="concludeAppointment('${appointment.id}')">
+                            <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
+                                filterStatus === "concluidos" ? "disabled" : ""
+                            } onclick="concludeAppointment('${appointment.id}')">
                                 <i class="fa-regular fa-circle-check"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="cancelAppointment('${appointment.id}')">
+                            <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
+                                filterStatus === "concluidos" ? "disabled" : ""
+                            } onclick="cancelAppointment('${appointment.id}')">
                                 <i class="fa-solid fa-ban"></i>
                             </button>
                         </td>
                     `;
                     tbody.appendChild(tr);
 
-                    // Renderiza os cards para mobile
+                    // 📱 Renderiza os cards (Mobile)
                     const card = document.createElement("div");
                     card.classList.add("col-12", "col-md-6");
                     card.innerHTML = `
@@ -474,10 +505,14 @@ function loadAppointments() {
                                 <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
                             </div>
                             <div class="card-footer d-flex justify-content-end gap-2">
-                                <button class="btn btn-sm btn-success" onclick="concludeAppointment('${appointment.id}')">
+                                <button class="btn btn-sm btn-success" ${
+                                    filterStatus === "concluidos" ? "disabled" : ""
+                                } onclick="concludeAppointment('${appointment.id}')">
                                     <i class="fa-regular fa-circle-check"></i> Concluir
                                 </button>
-                                <button class="btn btn-sm btn-danger" onclick="cancelAppointment('${appointment.id}')">
+                                <button class="btn btn-sm btn-danger" ${
+                                    filterStatus === "concluidos" ? "disabled" : ""
+                                }  onclick="cancelAppointment('${appointment.id}')">
                                     <i class="fa-solid fa-ban"></i> Deletar
                                 </button>
                             </div>
@@ -485,18 +520,22 @@ function loadAppointments() {
                     `;
                     container.appendChild(card);
                 });
-
-                // Atualiza o sino de notificações
                 processExpiredAppointments();
             } else {
                 displayNoAppointmentsMessage(tbody, container);
             }
+
+            isLoading = false;
         })
         .catch((error) => {
             console.error("Erro ao carregar agendamentos:", error);
+            const tbody = document.querySelector("#appointment-table tbody");
+            const container = document.getElementById("appointments-container");
             displayNoAppointmentsMessage(tbody, container, true);
+            isLoading = false;
         });
 }
+
 
 let appointmentToReschedule = null;
 
