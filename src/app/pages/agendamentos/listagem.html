@@ -463,13 +463,16 @@ document.getElementById('confirmRescheduleButton').addEventListener('click', asy
 
 // Função para formatar a data no formato "08 de outubro de 2024"
 function formatDate(dateString) {
-    const date = new Date(dateString); // Converte a string de data em um objeto Date
+    const dateParts = dateString.split('-'); // Divide "YYYY-MM-DD"
+    const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); // Ano, mês (0-indexado), dia
+
     return date.toLocaleDateString('pt-BR', { 
         day: '2-digit', 
         month: 'long', 
         year: 'numeric' 
     });
 }
+
 
 // Função para processar agendamentos vencidos
 function processExpiredAppointments() {
