@@ -63,6 +63,84 @@
             height: calc(100% - 50px); /* Ajusta a altura para ocupar o restante da sidebar */
         }
 
+        /* Estilização do botão flutuante do sino */
+        .notification-bell {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background-color: #bca49d; /* Vermelho Bootstrap */
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Contador de agendamentos vencidos no sino */
+        .notification-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: red;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Estilizando os itens da lista */
+        .expired-appointment-item {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Nome do cliente */
+        .expired-appointment-item strong {
+            font-size: 16px;
+            color: #333;
+        }
+
+        /* Informações adicionais */
+        .expired-appointment-item small {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Botões de ação */
+        .expired-appointment-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .expired-appointment-actions button {
+            font-size: 14px;
+            padding: 6px 12px;
+            width: 100%;
+        }
+
+        /* Ocultar contador quando não houver agendamentos vencidos */
+        .hidden {
+            display: none;
+        }
+
         iframe {
             width: 100%;
             height: 100%;
@@ -80,6 +158,48 @@
 
             #openCalendarButton {
                 right: -1%;
+            }
+
+            .notification-bell {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .notification-count {
+                font-size: 10px;
+                width: 16px;
+                height: 16px;
+                top: 3px;
+                right: 3px;
+            }
+
+            .modal-dialog {
+                max-width: 95vw;
+                margin: 10px auto;
+            }
+
+            .modal-content {
+                border-radius: 10px;
+            }
+
+            .modal-body {
+                max-height: 75vh;
+                overflow-y: auto;
+            }
+
+            .modal-header {
+                font-size: 16px;
+                padding: 10px 15px;
+            }
+
+            .modal-title {
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            .btn-close {
+                font-size: 14px;
             }
         }
 
@@ -152,7 +272,7 @@
     <!-- Modais para ambos Mobile e Desktop -->
     <!-- Modal de Confirmação de Conclusão -->
     <div class="modal fade" id="confirmConcludeModal" tabindex="-1" aria-labelledby="confirmConcludeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="confirmConcludeModalLabel">Confirmar Conclusão</h5>
@@ -160,8 +280,8 @@
                 </div>
                 <div class="modal-body">Tem certeza que deseja concluir este agendamento?</div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="confirmConcludeButton" class="btn btn-success">Concluir</button>
+                    <button style="width: 100%;" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button style="width: 100%;" type="button" id="confirmConcludeButton" class="btn btn-success">Concluir</button>
                 </div>
             </div>
         </div>
@@ -169,7 +289,7 @@
 
     <!-- Modal de Confirmação de Exclusão -->
     <div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="confirmCancelModalLabel">Confirmar Exclusão</h5>
@@ -177,8 +297,8 @@
                 </div>
                 <div class="modal-body">Tem certeza que deseja cancelar e remover este agendamento?</div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" id="confirmCancelButton" class="btn btn-danger">Excluir</button>
+                    <button style="width: 100%;" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button style="width: 100%;" type="button" id="confirmCancelButton" class="btn btn-danger">Excluir</button>
                 </div>
             </div>
         </div>
@@ -186,7 +306,7 @@
 
     <!-- Modal para Agendamentos Vencidos -->
     <div class="modal fade" id="expiredAppointmentModal" tabindex="-1" aria-labelledby="expiredAppointmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="expiredAppointmentModalLabel">Agendamentos Vencidos</h5>
@@ -194,13 +314,14 @@
                 </div>
                 <div class="modal-body">
                     <p>Os seguintes agendamentos estão vencidos. Escolha uma ação:</p>
-                    <div id="expiredAppointmentList" class="list-group">
+                    <div id="expiredAppointmentList">
                         <!-- Lista dinâmica de agendamentos vencidos será inserida aqui -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Botão de Calendário -->
     <button id="openCalendarButton">
@@ -248,7 +369,10 @@
             </div>
         </div>
     </div>
-
+    <button id="notificationBell" class="notification-bell" onclick="showExpiredAppointmentsModal()">
+        <i class="fa-solid fa-bell"></i>
+        <span id="notificationCount" class="notification-count hidden">0</span>
+    </button>
     <script>
 document.addEventListener("DOMContentLoaded", init);
 
@@ -481,16 +605,28 @@ function formatDate(dateString) {
 }
 
 function processExpiredAppointments() {
-    if (expiredAppointmentsQueue.length === 0) return;
+    const notificationBell = document.getElementById("notificationBell");
+    const notificationCount = document.getElementById("notificationCount");
 
+    // Atualiza o contador se houver agendamentos vencidos
+    if (expiredAppointmentsQueue.length > 0) {
+        notificationCount.textContent = expiredAppointmentsQueue.length;
+        notificationCount.classList.remove("hidden"); // Exibe o número
+    } else {
+        notificationCount.classList.add("hidden"); // Oculta o número se não houver vencidos
+    }
+
+    // O sino sempre será visível, mesmo sem agendamentos vencidos
+    notificationBell.style.display = "flex";
+}
+
+function showExpiredAppointmentsModal() {
     const modalBody = document.getElementById("expiredAppointmentList");
     modalBody.innerHTML = "";
 
     const now = new Date();
-    const currentHourMinute = now.toTimeString().slice(0, 5); // Captura "HH:mm"
-    const todayDate = now.toISOString().split("T")[0]; // Captura "YYYY-MM-DD"
-
-    let hasExpiredAppointments = false; // Flag para verificar se há itens vencidos
+    const currentHourMinute = now.toTimeString().slice(0, 5);
+    const todayDate = now.toISOString().split("T")[0];
 
     expiredAppointmentsQueue.forEach(appointment => {
         const appointmentDate = appointment.date;
@@ -500,12 +636,9 @@ function processExpiredAppointments() {
         const isToday = appointmentDate === todayDate;
         const isTimeExpired = isToday && appointmentTime < currentHourMinute;
 
-        // Só adiciona à lista se estiver vencido
         if (!isToday || isTimeExpired) {
-            hasExpiredAppointments = true; // Marca que há pelo menos um item vencido
-
             const listItem = document.createElement("div");
-            listItem.classList.add("d-flex", "justify-content-between", "align-items-center", "border-bottom", "p-2");
+            listItem.classList.add("expired-appointment-item");
 
             listItem.innerHTML = `
                 <div>
@@ -513,8 +646,8 @@ function processExpiredAppointments() {
                     <span>${appointment.procedure}</span><br>
                     <small>${formattedDate} às ${appointment.time}</small>
                 </div>
-                <div>
-                    <button class="btn btn-sm btn-success me-2" onclick="concludeAppointmentSemAviso('${appointment.id}', this)">
+                <div class="expired-appointment-actions">
+                    <button class="btn btn-sm btn-success" onclick="concludeAppointmentSemAviso('${appointment.id}', this)">
                         <i class="fa-regular fa-circle-check"></i> Concluir
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="deleteAppointment('${appointment.id}', this)">
@@ -527,19 +660,9 @@ function processExpiredAppointments() {
         }
     });
 
-    // Só abre o modal se houver agendamentos vencidos
-    if (hasExpiredAppointments) {
-        const modalElement = document.getElementById("expiredAppointmentModal");
-        const modal = new bootstrap.Modal(modalElement);
-        modalElement.addEventListener(
-            "hidden.bs.modal",
-            function () {
-                loadAppointments();
-            },
-            { once: true }
-        );
-        modal.show();
-    }
+    const modalElement = document.getElementById("expiredAppointmentModal");
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
 }
 
 function concludeAppointmentSemAviso(appointmentId, button) {
