@@ -486,38 +486,60 @@ function processExpiredAppointments() {
     const modalBody = document.getElementById("expiredAppointmentList");
     modalBody.innerHTML = "";
 
+    const now = new Date();
+    const currentHourMinute = now.toTimeString().slice(0, 5); // Captura "HH:mm"
+    const todayDate = now.toISOString().split("T")[0]; // Captura "YYYY-MM-DD"
+
+    let hasExpiredAppointments = false; // Flag para verificar se há itens vencidos
+
     expiredAppointmentsQueue.forEach(appointment => {
-        const formattedDate = formatDate(appointment.date);
+        const appointmentDate = appointment.date;
+        const appointmentTime = appointment.time;
+        const formattedDate = formatDate(appointmentDate);
 
-        const listItem = document.createElement("div");
-        listItem.classList.add("d-flex", "justify-content-between", "align-items-center", "border-bottom", "p-2");
+        const isToday = appointmentDate === todayDate;
+        const isTimeExpired = isToday && appointmentTime < currentHourMinute;
 
-        listItem.innerHTML = `
-            <div>
-                <strong>${appointment.client.name}</strong><br>
-                <span>${appointment.procedure}</span><br>
-                <small>${formattedDate} às ${appointment.time}</small>
-            </div>
-            <div>
-                <button class="btn btn-sm btn-success me-2" onclick="concludeAppointmentSemAviso('${appointment.id}', this)">
-                    <i class="fa-regular fa-circle-check"></i> Concluir
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteAppointment('${appointment.id}', this)">
-                    <i class="fa-solid fa-ban"></i> Deletar
-                </button>
-            </div>
-        `;
+        // Só adiciona à lista se estiver vencido
+        if (!isToday || isTimeExpired) {
+            hasExpiredAppointments = true; // Marca que há pelo menos um item vencido
 
-        modalBody.appendChild(listItem);
+            const listItem = document.createElement("div");
+            listItem.classList.add("d-flex", "justify-content-between", "align-items-center", "border-bottom", "p-2");
+
+            listItem.innerHTML = `
+                <div>
+                    <strong>${appointment.client.name}</strong><br>
+                    <span>${appointment.procedure}</span><br>
+                    <small>${formattedDate} às ${appointment.time}</small>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-success me-2" onclick="concludeAppointmentSemAviso('${appointment.id}', this)">
+                        <i class="fa-regular fa-circle-check"></i> Concluir
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteAppointment('${appointment.id}', this)">
+                        <i class="fa-solid fa-ban"></i> Deletar
+                    </button>
+                </div>
+            `;
+
+            modalBody.appendChild(listItem);
+        }
     });
 
-    const modalElement = document.getElementById("expiredAppointmentModal");
-    const modal = new bootstrap.Modal(modalElement);
-    modalElement.addEventListener("hidden.bs.modal", function () {
-        loadAppointments();
-    }, { once: true });
-
-    modal.show();
+    // Só abre o modal se houver agendamentos vencidos
+    if (hasExpiredAppointments) {
+        const modalElement = document.getElementById("expiredAppointmentModal");
+        const modal = new bootstrap.Modal(modalElement);
+        modalElement.addEventListener(
+            "hidden.bs.modal",
+            function () {
+                loadAppointments();
+            },
+            { once: true }
+        );
+        modal.show();
+    }
 }
 
 function concludeAppointmentSemAviso(appointmentId, button) {
