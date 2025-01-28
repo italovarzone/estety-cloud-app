@@ -620,65 +620,81 @@ function processExpiredAppointments() {
     notificationBell.style.display = "flex";
 }
 
+// Atualiza o ícone do sino com a contagem correta de agendamentos vencidos
+function updateNotificationBell() {
+    const notificationCount = document.getElementById("notificationCount");
+
+    if (expiredAppointmentsQueue.length > 0) {
+        notificationCount.textContent = expiredAppointmentsQueue.length;
+        notificationCount.classList.remove("hidden");
+    } else {
+        notificationCount.classList.add("hidden");
+    }
+}
+
+// Exibe o modal de agendamentos vencidos corretamente
 function showExpiredAppointmentsModal() {
+    const modalElement = document.getElementById("expiredAppointmentModal");
     const modalBody = document.getElementById("expiredAppointmentList");
     modalBody.innerHTML = "";
 
-    const now = new Date();
-    const currentHourMinute = now.toTimeString().slice(0, 5);
-    const todayDate = now.toISOString().split("T")[0];
-
     expiredAppointmentsQueue.forEach(appointment => {
-        const appointmentDate = appointment.date;
-        const appointmentTime = appointment.time;
-        const formattedDate = formatDate(appointmentDate);
+        const formattedDate = formatDate(appointment.date);
+        const listItem = document.createElement("div");
+        listItem.classList.add("expired-appointment-item");
 
-        const isToday = appointmentDate === todayDate;
-        const isTimeExpired = isToday && appointmentTime < currentHourMinute;
+        listItem.innerHTML = `
+            <div>
+                <strong>${appointment.client.name}</strong><br>
+                <span>${appointment.procedure}</span><br>
+                <small>${formattedDate} às ${appointment.time}</small>
+            </div>
+            <div class="expired-appointment-actions">
+                <button class="btn btn-sm btn-success" onclick="handleAppointmentAction('${appointment.id}', 'concluir', this)">
+                    <i class="fa-regular fa-circle-check"></i> Concluir
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="handleAppointmentAction('${appointment.id}', 'deletar', this)">
+                    <i class="fa-solid fa-ban"></i> Deletar
+                </button>
+            </div>
+        `;
 
-        if (!isToday || isTimeExpired) {
-            const listItem = document.createElement("div");
-            listItem.classList.add("expired-appointment-item");
-
-            listItem.innerHTML = `
-                <div>
-                    <strong>${appointment.client.name}</strong><br>
-                    <span>${appointment.procedure}</span><br>
-                    <small>${formattedDate} às ${appointment.time}</small>
-                </div>
-                <div class="expired-appointment-actions">
-                    <button class="btn btn-sm btn-success" onclick="concludeAppointmentSemAviso('${appointment.id}', this)">
-                        <i class="fa-regular fa-circle-check"></i> Concluir
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteAppointment('${appointment.id}', this)">
-                        <i class="fa-solid fa-ban"></i> Deletar
-                    </button>
-                </div>
-            `;
-
-            modalBody.appendChild(listItem);
-        }
+        modalBody.appendChild(listItem);
     });
 
-    const modalElement = document.getElementById("expiredAppointmentModal");
-    const modal = new bootstrap.Modal(modalElement);
-    modal.show();
+    if (expiredAppointmentsQueue.length > 0) {
+        const modal = new bootstrap.Modal(modalElement);
+
+        // 🚀 Atualiza a listagem de agendamentos ao fechar o modal
+        modalElement.addEventListener("hidden.bs.modal", function () {
+            loadAppointments();
+        }, { once: true });
+
+        modal.show();
+    }
 }
 
-function concludeAppointmentSemAviso(appointmentId, button) {
-    fetchWithToken(`/api/appointments/${appointmentId}/conclude`, {
-        method: "PUT"
-    })
-    .then(() => {
-        button.closest("div.d-flex").remove();
-        expiredAppointmentsQueue = expiredAppointmentsQueue.filter(a => a.id !== appointmentId);
+// Função para concluir ou deletar um agendamento
+function handleAppointmentAction(appointmentId, action, button) {
+    const url = `/api/appointments/${appointmentId}/${action === 'concluir' ? 'conclude' : ''}`;
+    const method = action === 'concluir' ? "PUT" : "DELETE";
 
-        if (expiredAppointmentsQueue.length === 0) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
-            modal.hide();
-        }
-    })
-    .catch((error) => console.error("Erro ao concluir agendamento:", error));
+    fetchWithToken(url, { method })
+        .then(() => {
+            // Remove o item do array e do modal
+            expiredAppointmentsQueue = expiredAppointmentsQueue.filter(a => a.id !== appointmentId);
+            button.closest(".expired-appointment-item").remove();
+
+            // Atualiza o sino
+            updateNotificationBell();
+
+            // Se não houver mais vencidos, fecha o modal e recarrega a lista
+            if (expiredAppointmentsQueue.length === 0) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
+                modal.hide();
+            }
+        })
+        .catch(error => console.error(`Erro ao ${action} agendamento:`, error));
 }
 
 function deleteAppointment(appointmentId, button) {
