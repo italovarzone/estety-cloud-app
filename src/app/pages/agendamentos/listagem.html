@@ -422,19 +422,16 @@ function loadAppointments() {
     const filterStatus = document.getElementById("filter-status").value;
     const filterName = document.getElementById("filter-name").value.toLowerCase();
     const filterOlderThan20Days = document.getElementById("filter-older-than-20-days").checked;
-    
+
     let url = "/api/appointments";
     const params = new URLSearchParams();
 
-    // Adiciona o status ao parâmetro de consulta
     params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
 
-    // Adiciona o termo de pesquisa ao parâmetro de consulta
     if (filterName) {
         params.append('search', filterName);
     }
 
-    // Adiciona o filtro de "há mais de 20 dias" se for aplicável
     if (filterStatus === 'concluidos' && filterOlderThan20Days) {
         params.append('olderThan20Days', 'true');
     }
@@ -442,7 +439,12 @@ function loadAppointments() {
     url += '?' + params.toString();
 
     fetchWithToken(url)
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Falha ao carregar os agendamentos.");
+            }
+            return response.json();
+        })
         .then((data) => {
             const tbody = document.querySelector("#appointment-table tbody");
             tbody.innerHTML = "";
@@ -450,30 +452,33 @@ function loadAppointments() {
             const container = document.getElementById("appointments-container");
             container.innerHTML = "";
 
-            expiredAppointmentsQueue = []; // Limpa a fila de agendamentos vencidos
+            expiredAppointmentsQueue = [];
 
             if (data.appointments && data.appointments.length > 0) {
+                const now = new Date();
+                const currentHourMinute = now.toTimeString().slice(0, 5); // HH:mm
+                const todayDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+
                 data.appointments.forEach((appointment) => {
-                    // Obtém a data atual sem horas para comparação
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
+                    const appointmentDate = appointment.date;
+                    const appointmentTime = appointment.time;
+                    const formattedDate = formatDateForDisplay(appointmentDate);
 
-                    // Converte a data do agendamento para um objeto Date e zera as horas
-                    const appointmentDate = new Date(appointment.date);
-                    appointmentDate.setHours(0, 0, 0, 0);
+                    const isToday = appointmentDate === todayDate;
+                    const isTimeExpired = isToday && appointmentTime < currentHourMinute;
+                    const isDateExpired = appointmentDate < todayDate;
 
-                    // Verifica se o agendamento está vencido (antes da data atual)
-                    if (filterStatus === 'nao-concluidos' && appointmentDate < today) {
+                    // ✅ Agora considera vencido apenas se for data anterior OU se for hoje e a hora já passou
+                    if (filterStatus === 'nao-concluidos' && (isDateExpired || isTimeExpired)) {
                         expiredAppointmentsQueue.push(appointment);
                     }
 
-                    // Renderiza a tabela para desktop
                     const tr = document.createElement("tr");
                     tr.innerHTML = `
                         <td>${appointment.client.name}</td>
                         <td>${appointment.procedure}</td>
                         <td>${appointment.price ? `R$ ${appointment.price.toFixed(2)}` : 'Preço não disponível'}</td>
-                        <td>${formatDateForDisplay(appointment.date)}</td>
+                        <td>${formattedDate}</td>
                         <td>${appointment.time}</td>
                         <td>
                             <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
@@ -489,54 +494,25 @@ function loadAppointments() {
                         </td>
                     `;
                     tbody.appendChild(tr);
-                    // <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
-                    //     <i class="fa-solid fa-calendar-alt"></i>
-                    // </button>
-                    // Renderiza o card para mobile
-                    const card = document.createElement("div");
-                    card.classList.add("col-md-6", "col-lg-4");
-                    card.innerHTML = `
-                        <br>
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">${appointment.client.name}</h5>
-                                <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
-                                <p class="card-text"><strong>Preço:</strong> ${appointment.price ? `R$ ${appointment.price.toFixed(2)}` : 'Preço não disponível'}</p>
-                                <p class="card-text"><strong>Data:</strong> ${formatDateForDisplay(appointment.date)}</p>
-                                <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
-                            </div>
-                            <div class="card-footer d-flex justify-content-end gap-2">
-                                <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
-                                    filterStatus === "concluidos" ? "disabled" : ""
-                                } onclick="concludeAppointment('${appointment.id}')">
-                                    <i class="fa-regular fa-circle-check"></i>
-                                </button>
-                                <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
-                                    filterStatus === "concluidos" ? "disabled" : ""
-                                } onclick="cancelAppointment('${appointment.id}')">
-                                    <i class="fa-solid fa-ban"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(card);
                 });
-                // <button title="Reagendar Agendamento" class="btn btn-sm btn-warning" onclick="showRescheduleModal('${appointment.id}', '${appointment.date}', '${appointment.time}', '${appointment.client.name}', '${appointment.procedure}')">
-                //     <i class="fa-solid fa-calendar-alt"></i>
-                // </button>
-                // Inicia o processamento dos agendamentos vencidos
-                processExpiredAppointments();
-                isLoading = false;
+
+                document.querySelector("#appointment-table tbody").classList.remove("error-message");
             } else {
-                isLoading = false;
                 displayNoAppointmentsMessage(tbody, container);
             }
+
+            processExpiredAppointments();
+            isLoading = false;
         })
         .catch((error) => {
             console.error("Erro ao carregar agendamentos:", error);
             const tbody = document.querySelector("#appointment-table tbody");
             const container = document.getElementById("appointments-container");
-            displayNoAppointmentsMessage(tbody, container, true);
+
+            if (error.message.includes("Falha ao carregar os agendamentos.")) {
+                displayNoAppointmentsMessage(tbody, container, true);
+            }
+
             isLoading = false;
         });
 }
@@ -605,25 +581,36 @@ function formatDate(dateString) {
 }
 
 function processExpiredAppointments() {
-    const notificationBell = document.getElementById("notificationBell");
-    const notificationCount = document.getElementById("notificationCount");
+    const now = new Date();
+    const currentHourMinute = now.toTimeString().slice(0, 5); // HH:mm
+    const todayDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
 
-    // Atualiza o contador se houver agendamentos vencidos
-    if (expiredAppointmentsQueue.length > 0) {
-        notificationCount.textContent = expiredAppointmentsQueue.length;
-        notificationCount.classList.remove("hidden"); // Exibe o número
-    } else {
-        notificationCount.classList.add("hidden"); // Oculta o número se não houver vencidos
-    }
+    let validExpiredAppointments = [];
 
-    // O sino sempre será visível, mesmo sem agendamentos vencidos
-    notificationBell.style.display = "flex";
+    expiredAppointmentsQueue.forEach(appointment => {
+        const appointmentDate = appointment.date;
+        const appointmentTime = appointment.time;
+
+        const isToday = appointmentDate === todayDate;
+        const isTimeExpired = isToday && appointmentTime < currentHourMinute;
+        const isDateExpired = appointmentDate < todayDate;
+
+        if (isDateExpired || isTimeExpired) {
+            validExpiredAppointments.push(appointment);
+        }
+    });
+
+    expiredAppointmentsQueue = validExpiredAppointments;
+
+    updateNotificationBell();
 }
+
 
 // Atualiza o ícone do sino com a contagem correta de agendamentos vencidos
 function updateNotificationBell() {
     const notificationCount = document.getElementById("notificationCount");
 
+    // Mostra a contagem apenas se houver agendamentos vencidos
     if (expiredAppointmentsQueue.length > 0) {
         notificationCount.textContent = expiredAppointmentsQueue.length;
         notificationCount.classList.remove("hidden");
@@ -637,6 +624,8 @@ function showExpiredAppointmentsModal() {
     const modalElement = document.getElementById("expiredAppointmentModal");
     const modalBody = document.getElementById("expiredAppointmentList");
     modalBody.innerHTML = "";
+
+    if (expiredAppointmentsQueue.length === 0) return; // Evita abrir se não houver agendamentos
 
     expiredAppointmentsQueue.forEach(appointment => {
         const formattedDate = formatDate(appointment.date);
@@ -662,16 +651,13 @@ function showExpiredAppointmentsModal() {
         modalBody.appendChild(listItem);
     });
 
-    if (expiredAppointmentsQueue.length > 0) {
-        const modal = new bootstrap.Modal(modalElement);
+    const modal = new bootstrap.Modal(modalElement);
 
-        // 🚀 Atualiza a listagem de agendamentos ao fechar o modal
-        modalElement.addEventListener("hidden.bs.modal", function () {
-            loadAppointments();
-        }, { once: true });
+    modalElement.addEventListener("hidden.bs.modal", function () {
+        loadAppointments();
+    }, { once: true });
 
-        modal.show();
-    }
+    modal.show();
 }
 
 // Função para concluir ou deletar um agendamento
