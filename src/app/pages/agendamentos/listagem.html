@@ -184,20 +184,19 @@
         </div>
     </div>
 
-        <!-- Modal para Agendamento Vencido -->
+    <!-- Modal para Agendamentos Vencidos -->
     <div class="modal fade" id="expiredAppointmentModal" tabindex="-1" aria-labelledby="expiredAppointmentModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="expiredAppointmentModalLabel">Agendamento Vencido</h5>
+                    <h5 class="modal-title" id="expiredAppointmentModalLabel">Agendamentos Vencidos</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="expiredAppointmentMessage">O agendamento já passou. Deseja concluí-lo ou deletá-lo?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="deleteExpiredAppointment" class="btn btn-danger">Deletar</button>
-                    <button type="button" id="concludeExpiredAppointment" class="btn btn-success">Concluir</button>
+                    <p>Os seguintes agendamentos estão vencidos. Escolha uma ação:</p>
+                    <div id="expiredAppointmentList" class="list-group">
+                        <!-- Lista dinâmica de agendamentos vencidos será inserida aqui -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -331,8 +330,16 @@ function loadAppointments() {
 
             if (data.appointments && data.appointments.length > 0) {
                 data.appointments.forEach((appointment) => {
-                    // Adiciona os agendamentos vencidos à fila
-                    if (filterStatus === 'nao-concluidos' && appointment.expired) {
+                    // Obtém a data atual sem horas para comparação
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    // Converte a data do agendamento para um objeto Date e zera as horas
+                    const appointmentDate = new Date(appointment.date);
+                    appointmentDate.setHours(0, 0, 0, 0);
+
+                    // Verifica se o agendamento está vencido (antes da data atual)
+                    if (filterStatus === 'nao-concluidos' && appointmentDate < today) {
                         expiredAppointmentsQueue.push(appointment);
                     }
 
@@ -473,66 +480,77 @@ function formatDate(dateString) {
     });
 }
 
-
-// Função para processar agendamentos vencidos
 function processExpiredAppointments() {
-    if (expiredAppointmentsQueue.length > 0) {
-        // Pega o próximo agendamento na fila
-        const nextAppointment = expiredAppointmentsQueue.shift();
-        appointmentToHandle = nextAppointment.id; // Armazena o agendamento atual para uso posterior
+    if (expiredAppointmentsQueue.length === 0) return;
 
-        // Formata a data no formato "08 de outubro de 2024"
-        const formattedDate = formatDate(nextAppointment.date);
+    const modalBody = document.getElementById("expiredAppointmentList");
+    modalBody.innerHTML = "";
 
-        // Atualiza a mensagem do modal com os dados do agendamento vencido
-        document.getElementById('expiredAppointmentMessage').textContent = 
-            `O agendamento de ${nextAppointment.client.name} no dia ${formattedDate} está vencido! Deseja concluí-lo ou deletá-lo?`;
+    expiredAppointmentsQueue.forEach(appointment => {
+        const formattedDate = formatDate(appointment.date);
 
-        // Exibe o modal
-        const modal = new bootstrap.Modal(document.getElementById("expiredAppointmentModal"));
-        modal.show();
-    } else {
-        // Se não houver mais agendamentos na fila, recarrega a lista
-        loadAppointments(); // Recarrega os agendamentos após processar todos os vencidos
-    }
+        const listItem = document.createElement("div");
+        listItem.classList.add("d-flex", "justify-content-between", "align-items-center", "border-bottom", "p-2");
+
+        listItem.innerHTML = `
+            <div>
+                <strong>${appointment.client.name}</strong><br>
+                <span>${appointment.procedure}</span><br>
+                <small>${formattedDate} às ${appointment.time}</small>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-success me-2" onclick="concludeAppointmentSemAviso('${appointment.id}', this)">
+                    <i class="fa-regular fa-circle-check"></i> Concluir
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteAppointment('${appointment.id}', this)">
+                    <i class="fa-solid fa-ban"></i> Deletar
+                </button>
+            </div>
+        `;
+
+        modalBody.appendChild(listItem);
+    });
+
+    const modalElement = document.getElementById("expiredAppointmentModal");
+    const modal = new bootstrap.Modal(modalElement);
+    modalElement.addEventListener("hidden.bs.modal", function () {
+        loadAppointments();
+    }, { once: true });
+
+    modal.show();
 }
 
-// Função para concluir o agendamento vencido diretamente no modal
-document.getElementById('concludeExpiredAppointment').addEventListener('click', () => {
-    if (appointmentToHandle) {
-        // Concluir o agendamento diretamente
-        fetchWithToken(`/api/appointments/${appointmentToHandle}/conclude`, {
-            method: "PUT"
-        })
-        .then((response) => response.json())
-        .then(() => {
+function concludeAppointmentSemAviso(appointmentId, button) {
+    fetchWithToken(`/api/appointments/${appointmentId}/conclude`, {
+        method: "PUT"
+    })
+    .then(() => {
+        button.closest("div.d-flex").remove();
+        expiredAppointmentsQueue = expiredAppointmentsQueue.filter(a => a.id !== appointmentId);
+
+        if (expiredAppointmentsQueue.length === 0) {
             const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
             modal.hide();
-            appointmentToHandle = null; // Limpa a variável após a ação
-            processExpiredAppointments(); // Processa o próximo agendamento vencido na fila
-        })
-        .catch((error) => console.error("Erro ao concluir agendamento:", error));
-    }
-});
+        }
+    })
+    .catch((error) => console.error("Erro ao concluir agendamento:", error));
+}
 
-// Função para deletar o agendamento vencido diretamente no modal
-document.getElementById('deleteExpiredAppointment').addEventListener('click', () => {
-    if (appointmentToHandle) {
-        // Deletar o agendamento diretamente
-        fetchWithToken(`/api/appointments/${appointmentToHandle}`, {
-            method: "DELETE"
-        })
-        .then((response) => response.json())
-        .then(() => {
+function deleteAppointment(appointmentId, button) {
+    fetchWithToken(`/api/appointments/${appointmentId}`, {
+        method: "DELETE"
+    })
+    .then(() => {
+        button.closest("div.d-flex").remove(); 
+        expiredAppointmentsQueue = expiredAppointmentsQueue.filter(a => a.id !== appointmentId);
+
+        if (expiredAppointmentsQueue.length === 0) {
             const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
             modal.hide();
-            appointmentToHandle = null; // Limpa a variável após a ação
-            processExpiredAppointments(); // Processa o próximo agendamento vencido na fila
-        })
-        .catch((error) => console.error("Erro ao deletar agendamento:", error));
-    }
-});
-
+        }
+    })
+    .catch((error) => console.error("Erro ao deletar agendamento:", error));
+}
 
 function displayNoAppointmentsMessage(tbody, container, error = false) {
     const message = error ? "Erro ao carregar agendamentos. Tente novamente mais tarde." : "Nenhum agendamento encontrado.";
