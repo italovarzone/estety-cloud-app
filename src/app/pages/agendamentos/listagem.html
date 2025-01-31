@@ -459,14 +459,9 @@ function loadAppointments() {
 
                 data.appointments.forEach((appointment) => {
                     const appointmentDate = appointment.date;
-                    const appointmentTime = appointment.time;
 
-                    const isToday = appointmentDate === todayDate;
-                    const isTimeExpired = isToday && appointmentTime < currentHourMinute;
-                    const isExpired = appointmentDate < todayDate || isTimeExpired;
-
-                    // Adiciona os vencidos à fila apenas se o status for "não concluído"
-                    if (filterStatus === 'nao-concluidos' && isExpired) {
+                    const isExpired = appointmentDate < todayDate && appointment.status !== "concluido";
+                    if (isExpired) {
                         expiredAppointmentsQueue.push(appointment);
                     }
 
@@ -602,26 +597,20 @@ function formatDate(dateString) {
 
 function processExpiredAppointments() {
     const now = new Date();
-    const currentHourMinute = now.toTimeString().slice(0, 5); // HH:mm
-    const todayDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const todayDate = now.toISOString().split("T")[0]; // Formato YYYY-MM-DD
 
     let validExpiredAppointments = [];
 
     expiredAppointmentsQueue.forEach(appointment => {
         const appointmentDate = appointment.date;
-        const appointmentTime = appointment.time;
 
-        const isToday = appointmentDate === todayDate;
-        const isTimeExpired = isToday && appointmentTime < currentHourMinute;
-        const isDateExpired = appointmentDate < todayDate;
-
-        if (isDateExpired || isTimeExpired) {
+        // 📌 Correção: Um agendamento só é vencido se a data for anterior a hoje e NÃO for concluído
+        if (appointmentDate < todayDate && appointment.status !== "concluido") {
             validExpiredAppointments.push(appointment);
         }
     });
 
     expiredAppointmentsQueue = validExpiredAppointments;
-
     updateNotificationBell();
 }
 
