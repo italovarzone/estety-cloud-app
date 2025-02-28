@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Técnica</title>
+    <link rel="stylesheet" href="../../../styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin-top: 42px;
+        }
+
+        .btn {
+            color: #9d8983 !important;
+            background-color: white !important;
+            border-color: #bca49d !important;
+        }
+
+        .btn:hover {
+            background-color: rgb(231, 231, 231) !important;
+        }
+
+        .modal-body {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .btn-success {
+            color:  rgb(66, 167, 90) !important;
+            background-color: white !important;
+            border-color: rgb(101, 218, 128) !important;
+        }
+
+        .btn-success:hover {
+            background-color: rgb(184, 235, 196) !important;
+        }
+    
+        .nav {
+            color: #9d8983 !important;
+            background-color: white !important;
+            border-color: #bca49d !important;
+
+            button {
+                color: #9d8983 !important;
+            }
+
+            button:hover {
+                background-color: #e6e6e6 !important;
+            }
+        }
+
+        #edit-button {
+                display: flex;
+                padding: 16px;
+                justify-content: left;
+                border-radius: 100%;
+
+                h1 {
+                    font-size: 14px;
+                }
+
+                span {
+                    display: none;
+                }
+                
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
+            }
+        /* Esconde as abas de navegação no mobile */
+        @media (max-width: 768px) {
+            .tab-content {
+                max-height: 520px;
+                overflow-x: hidden;
+            }
+
+            #technicalSheetTabs {
+                display: none;
+            }
+
+            .buttons-navegations {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ficha-tecnica">
+        <div class="header-container mb-4">
+            <h1>Ficha de Anamnese</h1>
+            <button id="edit-button" class="btn btn-sm btn-primary">
+                <span>Editar ficha</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1-.11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Abas para o Formulário -->
+        <ul class="nav nav-tabs" id="technicalSheetTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="info-geral-tab" data-bs-toggle="tab" data-bs-target="#info-geral" type="button" role="tab" aria-controls="info-geral" aria-selected="true">Informações Gerais</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="condicoes-medicas-tab" data-bs-toggle="tab" data-bs-target="#condicoes-medicas" type="button" role="tab" aria-controls="condicoes-medicas" aria-selected="false">Condições Médicas</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="preferencias-tab" data-bs-toggle="tab" data-bs-target="#preferencias" type="button" role="tab" aria-controls="preferencias" aria-selected="false">Preferências</button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content" id="technicalSheetTabsContent">
+            <!-- Informações Gerais -->
+            <div class="tab-pane fade show active" id="info-geral" role="tabpanel" aria-labelledby="info-geral-tab">
+                <div class="mt-3">
+                    <div class="mb-3">
+                        <label for="client-name" class="form-label">Nome do Cliente:</label>
+                        <input type="text" id="client-name" class="form-control" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="datetime" class="form-label">Data/Hora do Cadastro:</label>
+                        <input type="text" id="datetime" class="form-control" disabled>
+                    </div>
+                    <div class="buttons-navegations">
+                        <button class="btn btn-primary next-tab" data-next="condicoes-medicas-tab">Próxima</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Condições Médicas -->
+            <div class="tab-pane fade" id="condicoes-medicas" role="tabpanel" aria-labelledby="condicoes-medicas-tab">
+                <div class="mt-3">
+                    <div class="mb-3">
+                        <label>Gestante?</label>
+                        <div>
+                            <input type="radio" id="gestante-sim" name="gestante" value="Sim">
+                            <label for="gestante-sim">Sim</label>
+                            <input type="radio" id="gestante-nao" name="gestante" value="Não">
+                            <label for="gestante-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Está de rímel?</label>
+                        <div>
+                            <input type="radio" id="rimel-sim" name="rimel" value="Sim">
+                            <label for="rimel-sim">Sim</label>
+                            <input type="radio" id="rimel-nao" name="rimel" value="Não">
+                            <label for="rimel-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Usa lente de contato?</label>
+                        <div>
+                            <input type="radio" id="procedimento-olhos-sim" name="procedimento-olhos" value="Sim">
+                            <label for="procedimento-olhos-sim">Sim</label>
+                            <input type="radio" id="procedimento-olhos-nao" name="procedimento-olhos" value="Não">
+                            <label for="procedimento-olhos-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Possui alergia a esmaltes/cosméticos/cianoacrilato?</label>
+                        <div>
+                            <input type="radio" id="alergia-sim" name="alergia" value="Sim">
+                            <label for="alergia-sim">Sim</label>
+                            <input type="radio" id="alergia-nao" name="alergia" value="Não">
+                            <label for="alergia-nao">Não</label>
+                        </div>
+                        <label for="especificar-alergia" class="form-label mt-2">Especifique:</label>
+                        <input type="text" id="especificar-alergia" name="especificar-alergia" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Possui problemas com tireoide?</label>
+                        <div>
+                            <input type="radio" id="tireoide-sim" name="tireoide" value="Sim">
+                            <label for="tireoide-sim">Sim</label>
+                            <input type="radio" id="tireoide-nao" name="tireoide" value="Não">
+                            <label for="tireoide-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Possui glaucoma/blefarite/algum problema ocular?</label>
+                        <div>
+                            <input type="radio" id="problema-ocular-sim" name="problema-ocular" value="Sim">
+                            <label for="problema-ocular-sim">Sim</label>
+                            <input type="radio" id="problema-ocular-nao" name="problema-ocular" value="Não">
+                            <label for="problema-ocular-nao">Não</label>
+                        </div>
+                        <label for="especificar-ocular" class="form-label mt-2">Especifique:</label>
+                        <input type="text" id="especificar-ocular" name="especificar-ocular" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>Está em tratamento oncológico?</label>
+                        <div>
+                            <input type="radio" id="oncologico-sim" name="oncologico" value="Sim">
+                            <label for="oncologico-sim">Sim</label>
+                            <input type="radio" id="oncologico-nao" name="oncologico" value="Não">
+                            <label for="oncologico-nao">Não</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-group">
+                            <label for="dorme-lado">Dorme de lado?</label><br>
+                            <input type="radio" id="dorme-lado-sim" name="dorme-lado" value="SIM"> Sim
+                            <input type="radio" id="dorme-lado-nao" name="dorme-lado" value="NÃO"> Não
+                        </div>
+                        <div id="lado-posicao" class="form-group" style="display: none;">
+                            <label>De que lado?</label><br>
+                            <input type="radio" id="lado-esquerdo" name="dorme-lado-posicao" value="Esquerdo"> Esquerdo
+                            <input type="radio" id="lado-direito" name="dorme-lado-posicao" value="Direito"> Direito
+                        </div>
+                    </div>
+                    <div class="buttons-navegations">
+                        <button class="btn btn-secondary prev-tab" data-prev="info-geral-tab">Anterior</button>
+                        <button class="btn btn-primary next-tab" data-next="preferencias-tab">Próxima</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preferências e Observações -->
+            <div class="tab-pane fade" id="preferencias" role="tabpanel" aria-labelledby="preferencias-tab">
+                <div class="mt-3">
+                    <div class="mb-6">
+                        <label>Procedimento de preferência:</label>
+                        <div style="display: flex; flex-direction: column; padding: 16px 0 16px 0;">
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="brasileiro" name="procedimento" value="Brasileiro">
+                                <label for="brasileiro">Brasileiro</label>
+                            </div>
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="fox-eyes" name="procedimento" value="Fox Eyes">
+                                <label for="fox-eyes">Fox Eyes</label>
+                            </div>
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="classico" name="procedimento" value="Clássico">
+                                <label for="classico">Clássico</label>
+                            </div>
+                            <div style="display: flex; gap: 16px;">
+                                <input type="radio" id="sirena" name="procedimento" value="Sirena">
+                                <label for="sirena">Sirena</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="mapping" class="form-label">Mapping:</label>
+                            <input type="text" id="mapping" name="mapping" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="estilo" class="form-label">Estilo:</label>
+                            <input type="text" id="estilo" name="estilo" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="modelo-fios" class="form-label">Modelo dos fios:</label>
+                            <input type="text" id="modelo-fios" name="modelo-fios" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="espessura" class="form-label">Espessura:</label>
+                            <input type="text" id="espessura" name="espessura" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="curvatura" class="form-label">Curvatura:</label>
+                            <input type="text" id="curvatura" name="curvatura" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="adesivo" class="form-label">Adesivo/Cola:</label>
+                            <input type="text" id="adesivo" name="adesivo" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="problema-informar" class="form-label">Existe algum problema que julgue pertinente informar ao profissional antes do procedimento?</label>
+                        <input type="text" id="problema-informar" name="problema-informar" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="observacao" class="form-label">Observação:</label>
+                        <textarea id="observacao" name="observacao" class="form-control"></textarea>
+                    </div>
+
+                            <!-- Checkbox de confirmação de leitura do termo de consentimento -->
+                    <div class="mb-3">
+                        <input type="checkbox" id="consent-checkbox">
+                        <label for="consent-checkbox">Eu li e concordo com o Termo de Consentimento</label>
+                    </div>
+                </div>
+                <div class="buttons-navegations">
+                    <button class="btn btn-secondary prev-tab" data-prev="condicoes-medicas-tab">Anterior</button>
+                    <button id="save-technical-sheet" class="btn btn-success">Salvar Ficha Técnica</button>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal do Termo de Consentimento -->
+    <div class="modal fade" id="consentModal" tabindex="-1" aria-labelledby="consentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="consentModalLabel">Termo de Consentimento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="consent-content"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-consent" class="btn btn-primary" disabled>Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container position-fixed p-3 top-0 end-0">
+        <div id="toast-success" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Operação realizada com sucesso!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="toast-error" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Erro ao realizar a operação.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    <!-- Scripts -->
+<script>
+    // Navegação entre as Tabs
+    document.querySelectorAll('.next-tab').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const nextTab = document.querySelector(`#${this.getAttribute('data-next')}`);
+            new bootstrap.Tab(nextTab).show();
+        });
+    });
+
+    document.querySelectorAll('.prev-tab').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const prevTab = document.querySelector(`#${this.getAttribute('data-prev')}`);
+            new bootstrap.Tab(prevTab).show();
+        });
+    });
+
+    // Lógica original de carregar e manipular a ficha técnica
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = window.location.pathname.split('/').pop();
+        const token = localStorage.getItem('authToken');
+        const clientData = JSON.parse(localStorage.getItem("clientForTechnicalSheet"));
+        const clientNameElement = document.getElementById("client-name");
+        const datetimeElement = document.getElementById("datetime");
+        const editButton = document.getElementById("edit-button");
+
+        // Toast elements
+        const toastSuccess = new bootstrap.Toast(document.getElementById('toast-success'));
+        const toastError = new bootstrap.Toast(document.getElementById('toast-error'));
+
+        function showToast(type, message) {
+            if (type === 'success') {
+                document.querySelector('#toast-success .toast-body').textContent = message;
+                toastSuccess.show();
+            } else {
+                document.querySelector('#toast-error .toast-body').textContent = message;
+                toastError.show();
+            }
+        }
+
+        if (clientData && clientNameElement && datetimeElement) {
+            fetch(`/api/technical-sheets/${clientData.clientId}`, {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : ''
+                }
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.error) {
+                    console.log("Nenhuma ficha técnica encontrada para este cliente.");
+                    clientNameElement.value = clientData.clientName;
+                    clientNameElement.dataset.clientId = clientData.clientId;
+                    datetimeElement.value = new Date().toLocaleString();
+                    editButton.style.display = "none";
+                } else {
+                    preencherFormulario(data);
+                }
+            })
+            .catch((error) => console.error("Erro ao carregar ficha técnica:", error));
+        }
+
+        if (editButton) {
+            editButton.addEventListener("click", () => {
+                toggleFormFields(true);
+                consentCheckbox.disabled = false; // Habilita o checkbox para edição ao clicar em "Editar ficha"
+                datetimeElement.value = new Date().toLocaleString();
+            });
+        }
+
+        document.getElementById('save-technical-sheet').addEventListener('click', addTechnicalSheet);
+
+        function preencherFormulario(data) {
+            clientNameElement.value = clientData.clientName;
+            clientNameElement.dataset.clientId = clientData.clientId;
+            datetimeElement.value = data.datetime;
+
+            setRadioValue("rimel", data.rimel);
+            setRadioValue("gestante", data.gestante);
+            setRadioValue("procedimento-olhos", data.procedimento_olhos);
+            setRadioValue("alergia", data.alergia);
+            document.getElementById("especificar-alergia").value = data.especificar_alergia || "";
+            setRadioValue("tireoide", data.tireoide);
+            setRadioValue("problema-ocular", data.problema_ocular);
+            document.getElementById("especificar-ocular").value = data.especificar_ocular || "";
+            setRadioValue("oncologico", data.oncologico);
+            setRadioValue("dorme-lado", data.dorme_lado);
+
+            if (data.dorme_lado === "SIM") {
+                handleDormeLadoChange(data.dorme_lado);
+                setRadioValue("dorme-lado-posicao", data.dorme_lado_posicao);
+            }
+
+            document.getElementById("problema-informar").value = data.problema_informar || "";
+            setRadioValue("procedimento", data.procedimento);
+            document.getElementById("mapping").value = data.mapping || "";
+            document.getElementById("estilo").value = data.estilo || "";
+            document.getElementById("modelo-fios").value = data.modelo_fios || "";
+            document.getElementById("espessura").value = data.espessura || "";
+            document.getElementById("curvatura").value = data.curvatura || "";
+            document.getElementById("adesivo").value = data.adesivo || "";
+            document.getElementById("observacao").value = data.observacao || "";
+
+            // Atualiza o estado do checkbox de consentimento
+            consentCheckbox.disabled = true; // Desabilita o checkbox para evitar edição
+            consentCheckbox.checked = data.consentAccepted; // Marca o checkbox se o consentimento foi aceito
+
+            toggleFormFields(false); // Desabilita todos os campos para visualização inicial
+        }
+        function setRadioValue(name, value) {
+            if (document.querySelector(`input[name="${name}"][value="${value}"]`)) {
+                document.querySelector(`input[name="${name}"][value="${value}"]`).checked = true;
+            }
+        }
+
+        function addTechnicalSheet(e) {
+            e.preventDefault();
+
+            if (!consentCheckbox.checked) {
+                showToast('error', "Você deve aceitar o Termo de Consentimento antes de salvar a ficha técnica.");
+                return;
+            }
+
+            // Prepara os dados para enviar ao backend
+            const data = {
+                clientId: document.getElementById("client-name").dataset.clientId,
+                datetime: document.getElementById("datetime").value || "",
+                rimel: getRadioValue("rimel"),
+                gestante: getRadioValue("gestante"),
+                procedimento_olhos: getRadioValue("procedimento-olhos"),
+                alergia: getRadioValue("alergia"),
+                especificar_alergia: document.getElementById("especificar-alergia").value || "",
+                tireoide: getRadioValue("tireoide"),
+                problema_ocular: getRadioValue("problema-ocular"),
+                especificar_ocular: document.getElementById("especificar-ocular").value || "",
+                oncologico: getRadioValue("oncologico"),
+                dorme_lado: getRadioValue("dorme-lado"),
+                dorme_lado_posicao: getRadioValue("dorme-lado") === 'SIM' ? getRadioValue("dorme-lado-posicao") : "",
+                problema_informar: document.getElementById("problema-informar").value || "",
+                procedimento: getRadioValue("procedimento"),
+                mapping: document.getElementById("mapping").value || "",
+                estilo: document.getElementById("estilo").value || "",
+                modelo_fios: document.getElementById("modelo-fios").value || "",
+                espessura: document.getElementById("espessura").value || "",
+                curvatura: document.getElementById("curvatura").value || "",
+                adesivo: document.getElementById("adesivo").value || "",
+                observacao: document.getElementById("observacao").value || "",
+                consentAccepted: consentCheckbox.checked ? 'Sim' : 'Não'  // Corrigido o nome do campo para corresponder ao backend
+            };
+
+            // Envia os dados para o backend
+            fetch("/api/technical-sheets", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : '' 
+                },
+                body: JSON.stringify(data)
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.error) {
+                    console.error("Erro ao salvar ficha técnica:", data.error);
+                    alert("Erro ao salvar a ficha técnica: " + data.error);
+                } else {
+                    window.location.href = "../listagem.html";
+                }
+            })
+            .catch((error) => console.error("Erro ao salvar ficha técnica:", error));
+        }
+        function getRadioValue(name) {
+            const checkedRadio = document.querySelector(`input[name="${name}"]:checked`);
+            return checkedRadio ? checkedRadio.value : "";
+        }
+
+        function toggleFormFields(enable) {
+            const fields = document.querySelectorAll("input, textarea");
+            fields.forEach((field) => (field.disabled = !enable));
+        }
+
+        function handleDormeLadoChange(value) {
+            const ladoPosicaoDiv = document.getElementById("lado-posicao");
+            if (value === "SIM") {
+                ladoPosicaoDiv.style.display = "block";
+            } else {
+                ladoPosicaoDiv.style.display = "none";
+                const radioButtons = document.querySelectorAll('input[name="dorme-lado-posicao"]');
+                radioButtons.forEach((radio) => (radio.checked = false));
+            }
+        }
+
+        document.getElementById("dorme-lado-sim").addEventListener("change", () => {
+            handleDormeLadoChange("SIM");
+        });
+
+        document.getElementById("dorme-lado-nao").addEventListener("change", () => {
+            handleDormeLadoChange("NÃO");
+        });
+
+        // Lógica para o checkbox de consentimento e o modal de termo de consentimento
+        const consentCheckbox = document.getElementById('consent-checkbox');
+        const saveButton = document.getElementById('save-technical-sheet');
+        const confirmConsentButton = document.getElementById('confirm-consent');
+        const modalBody = document.querySelector('.modal-body');
+        const consentContent = document.getElementById('consent-content');
+
+        // Carrega o termo de consentimento ao carregar a página
+        fetch('/api/consent', {
+            method: 'GET',
+            headers: {
+                "Authorization": token ? `Bearer ${token}` : '',
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.consentMessage) {
+                consentContent.innerHTML = data.consentMessage;  // Use innerHTML para exibir o conteúdo formatado
+            } else {
+                consentContent.textContent = "Termo de consentimento não encontrado.";
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao carregar o termo de consentimento:", error);
+            consentContent.textContent = "Erro ao carregar o termo de consentimento.";
+        });
+
+        // Evento ao clicar no checkbox para abrir o modal
+        consentCheckbox.addEventListener('click', (e) => {
+            e.preventDefault(); // Evita marcar o checkbox diretamente
+            const consentModal = new bootstrap.Modal(document.getElementById('consentModal'));
+            consentModal.show();
+        });
+
+        // Habilita o botão de confirmação somente após o scroll completo
+        modalBody.addEventListener('scroll', () => {
+            if (modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight) {
+                confirmConsentButton.disabled = false;
+            }
+        });
+
+        // Evento ao confirmar o termo no modal
+        confirmConsentButton.addEventListener('click', () => {
+            consentCheckbox.checked = true; // Marca o checkbox
+            saveButton.disabled = false; // Habilita o botão de salvar
+            const consentModal = bootstrap.Modal.getInstance(document.getElementById('consentModal'));
+            consentModal.hide(); // Fecha o modal
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

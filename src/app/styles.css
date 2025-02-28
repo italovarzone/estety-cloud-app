@@ -32,9 +32,17 @@ body {
     padding: 10px;
     font-size: 16px;
     border: none;
-    cursor: pointer;
     border-radius: 5px;
-    transition: background-color 0.3s ease;
+}
+
+.btn {
+    color: #bc61da !important;
+    background-color: white !important;
+    border-color: #c378dc !important;
+}
+
+.btn:hover {
+    background-color: #f1e2f6 !important;
 }
 
 #client-form div, #appointment-form div {
@@ -199,7 +207,6 @@ td button:hover {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
-    background-color: #e5a9f7;
 }
 
 .calendar-row {
@@ -208,7 +215,6 @@ td button:hover {
 
 .calendar-cell, .calendar-header {
     background-color: white;
-    padding: 15px;
     text-align: center;
     cursor: pointer;
 }
@@ -219,7 +225,7 @@ td button:hover {
 }
 
 .calendar-header {
-    background-color: #c378dc;;
+    background-color: #c378dc;
     color: white;
 }
 
@@ -288,12 +294,10 @@ td button:hover {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: 50px;
-    margin-bottom: 50px;
+    margin-bottom: 100px;
     background-color: #fdfdfd;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .header-container {
@@ -435,4 +439,27 @@ input[type="radio"] {
 
 .edit-btn:hover, .delete-btn:hover {
     opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .container {
+        box-shadow: none;
+    }
+
+    .ficha-tecnica input[type="text"] {
+        width: 100%;
+    }
+
+    .appointments-container {
+        max-height: 110px;
+    }
+
+    .container button {
+        color: #c378dc;
+        background-color: white;
+    }
+
+    .btn:hover {
+        background-color: #744a82;
+    }
 }

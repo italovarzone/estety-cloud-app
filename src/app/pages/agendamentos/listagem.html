@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meus Agendamentos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilo para o botão de calendário */
+        #openCalendarButton {
+            position: fixed;
+            right: -0.1%;
+            bottom: 50%;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background-color: #bca49d;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #openCalendarButton:hover {
+            background-color: #9d8983;
+        }
+
+        /* Estilo para a sidebar do calendário */
+        .calendar-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 400px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            transition: right 0.3s ease-in-out;
+            overflow-y: hidden;
+        }
+
+        .calendar-sidebar.open {
+            right: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .sidebar-content {
+            height: calc(100% - 50px); /* Ajusta a altura para ocupar o restante da sidebar */
+        }
+
+        /* Estilização do botão flutuante do sino */
+        .notification-bell {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background-color: #bca49d; /* Vermelho Bootstrap */
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* Contador de agendamentos vencidos no sino */
+        .notification-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: red;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Estilizando os itens da lista */
+        .expired-appointment-item {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Nome do cliente */
+        .expired-appointment-item strong {
+            font-size: 16px;
+            color: #333;
+        }
+
+        /* Informações adicionais */
+        .expired-appointment-item small {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Botões de ação */
+        .expired-appointment-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .expired-appointment-actions button {
+            font-size: 14px;
+            padding: 6px 12px;
+            width: 100%;
+        }
+
+        /* Ocultar contador quando não houver agendamentos vencidos */
+        .hidden {
+            display: none;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Esconde a tabela em telas menores que 768px */
+        @media (max-width: 767px) {
+            .desktop-view {
+                display: none;
+            }
+            .mobile-view {
+                display: block;
+            }
+
+            #openCalendarButton {
+                right: -1%;
+            }
+
+            .notification-bell {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .notification-count {
+                font-size: 10px;
+                width: 16px;
+                height: 16px;
+                top: 3px;
+                right: 3px;
+            }
+
+            .modal-dialog {
+                max-width: 95vw;
+                margin: 10px auto;
+            }
+
+            .modal-content {
+                border-radius: 10px;
+            }
+
+            .modal-body {
+                max-height: 75vh;
+                overflow-y: auto;
+            }
+
+            .modal-header {
+                font-size: 16px;
+                padding: 10px 15px;
+            }
+
+            .modal-title {
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            .btn-close {
+                font-size: 14px;
+            }
+        }
+
+        /* Esconde os cards em telas maiores que 768px */
+        @media (min-width: 768px) {
+            .mobile-view {
+                display: none;
+            }
+            .desktop-view {
+                display: block;
+            }
+
+            .form-check {
+                padding-bottom: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div style="margin: 32px">
+        <h1 class="mb-4">Meus Agendamentos</h1>
+        <div class="row mb-3">
+            <div style="display: flex; gap: 8px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 16px;" class="row">
+                    <div class="col-md-6">
+                        <select id="filter-status" class="form-select">
+                            <option value="nao-concluidos">Não Concluídos</option>
+                            <option value="concluidos">Concluídos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" id="filter-name" class="form-control" placeholder="Digite o nome do cliente..." />
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="filter-older-than-20-days" />
+                            <label class="form-check-label" for="filter-older-than-20-days">
+                                a mais de 15 dias 
+                            </label>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Versão Desktop (Tabela) -->
+        <div class="desktop-view" style="max-height: 330px; overflow-y: auto;">
+            <table id="appointment-table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Procedimento</th>
+                        <th>Preço</th> <!-- Nova coluna para o preço -->
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>                
+                <tbody>
+                    <!-- A mensagem será inserida aqui -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Versão Mobile (Cards) -->
+        <div style="margin-bottom: 256px" id="appointments-container" class="mobile-view row gy-4">
+            <!-- Cards de agendamentos serão inseridos aqui -->
+        </div>
+    </div>
+
+    <!-- Modais para ambos Mobile e Desktop -->
+    <!-- Modal de Confirmação de Conclusão -->
+    <div class="modal fade" id="confirmConcludeModal" tabindex="-1" aria-labelledby="confirmConcludeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmConcludeModalLabel">Confirmar Conclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">Tem certeza que deseja concluir este agendamento?</div>
+                <div class="modal-footer">
+                    <button style="width: 100%;" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button style="width: 100%;" type="button" id="confirmConcludeButton" class="btn btn-success">Concluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmCancelModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">Tem certeza que deseja cancelar e remover este agendamento?</div>
+                <div class="modal-footer">
+                    <button style="width: 100%;" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button style="width: 100%;" type="button" id="confirmCancelButton" class="btn btn-danger">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agendamentos Vencidos -->
+    <div class="modal fade" id="expiredAppointmentModal" tabindex="-1" aria-labelledby="expiredAppointmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expiredAppointmentModalLabel">Agendamentos Vencidos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Os seguintes agendamentos estão vencidos. Escolha uma ação:</p>
+                    <div id="expiredAppointmentList">
+                        <!-- Lista dinâmica de agendamentos vencidos será inserida aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Botão de Calendário -->
+    <button id="openCalendarButton">
+        <i class="fa-solid fa-calendar-alt"></i>
+    </button>
+
+    <!-- Sidebar para o Calendário -->
+    <div id="calendarSidebar" class="calendar-sidebar">
+        <div class="sidebar-header">
+            <h5>Meu Calendário</h5>
+            <button type="button" class="btn-close" aria-label="Close" id="closeCalendarSidebar"></button>
+        </div>
+        <div class="sidebar-content">
+            <iframe src="../calendario/calendario.html" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+
+    <!-- Modal de Reagendamento -->
+    <div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rescheduleModalLabel">Reagendar Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Exibição de informações do cliente e procedimento -->
+                    <p style="margin: 0;" id="rescheduleClientInfo">Cliente:</p>
+                    <p id="rescheduleProcedureInfo">Procedimento:</p>
+                    <form id="rescheduleForm">
+                        <div class="mb-3">
+                            <label for="newDate" class="form-label">Data</label>
+                            <input type="date" id="newDate" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="newTime" class="form-label">Hora</label>
+                            <input type="time" id="newTime" class="form-control" required />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="confirmRescheduleButton" class="btn btn-primary">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button id="notificationBell" class="notification-bell" onclick="showExpiredAppointmentsModal()">
+        <i class="fa-solid fa-bell"></i>
+        <span id="notificationCount" class="notification-count hidden">0</span>
+    </button>
+    <script>
+document.addEventListener("DOMContentLoaded", init);
+
+function init() {
+    loadAppointments(); // Carrega a lista de agendamentos ao iniciar
+
+    document.getElementById("filter-status").addEventListener("change", loadAppointments);
+    document.getElementById("filter-name").addEventListener("input", loadAppointments);
+    document.getElementById("filter-older-than-20-days").addEventListener("change", loadAppointments);
+
+     // Botões para abrir e fechar a sidebar
+    document.getElementById("openCalendarButton").addEventListener("click", function() {
+     document.getElementById("calendarSidebar").classList.add("open");
+    });
+
+    document.getElementById("closeCalendarSidebar").addEventListener("click", function() {
+        document.getElementById("calendarSidebar").classList.remove("open");
+    });
+}
+
+// Função para realizar fetch com o token de autenticação
+function fetchWithToken(url, options = {}) {
+    const token = localStorage.getItem('authToken');  // Obter o token do localStorage
+    const headers = {
+        ...options.headers,
+        'Authorization': token ? `Bearer ${token}` : '',  // Inclui o token no cabeçalho de autorização
+        'Content-Type': 'application/json',  // Define o tipo de conteúdo como JSON
+    };
+
+    return fetch(url, { ...options, headers });  // Retorna o fetch com os headers atualizados
+}
+
+let expiredAppointmentsQueue = []; // Fila para armazenar os agendamentos vencidos
+let appointmentToHandle = null; // Armazena o agendamento atual que está sendo manipulado
+
+function formatDateForDisplay(dateString) {
+    const dateParts = dateString.split('-');
+    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+}
+
+let isLoading = false;
+// Função para carregar agendamentos
+function loadAppointments() {
+    if (isLoading) return; // Impede chamadas concorrentes
+    isLoading = true;
+
+    const filterStatus = document.getElementById("filter-status").value;
+    const filterName = document.getElementById("filter-name").value.toLowerCase();
+    const filterOlderThan20Days = document.getElementById("filter-older-than-20-days").checked;
+
+    let url = "/api/appointments";
+    const params = new URLSearchParams();
+
+    // Filtro de status
+    params.append('status', filterStatus === 'concluidos' ? 'concluidos' : 'nao-concluidos');
+
+    // Filtro de nome do cliente
+    if (filterName) {
+        params.append('search', filterName);
+    }
+
+    // Filtro de "há mais de 20 dias"
+    if (filterStatus === 'concluidos' && filterOlderThan20Days) {
+        params.append('olderThan20Days', 'true');
+    }
+
+    url += '?' + params.toString();
+
+    fetchWithToken(url)
+        .then((response) => response.json())
+        .then((data) => {
+            const tbody = document.querySelector("#appointment-table tbody");
+            tbody.innerHTML = "";
+
+            const container = document.getElementById("appointments-container");
+            container.innerHTML = "";
+
+            expiredAppointmentsQueue = []; // Limpa a fila de vencidos
+
+            if (data.appointments && data.appointments.length > 0) {
+                const now = new Date();
+                const todayDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+                const currentHourMinute = now.toTimeString().slice(0, 5); // HH:mm
+
+                data.appointments.forEach((appointment) => {
+                    const appointmentDate = appointment.date;
+
+                    const isExpired = appointmentDate < todayDate && appointment.status !== "concluido";
+                    if (isExpired) {
+                        expiredAppointmentsQueue.push(appointment);
+                    }
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${appointment.client.name}</td>
+                        <td>${appointment.procedure}</td>
+                        <td>${appointment.price ? `R$ ${appointment.price.toFixed(2)}` : 'Preço não disponível'}</td>
+                        <td>${formatDateForDisplay(appointment.date)}</td>
+                        <td>${appointment.time}</td>
+                        <td>
+                            <button title="Concluir Agendamento" class="btn btn-sm btn-success" ${
+                                filterStatus === "concluidos" ? "disabled" : ""
+                            } onclick="concludeAppointment('${appointment.id}')">
+                                <i class="fa-regular fa-circle-check"></i>
+                            </button>
+                            <button title="Cancelar Agendamento" class="btn btn-sm btn-danger" ${
+                                filterStatus === "concluidos" ? "disabled" : ""
+                            } onclick="cancelAppointment('${appointment.id}')">
+                                <i class="fa-solid fa-ban"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    // 📱 Renderiza os cards (Mobile)
+                    const card = document.createElement("div");
+                    card.classList.add("col-12", "col-md-6");
+                    card.innerHTML = `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">${appointment.client.name}</h5>
+                                <p class="card-text"><strong>Procedimento:</strong> ${appointment.procedure}</p>
+                                <p class="card-text"><strong>Preço:</strong> ${appointment.price ? `R$ ${appointment.price.toFixed(2)}` : 'Preço não disponível'}</p>
+                                <p class="card-text"><strong>Data:</strong> ${formatDateForDisplay(appointment.date)}</p>
+                                <p class="card-text"><strong>Hora:</strong> ${appointment.time}</p>
+                            </div>
+                            <div class="card-footer d-flex justify-content-end gap-2">
+                                <button class="btn btn-sm btn-success" ${
+                                    filterStatus === "concluidos" ? "disabled" : ""
+                                } onclick="concludeAppointment('${appointment.id}')">
+                                    <i class="fa-regular fa-circle-check"></i> Concluir
+                                </button>
+                                <button class="btn btn-sm btn-danger" ${
+                                    filterStatus === "concluidos" ? "disabled" : ""
+                                }  onclick="cancelAppointment('${appointment.id}')">
+                                    <i class="fa-solid fa-ban"></i> Deletar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                processExpiredAppointments();
+            } else {
+                displayNoAppointmentsMessage(tbody, container);
+            }
+
+            isLoading = false;
+        })
+        .catch((error) => {
+            console.error("Erro ao carregar agendamentos:", error);
+            const tbody = document.querySelector("#appointment-table tbody");
+            const container = document.getElementById("appointments-container");
+            displayNoAppointmentsMessage(tbody, container, true);
+            isLoading = false;
+        });
+}
+
+
+let appointmentToReschedule = null;
+
+function showRescheduleModal(id, currentDate, currentTime, clientName, procedureName) {
+    appointmentToReschedule = id;
+    // Preenche os inputs com a data e hora atuais
+    document.getElementById('newDate').value = currentDate;
+    document.getElementById('newTime').value = currentTime;
+    // Preenche as informações do cliente e procedimento no modal
+    document.getElementById('rescheduleClientInfo').textContent = `Cliente: ${clientName}`;
+    document.getElementById('rescheduleProcedureInfo').textContent = `Procedimento: ${procedureName}`;
+    const modal = new bootstrap.Modal(document.getElementById("rescheduleModal"));
+    modal.show();
+}
+
+async function checkAvailability(date, time) {
+    const response = await fetchWithToken(`/api/appointments/check-availability?date=${date}&time=${time}`);
+    const data = await response.json();
+    return data.available;
+}
+
+document.getElementById('confirmRescheduleButton').addEventListener('click', async () => {
+    const newDate = document.getElementById('newDate').value;
+    const newTime = document.getElementById('newTime').value;
+
+    const isAvailable = await checkAvailability(newDate, newTime);
+    if (!isAvailable) {
+        alert("Já existe um agendamento não concluído neste horário. Por favor, escolha outro horário.");
+        return;
+    }
+
+    // Proceder com a requisição para reagendar se estiver disponível
+    fetchWithToken(`/api/appointments/${appointmentToReschedule}/reschedule`, {
+        method: "PUT",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ date: newDate, time: newTime })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById("rescheduleModal"));
+            modal.hide();
+            loadAppointments();
+        } else {
+            console.error("Erro ao reagendar agendamento.");
+        }
+    })
+    .catch(error => console.error("Erro ao reagendar agendamento:", error));
+});
+
+// Função para formatar a data no formato "08 de outubro de 2024"
+function formatDate(dateString) {
+    const dateParts = dateString.split('-'); // Divide "YYYY-MM-DD"
+    const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); // Ano, mês (0-indexado), dia
+
+    return date.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: 'long', 
+        year: 'numeric' 
+    });
+}
+
+function processExpiredAppointments() {
+    const now = new Date();
+    const todayDate = now.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+
+    let validExpiredAppointments = [];
+
+    expiredAppointmentsQueue.forEach(appointment => {
+        const appointmentDate = appointment.date;
+
+        // 📌 Correção: Um agendamento só é vencido se a data for anterior a hoje e NÃO for concluído
+        if (appointmentDate < todayDate && appointment.status !== "concluido") {
+            validExpiredAppointments.push(appointment);
+        }
+    });
+
+    expiredAppointmentsQueue = validExpiredAppointments;
+    updateNotificationBell();
+}
+
+
+// Atualiza o ícone do sino com a contagem correta de agendamentos vencidos
+function updateNotificationBell() {
+    const notificationCount = document.getElementById("notificationCount");
+
+    // Mostra a contagem apenas se houver agendamentos vencidos
+    if (expiredAppointmentsQueue.length > 0) {
+        notificationCount.textContent = expiredAppointmentsQueue.length;
+        notificationCount.classList.remove("hidden");
+    } else {
+        notificationCount.classList.add("hidden");
+    }
+}
+
+// Exibe o modal de agendamentos vencidos corretamente
+function showExpiredAppointmentsModal() {
+    const modalElement = document.getElementById("expiredAppointmentModal");
+    const modalBody = document.getElementById("expiredAppointmentList");
+    modalBody.innerHTML = "";
+
+    if (expiredAppointmentsQueue.length === 0) return; // Evita abrir se não houver agendamentos
+
+    expiredAppointmentsQueue.forEach(appointment => {
+        const formattedDate = formatDate(appointment.date);
+        const listItem = document.createElement("div");
+        listItem.classList.add("expired-appointment-item");
+
+        listItem.innerHTML = `
+            <div>
+                <strong>${appointment.client.name}</strong><br>
+                <span>${appointment.procedure}</span><br>
+                <small>${formattedDate} às ${appointment.time}</small>
+            </div>
+            <div class="expired-appointment-actions">
+                <button class="btn btn-sm btn-success" onclick="handleAppointmentAction('${appointment.id}', 'concluir', this)">
+                    <i class="fa-regular fa-circle-check"></i> Concluir
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="handleAppointmentAction('${appointment.id}', 'deletar', this)">
+                    <i class="fa-solid fa-ban"></i> Deletar
+                </button>
+            </div>
+        `;
+
+        modalBody.appendChild(listItem);
+    });
+
+    const modal = new bootstrap.Modal(modalElement);
+
+    modalElement.addEventListener("hidden.bs.modal", function () {
+        loadAppointments();
+    }, { once: true });
+
+    modal.show();
+}
+
+// Função para concluir ou deletar um agendamento
+function handleAppointmentAction(appointmentId, action, button) {
+    const url = `/api/appointments/${appointmentId}/${action === 'concluir' ? 'conclude' : ''}`;
+    const method = action === 'concluir' ? "PUT" : "DELETE";
+
+    fetchWithToken(url, { method })
+        .then(() => {
+            // Remove o item do array e do modal
+            expiredAppointmentsQueue = expiredAppointmentsQueue.filter(a => a.id !== appointmentId);
+            button.closest(".expired-appointment-item").remove();
+
+            // Atualiza o sino
+            updateNotificationBell();
+
+            // Se não houver mais vencidos, fecha o modal e recarrega a lista
+            if (expiredAppointmentsQueue.length === 0) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
+                modal.hide();
+            }
+        })
+        .catch(error => console.error(`Erro ao ${action} agendamento:`, error));
+}
+
+function deleteAppointment(appointmentId, button) {
+    fetchWithToken(`/api/appointments/${appointmentId}`, {
+        method: "DELETE"
+    })
+    .then(() => {
+        button.closest("div.d-flex").remove(); 
+        expiredAppointmentsQueue = expiredAppointmentsQueue.filter(a => a.id !== appointmentId);
+
+        if (expiredAppointmentsQueue.length === 0) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById("expiredAppointmentModal"));
+            modal.hide();
+        }
+    })
+    .catch((error) => console.error("Erro ao deletar agendamento:", error));
+}
+
+function displayNoAppointmentsMessage(tbody, container, error = false) {
+    const message = error ? "Erro ao carregar agendamentos. Tente novamente mais tarde." : "Nenhum agendamento encontrado.";
+    
+    const noAppointmentsMessageTable = document.createElement("tr");
+    noAppointmentsMessageTable.innerHTML = `
+        <td colspan="5" class="text-center text-muted">${message}</td>
+    `;
+    tbody.appendChild(noAppointmentsMessageTable);
+
+    const noAppointmentsMessageCard = document.createElement("div");
+    noAppointmentsMessageCard.classList.add("col-12");
+    noAppointmentsMessageCard.innerHTML = `
+        <p class="text-center text-muted">${message}</p>
+    `;
+    container.appendChild(noAppointmentsMessageCard);
+}
+
+let appointmentToConclude = null;
+
+function concludeAppointment(id) {
+    appointmentToConclude = id;
+    const modal = new bootstrap.Modal(document.getElementById("confirmConcludeModal"));
+    modal.show();
+}
+
+document.getElementById("confirmConcludeButton").addEventListener("click", () => {
+    if (appointmentToConclude !== null) {
+        fetchWithToken(`/api/appointments/${appointmentToConclude}/conclude`, {
+            method: "PUT",
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById("confirmConcludeModal"));
+                    modal.hide();
+                    loadAppointments();
+                } else {
+                    console.error("Erro ao concluir agendamento.");
+                }
+            })
+            .catch((error) => console.error("Erro ao concluir agendamento:", error));
+    }
+});
+
+let appointmentToCancel = null;
+
+function cancelAppointment(id) {
+    appointmentToCancel = id;
+    const modal = new bootstrap.Modal(document.getElementById("confirmCancelModal"));
+    modal.show();
+}
+
+document.getElementById("confirmCancelButton").addEventListener("click", () => {
+    if (appointmentToCancel !== null) {
+        fetchWithToken(`/api/appointments/${appointmentToCancel}`, {
+            method: "DELETE",
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById("confirmCancelModal"));
+                    modal.hide();
+                    loadAppointments();
+                } else {
+                    console.error("Erro ao cancelar e remover agendamento.");
+                }
+            })
+            .catch((error) => console.error("Erro ao cancelar e remover agendamento:", error));
+    }
+});
+    </script>     
+</body>
+</html>

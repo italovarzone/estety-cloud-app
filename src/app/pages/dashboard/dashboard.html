@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="../../../styles.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .conteudo {
+        margin: 36px;
+      }
+
+      .card {
+        margin-bottom: 24px;
+      }
+
+      .box-graph {
+        margin: 36px;
+      }
+
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        height: 400px;
+        margin: auto;
+        padding: 20px;
+      }
+
+      @media (max-width: 999px) {
+        body {
+          margin-bottom: 256px;
+        }
+
+        .card {
+          margin-bottom: 12px;
+        }
+
+        .conteudo {
+          margin: 16px;
+        }
+
+        .scroll-container {
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+
+        .chart-container {
+          position: relative;
+          width: 100%;
+          height: 400px;
+          margin: auto;
+          padding: 20px;
+        }
+
+        .chart-container {
+          width: 1000px;
+          padding: 0;
+          margin-right: 16px;
+        }
+
+        .box-graph {
+          margin: 0;
+          margin-top: 16px;
+        }
+      }
+
+      @media (min-width: 1000px) {
+        .chart-container {
+          max-width: 700px;
+          height: 500px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="conteudo">
+      <h1 class="mb-4 text-center">Dashboard</h1>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-title">Total de Agendamentos</p>
+              <h5 id="total-appointments" class="card-text">0</h5>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-title">Total de Clientes</p>
+              <h5 id="total-clients" class="card-text">0</h5>
+            </div>
+          </div>
+        </div>
+        <!-- Adicionando os novos cards -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-title" data-revenue="monthly">Receita Mensal</p>
+              <h5 id="monthly-revenue" class="card-text">R$ 0,00</h5>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-title" data-revenue="annual">Receita Anual</p>
+              <h5 id="annual-revenue" class="card-text">R$ 0,00</h5>
+            </div>
+          </div>
+        </div>  
+      </div>      
+      <div class="box-graph">
+        <h1 class="m-4 text-center">Agendamentos por Cliente</h1>
+        <div class="scroll-container">
+          <div class="chart-container">
+            <canvas id="horizontalBarChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="box-graph">
+        <h1 class="m-4 text-center">Receita mês a mês</h1>
+        <div class="scroll-container">
+          <div class="chart-container">
+            <canvas id="monthlyRevenueChart"></canvas>
+          </div>
+        </div>
+      </div>      
+      <div class="box-graph">
+        <h1 class="m-4 text-center">Receita Total</h1>
+        <div class="scroll-container">
+          <div class="chart-container">
+            <canvas id="annualRevenueChart"></canvas>
+          </div>
+        </div>
+      </div>      
+      <div id="top3procedimentos">
+        <h2 class="m-4 mt-4">Top 3 Procedimentos Realizados</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Procedimento</th>
+              <th>Quantidade de Agendamentos</th>
+            </tr>
+          </thead>
+          <tbody id="top-procedures-table">
+            <!-- Conteúdo preenchido dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        function fetchWithToken(url, options = {}) {
+          const token = localStorage.getItem('authToken');
+          const headers = {
+            ...options.headers,
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json',
+          };
+          return fetch(url, { ...options, headers });
+        }
+
+        function createHorizontalBarChart(clientNames, appointmentCounts) {
+          const ctx = document.getElementById("horizontalBarChart").getContext("2d");
+
+          if (clientNames.length === 0 || appointmentCounts.length === 0) {
+            ctx.font = "16px Arial";
+            ctx.fillText("Nenhum dado disponível", 10, 50);
+            return;
+          }
+
+          // Ajustar a largura do gráfico para exibir todos os clientes
+          const minWidthPerClient = 80; // Reduza este valor se necessário para garantir visibilidade adequada
+          const chartWidth = clientNames.length * minWidthPerClient;
+
+          // Configurar a largura do contêiner do gráfico
+          if (window.innerWidth < 1000) {
+            // Dispositivos móveis: permitir rolagem horizontal
+            ctx.canvas.parentNode.style.width = `${chartWidth}px`;
+            ctx.canvas.parentNode.style.overflowX = 'auto';
+          } else {
+            // Desktop: manter a largura padrão
+            ctx.canvas.parentNode.style.width = '100%';
+          }
+
+          new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: clientNames,
+              datasets: [
+                {
+                  label: "Quantidade de Agendamentos",
+                  data: appointmentCounts,
+                  backgroundColor: "rgba(75, 192, 192, 0.5)",
+                  borderColor: "rgba(75, 192, 192, 1)",
+                  borderWidth: 1,
+                },
+              ],
+            },
+            options: {
+              indexAxis: 'x',
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: "Clientes",
+                    font: {
+                      size: 16,
+                      weight: "bold",
+                    },
+                  },
+                  ticks: {
+                    autoSkip: false, // Garante que nenhum rótulo seja pulado
+                    maxRotation: 45, // Rotaciona os rótulos para evitar sobreposição
+                    minRotation: 45,
+                  },
+                  grid: {
+                    display: false,
+                  },
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: "Quantidade de Agendamentos",
+                    font: {
+                      size: 16,
+                      weight: "bold",
+                    },
+                  },
+                  beginAtZero: true,
+                  grid: {
+                    color: "rgba(200, 200, 200, 0.3)",
+                  },
+                },
+              },
+              plugins: {
+                legend: {
+                  display: false,
+                },
+              },
+            },
+          });
+        }
+
+      function createRevenueCharts(monthlyLabels, monthlyRevenue, annualRevenue) {
+        // Ordena os meses de janeiro a dezembro
+        const monthOrder = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+        const sortedData = monthlyLabels
+          .map((label, index) => ({ label, revenue: monthlyRevenue[index] }))
+          .sort((a, b) => {
+            const [yearA, monthA] = a.label.split("-");
+            const [yearB, monthB] = b.label.split("-");
+            // Comparar primeiro por ano, depois pelo índice do mês na ordem
+            return yearA - yearB || monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
+          });
+
+        // Extrai os dados ordenados
+        const sortedLabels = sortedData.map(item => item.label);
+        const sortedRevenue = sortedData.map(item => item.revenue);
+
+        const ctxMonthly = document.getElementById('monthlyRevenueChart').getContext('2d');
+        const ctxAnnual = document.getElementById('annualRevenueChart').getContext('2d');
+
+        // Verificar se a largura da janela é menor que 1000px (dispositivos móveis)
+        if (window.innerWidth < 1000) {
+          // Ajuste dinâmico da largura para permitir rolagem horizontal em dispositivos móveis
+          const chartWidthMonthly = sortedLabels.length * 60; // Ajuste conforme necessário
+          ctxMonthly.canvas.parentNode.style.width = `${chartWidthMonthly}px`;
+
+          const chartWidthAnnual = 200; // Ajuste conforme necessário
+          ctxAnnual.canvas.parentNode.style.width = `${chartWidthAnnual}px`;
+        } else {
+          // Restaurar a largura padrão em dispositivos desktop
+          ctxMonthly.canvas.parentNode.style.width = '100%';
+          ctxAnnual.canvas.parentNode.style.width = '100%';
+        }
+
+        new Chart(ctxMonthly, {
+          type: 'line',
+          data: {
+            labels: sortedLabels,
+            datasets: [{
+              label: 'Receita mês a mês (R$)',
+              data: sortedRevenue,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 2,
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Receita mês a mês'
+              }
+            }
+          }
+        });
+
+        new Chart(ctxAnnual, {
+          type: 'bar',
+          data: {
+            labels: ['Receita Total'],
+            datasets: [{
+              label: 'Receita Total (R$)',
+              data: [annualRevenue],
+              backgroundColor: 'rgba(54, 162, 235, 0.5)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Receita Total'
+              }
+            }
+          }
+        });
+      }
+
+        fetchWithToken("/api/appointments-by-client")
+          .then((response) => response.json())
+          .then((data) => {
+            const clientNames = data.map((item) => item.client_name);
+            const appointmentCounts = data.map((item) => item.appointment_count);
+            createHorizontalBarChart(clientNames, appointmentCounts);
+          })
+          .catch((error) => console.error("Erro ao carregar os dados do gráfico de agendamentos por cliente:", error));
+
+        fetchWithToken("/api/dashboard")
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("total-appointments").textContent = data.totalAppointments;
+            document.getElementById("total-clients").textContent = data.totalClients;
+
+            const topProceduresTable = document.getElementById("top-procedures-table");
+            data.topProcedures.forEach(proc => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${proc.procedureName}</td>
+                <td>${proc.count}</td>
+              `;
+              topProceduresTable.appendChild(row);
+            });
+          })
+          .catch((error) => console.error("Erro ao carregar o dashboard:", error));
+
+        fetchWithToken("/api/procedures/revenue")
+          .then(response => response.json())
+          .then(data => {
+            const monthlyLabels = Object.keys(data.monthlyRevenue);
+            const monthlyRevenue = Object.values(data.monthlyRevenue);
+            const annualRevenue = data.annualRevenue;
+
+            createRevenueCharts(monthlyLabels, monthlyRevenue, annualRevenue);
+          })
+          .catch(error => console.error("Erro ao carregar dados de receita:", error));
+
+          fetchWithToken("/api/procedures/revenue")
+          .then(response => response.json())
+          .then(data => {
+            // Obter mês e ano atual
+            const currentDate = new Date();
+            const currentMonthName = currentDate.toLocaleString('pt-BR', { month: 'long' }).charAt(0).toUpperCase() + currentDate.toLocaleString('pt-BR', { month: 'long' }).slice(1);
+            const currentYear = currentDate.getFullYear();
+
+            // Atualizar títulos com mês e ano atual
+            document.querySelector('.card-title[data-revenue="monthly"]').textContent = `Receita Mensal (${currentMonthName})`;
+            document.querySelector('.card-title[data-revenue="annual"]').textContent = `Receita Anual (${currentYear})`;
+
+            // Encontrar receita mensal para o mês atual
+            let currentMonthRevenue = 0;
+            const currentMonth = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            const monthlyLabels = Object.keys(data.monthlyRevenue);
+            const monthlyRevenue = Object.values(data.monthlyRevenue);
+            const index = monthlyLabels.indexOf(currentMonth);
+            if (index !== -1) {
+              currentMonthRevenue = monthlyRevenue[index];
+            }
+
+            // Atualizar os elementos no DOM
+            document.getElementById("monthly-revenue").textContent = `R$ ${currentMonthRevenue.toFixed(2)}`;
+            document.getElementById("annual-revenue").textContent = `R$ ${data.annualRevenue.toFixed(2)}`;
+          })
+          .catch(error => console.error("Erro ao carregar dados de receita mensal e anual:", error));
+      });
+    </script>
+  </body>
+</html>
